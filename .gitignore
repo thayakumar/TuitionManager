@@ -1,0 +1,32 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# local database
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# env
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# ts
+*.tsbuildinfo
+next-env.d.ts
