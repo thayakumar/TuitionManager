@@ -1,18 +1,22 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { queryAll } from "@/lib/db";
 import { generateInvoice } from "@/lib/actions";
-import { PageHeader, Card, Field, Select, TextArea, Button, EmptyState } from "@/components/ui";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Field, TextAreaField, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
-export default function NewInvoicePage({
+export default async function NewInvoicePage({
   searchParams,
 }: {
   searchParams: { student?: string };
 }) {
-  const students = db()
-    .prepare("SELECT * FROM students WHERE active = 1 ORDER BY name")
-    .all() as Student[];
+  const students = await queryAll<Student>(
+    "SELECT * FROM students WHERE active = 1 ORDER BY name"
+  );
 
   if (students.length === 0) {
     return (
@@ -35,39 +39,41 @@ export default function NewInvoicePage({
       />
       <form action={generateInvoice} className="max-w-xl">
         <Card>
-          <div className="grid grid-cols-1 gap-4">
-            <Select
-              label="Student *"
-              name="student_id"
-              defaultValue={searchParams.student || String(students[0].id)}
-              options={students.map((s) => ({ value: String(s.id), label: s.name }))}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Period start *"
-                name="period_start"
-                type="date"
-                required
-                defaultValue={start}
+          <CardContent className="pt-5">
+            <div className="grid grid-cols-1 gap-4">
+              <SelectField
+                label="Student *"
+                name="student_id"
+                defaultValue={searchParams.student || String(students[0].id)}
+                options={students.map((s) => ({ value: String(s.id), label: s.name }))}
               />
-              <Field
-                label="Period end *"
-                name="period_end"
-                type="date"
-                required
-                defaultValue={end}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <Field
+                  label="Period start *"
+                  name="period_start"
+                  type="date"
+                  required
+                  defaultValue={start}
+                />
+                <Field
+                  label="Period end *"
+                  name="period_end"
+                  type="date"
+                  required
+                  defaultValue={end}
+                />
+              </div>
+              <TextAreaField label="Notes (optional)" name="notes" rows={3} />
             </div>
-            <TextArea label="Notes (optional)" name="notes" rows={3} />
-          </div>
-          <div className="mt-6 flex justify-end gap-2">
-            <Link href="/invoices">
-              <Button variant="secondary">Cancel</Button>
-            </Link>
-            <Button type="submit" variant="primary">
-              Generate
-            </Button>
-          </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <Link href="/invoices">
+                <Button variant="secondary">Cancel</Button>
+              </Link>
+              <Button type="submit">
+                Generate
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </form>
     </>

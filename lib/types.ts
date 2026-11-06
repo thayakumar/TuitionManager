@@ -25,6 +25,10 @@ export type ClassRow = {
   location: string | null;
   status: ClassStatus;
   attendance: Attendance;
+  recurrence_id: number | null;
+  is_trial: number;
+  cancel_reason: string | null;
+  rescheduled_from: number | null;
   created_at: string;
 };
 
@@ -70,4 +74,44 @@ export type InvoiceItem = {
   quantity: number;
   unit_amount: number;
   amount: number;
+};
+
+export type RecurrenceFrequency = "weekly" | "biweekly" | "custom";
+
+export type Recurrence = {
+  id: number;
+  student_id: number;
+  day_of_week: number;
+  time: string;
+  duration_minutes: number;
+  subject: string | null;
+  location: string | null;
+  frequency: RecurrenceFrequency;
+  custom_interval_days: number | null;
+  start_date: string;
+  end_date: string | null;
+  active: number;
+  created_at: string;
+};
+
+export type Holiday = {
+  id: number;
+  name: string;
+  date: string;
+  created_at: string;
+};
+
+export type StudentNote = {
+  id: number;
+  student_id: number;
+  content: string;
+  created_at: string;
+};
+
+export type ShareToken = {
+  id: number;
+  student_id: number;
+  token: string;
+  active: number;
+  created_at: string;
 };

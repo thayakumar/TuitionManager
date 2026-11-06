@@ -1,19 +1,22 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { queryAll } from "@/lib/db";
 import { createClass } from "@/lib/actions";
-import { PageHeader, Card, Field, Select, Button, EmptyState } from "@/components/ui";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Field, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
 import { format } from "date-fns";
 
-export default function NewClassPage({
+export default async function NewClassPage({
   searchParams,
 }: {
   searchParams: { student?: string };
 }) {
-  const students = db()
-    .prepare("SELECT * FROM students WHERE active = 1 ORDER BY name")
-    .all() as Student[];
+  const students = await queryAll<Student>(
+    "SELECT * FROM students WHERE active = 1 ORDER BY name"
+  );
 
   if (students.length === 0) {
     return (
@@ -24,7 +27,7 @@ export default function NewClassPage({
           description="You need at least one active student before scheduling a class."
           action={
             <Link href="/students/new">
-              <Button variant="primary">Add student</Button>
+              <Button>Add student</Button>
             </Link>
           }
         />
@@ -39,39 +42,45 @@ export default function NewClassPage({
       <PageHeader title="Schedule a class" />
       <form action={createClass} className="max-w-xl">
         <Card>
-          <div className="grid grid-cols-1 gap-4">
-            <Select
-              label="Student *"
-              name="student_id"
-              defaultValue={searchParams.student || String(students[0].id)}
-              options={students.map((s) => ({ value: String(s.id), label: s.name }))}
-            />
-            <Field
-              label="Date & time *"
-              name="scheduled_at"
-              type="datetime-local"
-              required
-              defaultValue={defaultTime}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Duration (minutes)"
-                name="duration_minutes"
-                type="number"
-                defaultValue={60}
+          <CardContent className="pt-5">
+            <div className="grid grid-cols-1 gap-4">
+              <SelectField
+                label="Student *"
+                name="student_id"
+                defaultValue={searchParams.student || String(students[0].id)}
+                options={students.map((s) => ({ value: String(s.id), label: s.name }))}
               />
-              <Field label="Subject" name="subject" placeholder="e.g. Algebra" />
+              <Field
+                label="Date & time *"
+                name="scheduled_at"
+                type="datetime-local"
+                required
+                defaultValue={defaultTime}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Field
+                  label="Duration (minutes)"
+                  name="duration_minutes"
+                  type="number"
+                  defaultValue={60}
+                />
+                <Field label="Subject" name="subject" placeholder="e.g. Algebra" />
+              </div>
+              <Field label="Location" name="location" placeholder="e.g. Zoom / Home" />
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" name="is_trial" />
+                Trial class (invoiced at RM 0.00)
+              </label>
             </div>
-            <Field label="Location" name="location" placeholder="e.g. Zoom / Home" />
-          </div>
-          <div className="mt-6 flex justify-end gap-2">
-            <Link href="/schedule">
-              <Button variant="secondary">Cancel</Button>
-            </Link>
-            <Button type="submit" variant="primary">
-              Schedule
-            </Button>
-          </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <Link href="/schedule">
+                <Button variant="secondary">Cancel</Button>
+              </Link>
+              <Button type="submit">
+                Schedule
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </form>
     </>

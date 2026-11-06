@@ -1,8 +1,6 @@
 import { format, parseISO } from "date-fns";
-import { getSetting } from "./db";
 
-export function currency(amount: number): string {
-  const symbol = getSetting("currency") || "RM";
+export function currency(amount: number, symbol: string = "RM"): string {
   return `${symbol} ${amount.toFixed(2)}`;
 }
 
