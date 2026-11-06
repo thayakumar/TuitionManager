@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, X, Clock, Trash2 } from "lucide-react";
+import { Check, X, Clock, Trash2, Pencil } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { markAttendance, saveReport, deleteClass, updateClass } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Field, TextAreaField, SelectField } from "@/components/form-field";
 import { CancelClassDialog } from "@/components/cancel-dialog";
 import { WhatsAppShare } from "@/components/whatsapp-share";
@@ -78,40 +79,52 @@ export default async function ClassDetailPage({ params }: { params: { id: string
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-2">Status</div>
-            <div className="flex items-center gap-1.5">
+          <CardHeader>
+            <CardDescription>Status</CardDescription>
+            <CardTitle className="flex items-center gap-1.5">
               <Badge variant={statusVariant(cls.status)}>{cls.status}</Badge>
               {cls.is_trial ? <Badge variant="outline" className="border-accent text-accent-foreground">TRIAL</Badge> : null}
-            </div>
-            {cls.cancel_reason && (
-              <div className="text-xs text-muted-foreground mt-2">Reason: {cls.cancel_reason}</div>
-            )}
-          </CardContent>
+            </CardTitle>
+          </CardHeader>
+          {cls.cancel_reason && (
+            <CardContent>
+              <div className="text-xs text-muted-foreground">Reason: {cls.cancel_reason}</div>
+            </CardContent>
+          )}
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-2">Attendance</div>
-            {cls.attendance ? (
-              <Badge variant={statusVariant(cls.attendance)}>{cls.attendance}</Badge>
-            ) : (
-              <span className="text-sm text-muted-foreground">not marked</span>
-            )}
-          </CardContent>
+          <CardHeader>
+            <CardDescription>Attendance</CardDescription>
+            <CardTitle>
+              {cls.attendance ? (
+                <Badge variant={statusVariant(cls.attendance)}>{cls.attendance}</Badge>
+              ) : (
+                <span className="text-sm text-muted-foreground">Not marked</span>
+              )}
+            </CardTitle>
+          </CardHeader>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-2">Rate</div>
-            <div className="text-sm">
-              {Number(student.hourly_rate).toFixed(2)} / hr · {(Number(cls.duration_minutes) / 60).toFixed(2)}h
+          <CardHeader>
+            <CardDescription>Rate</CardDescription>
+            <CardTitle>
+              {Number(student.hourly_rate).toFixed(2)} / hr
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xs text-muted-foreground">
+              Duration: {(Number(cls.duration_minutes) / 60).toFixed(2)}h
             </div>
           </CardContent>
         </Card>
       </div>
 
       <Card className="mb-6">
-        <CardContent className="pt-5">
-          <div className="text-sm font-semibold text-foreground mb-3">Attendance</div>
+        <CardHeader>
+          <CardTitle>Attendance</CardTitle>
+          <CardDescription>Mark student attendance for this class</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-wrap gap-2">
             <form action={attend.bind(null, "present" as Attendance)}>
               <Button type="submit" variant={cls.attendance === "present" ? "default" : "secondary"}>
@@ -130,16 +143,20 @@ export default async function ClassDetailPage({ params }: { params: { id: string
             </form>
           </div>
           {cls.status === "scheduled" && (
-            <div className="mt-4 pt-4 border-t border-border">
+            <>
+              <Separator className="my-4" />
               <CancelClassDialog classId={id} />
-            </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       <Card className="mb-6">
-        <CardContent className="pt-5">
-          <div className="text-sm font-semibold text-foreground mb-4">Post-class report</div>
+        <CardHeader>
+          <CardTitle>Post-class report</CardTitle>
+          <CardDescription>Record what was covered and how the student performed</CardDescription>
+        </CardHeader>
+        <CardContent>
           <form action={saveR}>
             <div className="grid grid-cols-1 gap-4">
               <TextAreaField
@@ -204,62 +221,63 @@ export default async function ClassDetailPage({ params }: { params: { id: string
         </CardContent>
       </Card>
 
-      <details className="mb-6">
-        <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-          Edit class details
-        </summary>
-        <Card className="mt-3">
-          <CardContent className="pt-5">
-            <form action={upd}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field
-                  label="Date & time"
-                  name="scheduled_at"
-                  type="datetime-local"
-                  defaultValue={fmtDateInput(cls.scheduled_at)}
-                />
-                <Field
-                  label="Duration"
-                  name="duration_minutes"
-                  type="number"
-                  defaultValue={Number(cls.duration_minutes)}
-                />
-                <Field label="Subject" name="subject" defaultValue={cls.subject ?? ""} />
-                <Field label="Location" name="location" defaultValue={cls.location ?? ""} />
-                <SelectField
-                  label="Status"
-                  name="status"
-                  defaultValue={cls.status}
-                  options={[
-                    { value: "scheduled", label: "Scheduled" },
-                    { value: "completed", label: "Completed" },
-                    { value: "canceled", label: "Canceled" },
-                  ]}
-                />
-                <SelectField
-                  label="Attendance"
-                  name="attendance"
-                  defaultValue={cls.attendance ?? ""}
-                  options={[
-                    { value: "", label: "—" },
-                    { value: "present", label: "Present" },
-                    { value: "late", label: "Late" },
-                    { value: "absent", label: "Absent" },
-                  ]}
-                />
-              </div>
-              <div className="mt-6 flex justify-between">
-                <Button type="submit" formAction={del} variant="destructive" formNoValidate>
-                  <Trash2 size={16} /> Delete class
-                </Button>
-                <Button type="submit">
-                  Save
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </details>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Pencil size={16} /> Edit class details
+          </CardTitle>
+          <CardDescription>Modify the class schedule, status, or attendance</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={upd}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field
+                label="Date & time"
+                name="scheduled_at"
+                type="datetime-local"
+                defaultValue={fmtDateInput(cls.scheduled_at)}
+              />
+              <Field
+                label="Duration"
+                name="duration_minutes"
+                type="number"
+                defaultValue={Number(cls.duration_minutes)}
+              />
+              <Field label="Subject" name="subject" defaultValue={cls.subject ?? ""} />
+              <Field label="Location" name="location" defaultValue={cls.location ?? ""} />
+              <SelectField
+                label="Status"
+                name="status"
+                defaultValue={cls.status}
+                options={[
+                  { value: "scheduled", label: "Scheduled" },
+                  { value: "completed", label: "Completed" },
+                  { value: "canceled", label: "Canceled" },
+                ]}
+              />
+              <SelectField
+                label="Attendance"
+                name="attendance"
+                defaultValue={cls.attendance ?? ""}
+                options={[
+                  { value: "", label: "—" },
+                  { value: "present", label: "Present" },
+                  { value: "late", label: "Late" },
+                  { value: "absent", label: "Absent" },
+                ]}
+              />
+            </div>
+            <div className="mt-6 flex justify-between">
+              <Button type="submit" formAction={del} variant="destructive" formNoValidate>
+                <Trash2 size={16} /> Delete class
+              </Button>
+              <Button type="submit">
+                Save
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </>
   );
 }

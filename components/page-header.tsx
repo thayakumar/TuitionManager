@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Separator } from "@/components/ui/separator";
 
 export function PageHeader({
   title,
@@ -10,12 +11,19 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <div>
-        <h1 className="text-2xl font-heading font-semibold text-foreground">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+    <div className="mb-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-semibold tracking-tight text-foreground">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
+        </div>
+        {action && <div className="no-print">{action}</div>}
       </div>
-      {action && <div className="no-print">{action}</div>}
+      <Separator className="mt-4" />
     </div>
   );
 }

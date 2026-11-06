@@ -1,17 +1,22 @@
+import Link from "next/link";
 import { createStudent } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
 
 export default function NewStudentPage() {
   return (
     <>
-      <PageHeader title="New student" subtitle="Add a student to your roster" />
+      <PageHeader title="New student" />
 
       <form action={createStudent} className="max-w-2xl">
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>Add student</CardTitle>
+            <CardDescription>Add a new student to your roster</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Full name *" name="name" required />
               <Field label="Subject" name="subject" placeholder="e.g. Mathematics" />
@@ -32,6 +37,9 @@ export default function NewStudentPage() {
               <TextAreaField label="Notes" name="notes" rows={4} placeholder="Learning goals, preferences, etc." />
             </div>
             <div className="mt-6 flex justify-end gap-2">
+              <Link href="/students">
+                <Button variant="secondary">Cancel</Button>
+              </Link>
               <Button type="submit">
                 Create student
               </Button>

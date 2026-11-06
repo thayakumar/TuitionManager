@@ -1,11 +1,26 @@
 import Link from "next/link";
-import { CalendarPlus, Users, Receipt } from "lucide-react";
+import { CalendarPlus, Users, Receipt, TrendingUp, Clock, FileText } from "lucide-react";
 import { queryAll, queryOne, getSetting } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardAction,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { currency, fmtDateTime } from "@/lib/format";
 import { RevenueChart } from "@/components/revenue-chart";
 import type { ClassWithStudent, Invoice } from "@/lib/types";
@@ -79,127 +94,197 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card>
-          <CardContent className="flex items-center gap-3 pt-5">
-            <Users className="text-primary" size={24} />
-            <div>
-              <div className="text-xs text-muted-foreground">Active students</div>
-              <div className="text-2xl font-heading font-semibold">{Number(s.active_students)}</div>
-            </div>
-          </CardContent>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <Users size={14} className="text-primary" />
+              Active students
+            </CardDescription>
+            <CardTitle className="text-3xl font-heading tabular-nums">
+              {Number(s.active_students)}
+            </CardTitle>
+          </CardHeader>
         </Card>
         <Card>
-          <CardContent className="flex items-center gap-3 pt-5">
-            <CalendarPlus className="text-emerald-600" size={24} />
-            <div>
-              <div className="text-xs text-muted-foreground">Upcoming classes</div>
-              <div className="text-2xl font-heading font-semibold">{Number(s.upcoming_count)}</div>
-            </div>
-          </CardContent>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <Clock size={14} className="text-primary" />
+              Upcoming classes
+            </CardDescription>
+            <CardTitle className="text-3xl font-heading tabular-nums">
+              {Number(s.upcoming_count)}
+            </CardTitle>
+          </CardHeader>
         </Card>
         <Card>
-          <CardContent className="flex items-center gap-3 pt-5">
-            <Receipt className="text-accent" size={24} />
-            <div>
-              <div className="text-xs text-muted-foreground">Outstanding</div>
-              <div className="text-2xl font-heading font-semibold">{currency(Number(s.outstanding), currencySymbol)}</div>
-            </div>
-          </CardContent>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <Receipt size={14} className="text-accent" />
+              Outstanding
+            </CardDescription>
+            <CardTitle className="text-3xl font-heading tabular-nums">
+              {currency(Number(s.outstanding), currencySymbol)}
+            </CardTitle>
+          </CardHeader>
         </Card>
       </div>
 
       {revenueData.length > 0 && (
         <Card className="mb-8">
-          <CardContent className="pt-5">
-            <h2 className="text-sm font-semibold text-foreground mb-3">Revenue (last 6 months)</h2>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <TrendingUp size={14} />
+              Last 6 months
+            </CardDescription>
+            <CardTitle>Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
             <RevenueChart data={revenueData} symbol={currencySymbol} />
-            <div className="flex gap-4 mt-3 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded bg-primary" /> Paid</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded bg-accent/60" /> Outstanding</span>
+            <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block size-2.5 rounded-full bg-primary" />
+                Paid
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block size-2.5 rounded-full bg-accent/60" />
+                Outstanding
+              </span>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <section>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-sm font-semibold text-foreground">Next 5 classes</h2>
-            <Link href="/schedule" className="text-xs text-primary hover:underline">View all →</Link>
-          </div>
-          {upcoming.length === 0 ? (
-            <EmptyState title="Nothing scheduled" />
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map((c) => (
-                <Link key={c.id} href={`/classes/${c.id}`}>
-                  <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                    <CardContent className="py-0">
-                      <div className="text-sm font-medium">{fmtDateTime(c.scheduled_at)}</div>
-                      <div className="text-xs text-muted-foreground">{c.student_name} · {c.duration_minutes} min</div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Upcoming classes</CardTitle>
+            <CardDescription>Next 5 scheduled sessions</CardDescription>
+            <CardAction>
+              <Link href="/schedule">
+                <Button variant="outline" size="sm">View all</Button>
+              </Link>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            {upcoming.length === 0 ? (
+              <EmptyState title="Nothing scheduled" />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date &amp; time</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead className="text-right">Duration</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcoming.map((c) => (
+                    <TableRow key={c.id} className="cursor-pointer">
+                      <TableCell>
+                        <Link href={`/classes/${c.id}`} className="font-medium hover:underline">
+                          {fmtDateTime(c.scheduled_at)}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{c.student_name}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{c.duration_minutes} min</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-        <section>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-sm font-semibold text-foreground">Needs report</h2>
-          </div>
-          {needsReport.length === 0 ? (
-            <EmptyState title="All caught up" />
-          ) : (
-            <div className="space-y-2">
-              {needsReport.map((c) => (
-                <Link key={c.id} href={`/classes/${c.id}`}>
-                  <Card className="hover:border-primary py-3 mb-2 border-accent/50 cursor-pointer transition">
-                    <CardContent className="py-0 flex justify-between">
-                      <div>
-                        <div className="text-sm font-medium">{c.student_name}</div>
-                        <div className="text-xs text-muted-foreground">{fmtDateTime(c.scheduled_at)}</div>
-                      </div>
-                      <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/30">pending</Badge>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Needs report</CardTitle>
+            <CardDescription>Classes without post-class reports</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {needsReport.length === 0 ? (
+              <EmptyState title="All caught up" />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {needsReport.map((c) => (
+                    <TableRow key={c.id} className="cursor-pointer">
+                      <TableCell>
+                        <Link href={`/classes/${c.id}`} className="font-medium hover:underline">
+                          {c.student_name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{fmtDateTime(c.scheduled_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/30">
+                          pending
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <section>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Unpaid invoices</h2>
-          <Link href="/invoices" className="text-xs text-primary hover:underline">View all →</Link>
-        </div>
-        {unpaid.length === 0 ? (
-          <EmptyState title="Nothing outstanding" />
-        ) : (
-          <div className="space-y-2">
-            {unpaid.map((inv) => (
-              <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                  <CardContent className="py-0 flex justify-between items-center">
-                    <div>
-                      <div className="text-sm font-medium">{inv.invoice_number} · {inv.student_name}</div>
-                      <div className="text-xs text-muted-foreground">Issued {new Date(inv.issued_at).toLocaleDateString()}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">{currency(Number(inv.total_amount), currencySymbol)}</div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Unpaid invoices</CardTitle>
+          <CardDescription>Outstanding balances awaiting payment</CardDescription>
+          <CardAction>
+            <Link href="/invoices">
+              <Button variant="outline" size="sm">View all</Button>
+            </Link>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {unpaid.length === 0 ? (
+            <EmptyState title="Nothing outstanding" />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Issued</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {unpaid.map((inv) => (
+                  <TableRow key={inv.id} className="cursor-pointer">
+                    <TableCell>
+                      <Link href={`/invoices/${inv.id}`} className="font-medium hover:underline">
+                        {inv.invoice_number}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{inv.student_name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(inv.issued_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {currency(Number(inv.total_amount), currencySymbol)}
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Badge variant={inv.status === "overdue" ? "destructive" : "outline"}>
                         {inv.status}
                       </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }

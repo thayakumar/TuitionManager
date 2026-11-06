@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { updateStudent, deleteStudent } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
@@ -30,7 +30,11 @@ export default async function EditStudentPage({ params }: { params: { id: string
 
       <form action={update} className="max-w-2xl">
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>Edit student</CardTitle>
+            <CardDescription>Update student information and preferences</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Full name *" name="name" required defaultValue={student.name} />
               <Field label="Subject" name="subject" defaultValue={student.subject ?? ""} />
@@ -50,8 +54,13 @@ export default async function EditStudentPage({ params }: { params: { id: string
             <div className="mt-4">
               <TextAreaField label="Notes" name="notes" rows={4} defaultValue={student.notes ?? ""} />
             </div>
-            <label className="flex items-center gap-2 mt-4 text-sm text-foreground">
-              <input type="checkbox" name="active" defaultChecked={!!student.active} />
+            <label className="flex items-center gap-2 mt-4 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                name="active"
+                defaultChecked={!!student.active}
+                className="size-4 rounded border-input accent-primary"
+              />
               Active
             </label>
             <div className="mt-6 flex justify-between">

@@ -40,7 +40,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased font-sans">
         <div className="flex min-h-screen">
           <Nav />
-          <main className="flex-1 p-8 max-w-6xl mx-auto w-full">{children}</main>
+          <main className="flex-1 overflow-x-hidden">
+            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+              {children}
+            </div>
+          </main>
         </div>
       </body>
     </html>

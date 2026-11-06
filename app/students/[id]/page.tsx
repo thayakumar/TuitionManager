@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarPlus, Receipt, Pencil, Trash2 } from "lucide-react";
+import { CalendarPlus, Receipt, Pencil, Trash2, Phone, Mail, UserCircle } from "lucide-react";
 import { queryAll, queryOne, getSetting } from "@/lib/db";
 import { addStudentNote, deleteStudentNote } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import { ShareTokenButton } from "@/components/share-token-button";
 import { currency, fmtDateTime, fmtDate } from "@/lib/format";
 import type { Student, ClassRow, Invoice, StudentNote } from "@/lib/types";
@@ -28,6 +30,15 @@ function statusVariant(status: string) {
     default:
       return "outline" as const;
   }
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export default async function StudentDetailPage({ params }: { params: { id: string } }) {
@@ -64,7 +75,16 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
   return (
     <>
       <PageHeader
-        title={student.name}
+        title={
+          <div className="flex items-center gap-3">
+            <Avatar className="size-10">
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {getInitials(student.name)}
+              </AvatarFallback>
+            </Avatar>
+            <span>{student.name}</span>
+          </div>
+        }
         subtitle={`${student.subject || "—"}${student.grade_level ? " · " + student.grade_level : ""} · ${currency(Number(student.hourly_rate), currencySymbol)}/hr`}
         action={
           <div className="flex flex-wrap gap-2">
@@ -85,50 +105,67 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-1">Contact</div>
-            <div className="text-sm">{student.phone || "—"}</div>
-            <div className="text-sm text-muted-foreground">{student.email || ""}</div>
-          </CardContent>
+          <CardHeader>
+            <CardDescription>Contact</CardDescription>
+            <CardTitle className="text-sm">{student.phone || "—"}</CardTitle>
+          </CardHeader>
+          {student.email && (
+            <CardContent>
+              <div className="text-sm text-muted-foreground">{student.email}</div>
+            </CardContent>
+          )}
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-1">Guardian</div>
-            <div className="text-sm">{student.guardian_name || "—"}</div>
-            <div className="text-sm text-muted-foreground">{student.guardian_contact || ""}</div>
-          </CardContent>
+          <CardHeader>
+            <CardDescription>Guardian</CardDescription>
+            <CardTitle className="text-sm">{student.guardian_name || "—"}</CardTitle>
+          </CardHeader>
+          {student.guardian_contact && (
+            <CardContent>
+              <div className="text-sm text-muted-foreground">{student.guardian_contact}</div>
+            </CardContent>
+          )}
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-1">Status</div>
-            <Badge variant={student.active ? "default" : "secondary"}>
-              {student.active ? "Active" : "Inactive"}
-            </Badge>
-            <div className="text-xs text-muted-foreground/70 mt-2">Since {fmtDate(student.created_at)}</div>
+          <CardHeader>
+            <CardDescription>Status</CardDescription>
+            <CardTitle>
+              <Badge variant={student.active ? "default" : "secondary"}>
+                {student.active ? "Active" : "Inactive"}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xs text-muted-foreground">Since {fmtDate(student.created_at)}</div>
           </CardContent>
         </Card>
       </div>
 
       {student.notes && (
         <Card className="mb-6">
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground mb-1">Notes</div>
+          <CardHeader>
+            <CardDescription>Notes</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="text-sm whitespace-pre-wrap">{student.notes}</div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Upcoming classes</h2>
-          {upcoming.length === 0 ? (
-            <EmptyState title="None scheduled" />
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map((c) => (
-                <Link key={c.id} href={`/classes/${c.id}`}>
-                  <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                    <CardContent className="py-0 flex justify-between items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Upcoming classes</CardTitle>
+            <CardDescription>{upcoming.length} scheduled</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {upcoming.length === 0 ? (
+              <div className="text-center py-6 text-sm text-muted-foreground">None scheduled</div>
+            ) : (
+              <div className="space-y-2">
+                {upcoming.map((c) => (
+                  <Link key={c.id} href={`/classes/${c.id}`} className="block">
+                    <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:border-primary hover:bg-muted/30">
                       <div>
                         <div className="text-sm font-medium">{fmtDateTime(c.scheduled_at)}</div>
                         <div className="text-xs text-muted-foreground">
@@ -139,24 +176,27 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                         {c.is_trial ? <Badge variant="outline" className="text-accent border-accent/40">TRIAL</Badge> : null}
                         <Badge variant="secondary">scheduled</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        <section>
-          <h2 className="text-sm font-semibold text-foreground mb-3">Past classes</h2>
-          {past.length === 0 ? (
-            <EmptyState title="No history yet" />
-          ) : (
-            <div className="space-y-2">
-              {past.map((c) => (
-                <Link key={c.id} href={`/classes/${c.id}`}>
-                  <Card className={`hover:border-primary py-3 mb-2 cursor-pointer transition ${c.status === "canceled" ? "opacity-60" : ""}`}>
-                    <CardContent className="py-0 flex justify-between items-center">
+        <Card>
+          <CardHeader>
+            <CardTitle>Past classes</CardTitle>
+            <CardDescription>{past.length} recorded</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {past.length === 0 ? (
+              <div className="text-center py-6 text-sm text-muted-foreground">No history yet</div>
+            ) : (
+              <div className="space-y-2">
+                {past.map((c) => (
+                  <Link key={c.id} href={`/classes/${c.id}`} className="block">
+                    <div className={`flex items-center justify-between rounded-lg border p-3 transition-colors hover:border-primary hover:bg-muted/30 ${c.status === "canceled" ? "opacity-60" : ""}`}>
                       <div>
                         <div className={`text-sm font-medium ${c.status === "canceled" ? "line-through" : ""}`}>{fmtDateTime(c.scheduled_at)}</div>
                         <div className="text-xs text-muted-foreground">
@@ -167,32 +207,35 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                         {c.is_trial ? <Badge variant="outline" className="text-accent border-accent/40">TRIAL</Badge> : null}
                         <Badge variant={statusVariant(c.status)}>{c.status}</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <section>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Invoices</h2>
-          <Link href={`/invoices/new?student=${id}`}>
-            <Button variant="secondary">
-              <Receipt size={16} /> Generate invoice
-            </Button>
-          </Link>
-        </div>
-        {invoices.length === 0 ? (
-          <EmptyState title="No invoices" />
-        ) : (
-          <div className="space-y-2">
-            {invoices.map((inv) => (
-              <Link key={inv.id} href={`/invoices/${inv.id}`}>
-                <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                  <CardContent className="py-0 flex justify-between items-center">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Invoices</CardTitle>
+          <CardDescription>{invoices.length} total</CardDescription>
+          <CardAction>
+            <Link href={`/invoices/new?student=${id}`}>
+              <Button variant="secondary" size="sm">
+                <Receipt size={14} /> Generate
+              </Button>
+            </Link>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {invoices.length === 0 ? (
+            <div className="text-center py-6 text-sm text-muted-foreground">No invoices</div>
+          ) : (
+            <div className="space-y-2">
+              {invoices.map((inv) => (
+                <Link key={inv.id} href={`/invoices/${inv.id}`} className="block">
+                  <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:border-primary hover:bg-muted/30">
                     <div>
                       <div className="text-sm font-medium">{inv.invoice_number}</div>
                       <div className="text-xs text-muted-foreground">
@@ -203,39 +246,40 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                       <div className="text-sm font-medium">{currency(Number(inv.total_amount), currencySymbol)}</div>
                       <Badge variant={statusVariant(inv.status)}>{inv.status}</Badge>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Running notes</h2>
-        <Card className="mb-3">
-          <CardContent className="pt-5">
-            <form action={addStudentNote.bind(null, id)}>
-              <textarea
-                name="content"
-                rows={2}
-                required
-                placeholder="Add a note about this student..."
-                className="w-full rounded-md border border-input bg-transparent px-3 py-1.5 text-sm mb-2"
-              />
-              <div className="flex justify-end">
-                <Button type="submit" size="sm">Add note</Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-        {notes.length === 0 ? (
-          <EmptyState title="No notes yet" />
-        ) : (
-          <div className="space-y-2">
-            {notes.map((n) => (
-              <Card key={n.id} className="py-2">
-                <CardContent className="py-0 flex justify-between items-start gap-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Running notes</CardTitle>
+          <CardDescription>Session-by-session observations about this student</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={addStudentNote.bind(null, id)} className="mb-4">
+            <Textarea
+              name="content"
+              rows={2}
+              required
+              placeholder="Add a note about this student..."
+              className="mb-2"
+            />
+            <div className="flex justify-end">
+              <Button type="submit" size="sm">Add note</Button>
+            </div>
+          </form>
+          {notes.length === 0 ? (
+            <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-lg">
+              No notes yet
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notes.map((n) => (
+                <div key={n.id} className="flex items-start justify-between gap-2 rounded-lg border p-3">
                   <div>
                     <div className="text-sm whitespace-pre-wrap">{n.content}</div>
                     <div className="text-xs text-muted-foreground mt-1">
@@ -247,12 +291,12 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                       <Trash2 size={14} />
                     </Button>
                   </form>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }

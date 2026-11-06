@@ -4,9 +4,18 @@ import { Trash2 } from "lucide-react";
 import { queryOne, queryAll, getSetting } from "@/lib/db";
 import { setInvoiceStatus, deleteInvoice } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { currency, fmtDate } from "@/lib/format";
 import type { Invoice, InvoiceItem, Student, InvoiceStatus } from "@/lib/types";
 import PrintButton from "./PrintButton";
@@ -76,22 +85,30 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-6 no-print">
-        {STATUSES.map((s) => (
-          <form key={s} action={setInvoiceStatus.bind(null, id, s)}>
-            <Button
-              type="submit"
-              variant={inv.status === s ? "default" : "secondary"}
-              className="w-full justify-center"
-            >
-              {s}
-            </Button>
-          </form>
-        ))}
-      </div>
+      <Card className="mb-6 no-print">
+        <CardHeader>
+          <CardTitle>Status</CardTitle>
+          <CardDescription>Update the invoice status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {STATUSES.map((s) => (
+              <form key={s} action={setInvoiceStatus.bind(null, id, s)}>
+                <Button
+                  type="submit"
+                  variant={inv.status === s ? "default" : "secondary"}
+                  className="capitalize"
+                >
+                  {s}
+                </Button>
+              </form>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
-        <CardContent className="pt-5">
+        <CardContent className="pt-6">
           <div className="flex justify-between items-start mb-6">
             <div>
               <div className="text-lg font-heading font-semibold">{businessName}</div>
@@ -100,7 +117,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
               )}
             </div>
             <div className="text-right">
-              <div className="text-2xl font-heading font-bold">INVOICE</div>
+              <div className="text-2xl font-heading font-bold tracking-tight">INVOICE</div>
               <div className="text-sm text-foreground/80 mt-1">{inv.invoice_number}</div>
               <div className="text-xs text-muted-foreground">Issued {fmtDate(inv.issued_at)}</div>
               <div className="mt-2">
@@ -124,64 +141,70 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
             )}
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 font-medium text-muted-foreground">Description</th>
-                <th className="text-right py-2 font-medium text-muted-foreground">Hours</th>
-                <th className="text-right py-2 font-medium text-muted-foreground">Rate</th>
-                <th className="text-right py-2 font-medium text-muted-foreground">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Hours</TableHead>
+                <TableHead className="text-right">Rate</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {items.map((it) => {
                 const isCancelled = it.description.startsWith("[CANCELLED]");
                 return (
-                  <tr key={it.id} className={`border-b border-border/50 ${isCancelled ? "text-muted-foreground line-through" : ""}`}>
-                    <td className="py-2">{it.description}</td>
-                    <td className="text-right py-2">{Number(it.quantity).toFixed(2)}</td>
-                    <td className="text-right py-2">{Number(it.unit_amount).toFixed(2)}</td>
-                    <td className="text-right py-2">{Number(it.amount).toFixed(2)}</td>
-                  </tr>
+                  <TableRow key={it.id} className={isCancelled ? "text-muted-foreground line-through" : ""}>
+                    <TableCell>{it.description}</TableCell>
+                    <TableCell className="text-right">{Number(it.quantity).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{Number(it.unit_amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{Number(it.amount).toFixed(2)}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={3} className="text-right py-3 font-semibold">
-                  Total
-                </td>
-                <td className="text-right py-3 font-semibold text-lg">
-                  {currency(Number(inv.total_amount), currencySymbol)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+            </TableBody>
+          </Table>
+
+          <div className="flex justify-end border-t pt-3 mt-1">
+            <div className="text-right">
+              <span className="text-sm font-medium text-muted-foreground mr-4">Total</span>
+              <span className="text-lg font-semibold">{currency(Number(inv.total_amount), currencySymbol)}</span>
+            </div>
+          </div>
 
           {inv.notes && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Notes</div>
-              <div className="text-sm whitespace-pre-wrap">{inv.notes}</div>
-            </div>
+            <>
+              <Separator className="my-6" />
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Notes</div>
+                <div className="text-sm whitespace-pre-wrap">{inv.notes}</div>
+              </div>
+            </>
           )}
 
           {paymentInstructions && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-                Payment instructions
+            <>
+              <Separator className="my-6" />
+              <div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  Payment instructions
+                </div>
+                <div className="text-sm whitespace-pre-wrap">{paymentInstructions}</div>
               </div>
-              <div className="text-sm whitespace-pre-wrap">{paymentInstructions}</div>
-            </div>
+            </>
           )}
 
           {duitnowQr && (
-            <div className="mt-6 pt-6 border-t border-border text-center">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
-                Pay via DuitNow
+            <>
+              <Separator className="my-6" />
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                  Pay via DuitNow
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={duitnowQr} alt="DuitNow QR" className="max-w-48 mx-auto" />
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={duitnowQr} alt="DuitNow QR" className="max-w-48 mx-auto" />
-            </div>
+            </>
           )}
 
           {inv.paid_at && (

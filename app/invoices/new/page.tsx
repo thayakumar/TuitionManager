@@ -3,7 +3,7 @@ import { queryAll } from "@/lib/db";
 import { generateInvoice } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
@@ -33,13 +33,16 @@ export default async function NewInvoicePage({
 
   return (
     <>
-      <PageHeader
-        title="Generate invoice"
-        subtitle="Pulls all completed, un-invoiced classes in the selected period"
-      />
+      <PageHeader title="Generate invoice" />
       <form action={generateInvoice} className="max-w-xl">
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>New invoice</CardTitle>
+            <CardDescription>
+              Pulls all completed and cancelled classes in the selected period
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <SelectField
                 label="Student *"

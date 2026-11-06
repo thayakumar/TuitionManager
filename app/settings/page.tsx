@@ -2,7 +2,7 @@ import { Trash2 } from "lucide-react";
 import { getSetting, queryAll } from "@/lib/db";
 import { saveSettings, addHoliday, deleteHoliday, saveDuitNowQR, removeDuitNowQR } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { NotificationToggle } from "@/components/notification-toggle";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
@@ -23,44 +23,51 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="Business details shown on invoices" />
+      <PageHeader title="Settings" subtitle="Configure your tutoring business" />
 
-      {/* Business Settings */}
-      <form action={saveSettings} className="max-w-xl mb-8">
-        <Card>
-          <CardContent className="pt-5">
-            <div className="grid grid-cols-1 gap-4">
-              <Field label="Business / your name" name="business_name" defaultValue={businessName} />
-              <TextAreaField
-                label="Contact details (address, phone, email)"
-                name="business_contact"
-                rows={3}
-                defaultValue={businessContact}
-              />
-              <Field
-                label="Currency symbol"
-                name="currency"
-                defaultValue={currencyVal || "RM"}
-              />
-              <TextAreaField
-                label="Payment instructions (shown on invoice)"
-                name="payment_instructions"
-                rows={3}
-                defaultValue={paymentInstructions}
-              />
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button type="submit">Save settings</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+      <div className="max-w-xl space-y-8">
+        {/* Business Settings */}
+        <form action={saveSettings}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Business details</CardTitle>
+              <CardDescription>Shown on invoices and shared pages</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4">
+                <Field label="Business / your name" name="business_name" defaultValue={businessName} />
+                <TextAreaField
+                  label="Contact details (address, phone, email)"
+                  name="business_contact"
+                  rows={3}
+                  defaultValue={businessContact}
+                />
+                <Field
+                  label="Currency symbol"
+                  name="currency"
+                  defaultValue={currencyVal || "RM"}
+                />
+                <TextAreaField
+                  label="Payment instructions (shown on invoice)"
+                  name="payment_instructions"
+                  rows={3}
+                  defaultValue={paymentInstructions}
+                />
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button type="submit">Save settings</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
 
-      {/* Holidays */}
-      <div className="max-w-xl mb-8">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Holidays</h2>
+        {/* Holidays */}
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>Holidays</CardTitle>
+            <CardDescription>Classes on these dates are auto-skipped in recurring schedules</CardDescription>
+          </CardHeader>
+          <CardContent>
             <form action={addHoliday} className="flex gap-2 items-end mb-4">
               <div className="flex-1">
                 <Field label="Holiday name" name="name" required placeholder="e.g. Hari Raya" />
@@ -93,15 +100,17 @@ export default async function SettingsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* DuitNow QR */}
-      <div className="max-w-xl">
-        <h2 className="text-sm font-semibold text-foreground mb-3">DuitNow QR</h2>
+        {/* DuitNow QR */}
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>DuitNow QR</CardTitle>
+            <CardDescription>This QR code will appear on printed invoices for easy payment</CardDescription>
+          </CardHeader>
+          <CardContent>
             {duitnowQr ? (
               <div className="space-y-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={duitnowQr}
                   alt="DuitNow QR"
@@ -130,18 +139,16 @@ export default async function SettingsPage() {
                 <Button type="submit">Upload QR</Button>
               </form>
             )}
-            <p className="text-xs text-muted-foreground mt-3">
-              This QR code will appear on printed invoices for easy payment.
-            </p>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Notifications */}
-      <div className="max-w-xl mt-8">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Notifications</h2>
+        {/* Notifications */}
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>Browser-based class reminders</CardDescription>
+          </CardHeader>
+          <CardContent>
             <NotificationToggle />
           </CardContent>
         </Card>

@@ -3,7 +3,7 @@ import { queryAll } from "@/lib/db";
 import { createClass } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
@@ -42,7 +42,11 @@ export default async function NewClassPage({
       <PageHeader title="Schedule a class" />
       <form action={createClass} className="max-w-xl">
         <Card>
-          <CardContent className="pt-5">
+          <CardHeader>
+            <CardTitle>New class</CardTitle>
+            <CardDescription>Schedule a class session for a student</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <SelectField
                 label="Student *"
@@ -67,8 +71,12 @@ export default async function NewClassPage({
                 <Field label="Subject" name="subject" placeholder="e.g. Algebra" />
               </div>
               <Field label="Location" name="location" placeholder="e.g. Zoom / Home" />
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <input type="checkbox" name="is_trial" />
+              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_trial"
+                  className="size-4 rounded border-input accent-primary"
+                />
                 Trial class (invoiced at RM 0.00)
               </label>
             </div>

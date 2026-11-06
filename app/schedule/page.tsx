@@ -2,64 +2,45 @@ import Link from "next/link";
 import { CalendarPlus, Repeat } from "lucide-react";
 import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { fmtDateTime, fmtDate } from "@/lib/format";
-import type { ClassWithStudent } from "@/lib/types";
-import { startOfDay, endOfDay, addDays, format } from "date-fns";
+import { ScheduleCalendar } from "@/components/schedule-calendar";
 import { ExportButton } from "@/components/export-button";
 import { exportClassesCsv } from "@/lib/export";
+import type { ClassWithStudent } from "@/lib/types";
+import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
-function statusVariant(status: string) {
-  switch (status) {
-    case "completed":
-      return "default" as const;
-    case "canceled":
-      return "destructive" as const;
-    default:
-      return "secondary" as const;
-  }
-}
-
 export default async function SchedulePage() {
   const now = new Date();
-  const startISO = startOfDay(now).toISOString();
-  const endISO = endOfDay(addDays(now, 30)).toISOString();
+  const startISO = startOfMonth(subMonths(now, 1)).toISOString();
+  const endISO = endOfMonth(addMonths(now, 2)).toISOString();
 
-  const [upcoming, past] = await Promise.all([
-    queryAll<ClassWithStudent>(
-      `SELECT c.*, s.name AS student_name, s.hourly_rate
-       FROM classes c JOIN students s ON s.id = c.student_id
-       WHERE c.scheduled_at BETWEEN ? AND ?
-       ORDER BY c.scheduled_at`,
-      [startISO, endISO]
-    ),
-    queryAll<ClassWithStudent>(
-      `SELECT c.*, s.name AS student_name, s.hourly_rate
-       FROM classes c JOIN students s ON s.id = c.student_id
-       WHERE c.scheduled_at < ?
-       ORDER BY c.scheduled_at DESC
-       LIMIT 20`,
-      [startISO]
-    ),
-  ]);
+  const classes = await queryAll<ClassWithStudent>(
+    `SELECT c.*, s.name AS student_name, s.hourly_rate
+     FROM classes c JOIN students s ON s.id = c.student_id
+     WHERE c.scheduled_at BETWEEN ? AND ?
+     ORDER BY c.scheduled_at`,
+    [startISO, endISO]
+  );
 
-  const grouped = new Map<string, ClassWithStudent[]>();
-  for (const c of upcoming) {
-    const day = format(new Date(c.scheduled_at), "yyyy-MM-dd");
-    if (!grouped.has(day)) grouped.set(day, []);
-    grouped.get(day)!.push(c);
-  }
+  const calendarData = classes.map((c) => ({
+    id: c.id,
+    student_name: c.student_name,
+    scheduled_at: c.scheduled_at,
+    duration_minutes: c.duration_minutes,
+    subject: c.subject,
+    location: c.location,
+    status: c.status,
+    attendance: c.attendance,
+    is_trial: c.is_trial,
+  }));
 
   return (
     <>
       <PageHeader
         title="Schedule"
-        subtitle="Next 30 days"
+        subtitle="Calendar view"
         action={
           <div className="flex gap-2">
             <ExportButton getData={exportClassesCsv} filename="classes.csv" />
@@ -77,74 +58,7 @@ export default async function SchedulePage() {
         }
       />
 
-      {upcoming.length === 0 ? (
-        <EmptyState
-          title="No upcoming classes"
-          description="Schedule your next class to see it here."
-          action={
-            <Link href="/schedule/new">
-              <Button>
-                <CalendarPlus size={16} /> Schedule class
-              </Button>
-            </Link>
-          }
-        />
-      ) : (
-        <div className="space-y-6">
-          {Array.from(grouped.entries()).map(([day, items]) => (
-            <div key={day}>
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                {fmtDate(day + "T00:00:00")}
-              </div>
-              <div className="space-y-2">
-                {items.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}`}>
-                    <Card className={`hover:border-primary py-3 mb-2 cursor-pointer transition ${c.status === "canceled" ? "opacity-60" : ""}`}>
-                      <CardContent className="py-0 flex justify-between items-center">
-                        <div className={c.status === "canceled" ? "line-through" : ""}>
-                          <div className="text-sm font-medium">
-                            {format(new Date(c.scheduled_at), "h:mm a")} · {c.student_name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {c.duration_minutes} min · {c.subject || "Lesson"}
-                            {c.location && ` · ${c.location}`}
-                          </div>
-                        </div>
-                        <Badge variant={statusVariant(c.status)}>{c.status}</Badge>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {past.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Recent past</h2>
-          <div className="space-y-2">
-            {past.map((c) => (
-              <Link key={c.id} href={`/classes/${c.id}`}>
-                <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                  <CardContent className="py-0 flex justify-between items-center">
-                    <div>
-                      <div className="text-sm font-medium">
-                        {fmtDateTime(c.scheduled_at)} · {c.student_name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {c.attendance || "no attendance"} · {c.duration_minutes} min
-                      </div>
-                    </div>
-                    <Badge variant={statusVariant(c.status)}>{c.status}</Badge>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      <ScheduleCalendar classes={calendarData} />
     </>
   );
 }

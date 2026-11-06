@@ -1,11 +1,19 @@
 import Link from "next/link";
-import { Receipt } from "lucide-react";
+import { Receipt, DollarSign, TrendingUp, FileText } from "lucide-react";
 import { queryAll, getSetting } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { currency, fmtDate } from "@/lib/format";
 import type { Invoice } from "@/lib/types";
 import { ExportButton } from "@/components/export-button";
@@ -70,21 +78,45 @@ export default async function InvoicesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground">Outstanding</div>
-            <div className="text-2xl font-heading font-semibold mt-1">{currency(outstanding, currencySymbol)}</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardDescription>Outstanding</CardDescription>
+            <DollarSign className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-heading font-semibold">
+              {currency(outstanding, currencySymbol)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Unpaid invoices
+            </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground">Paid this month</div>
-            <div className="text-2xl font-heading font-semibold mt-1">{currency(paidThisMonth, currencySymbol)}</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardDescription>Paid This Month</CardDescription>
+            <TrendingUp className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-heading font-semibold">
+              {currency(paidThisMonth, currencySymbol)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Collected revenue
+            </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <div className="text-xs text-muted-foreground">Total invoices</div>
-            <div className="text-2xl font-heading font-semibold mt-1">{invoices.length}</div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardDescription>Total Invoices</CardDescription>
+            <FileText className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-heading font-semibold">
+              {invoices.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              All time
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -102,28 +134,53 @@ export default async function InvoicesPage() {
           }
         />
       ) : (
-        <div className="space-y-2">
-          {invoices.map((inv) => (
-            <Link key={inv.id} href={`/invoices/${inv.id}`}>
-              <Card className="hover:border-primary py-3 mb-2 cursor-pointer transition">
-                <CardContent className="py-0 flex justify-between items-center">
-                  <div>
-                    <div className="text-sm font-medium">
-                      {inv.invoice_number} · {inv.student_name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Invoices</CardTitle>
+            <CardDescription>
+              A list of all invoices including status and amount.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map((inv) => (
+                  <TableRow key={inv.id} className="cursor-pointer">
+                    <TableCell>
+                      <Link
+                        href={`/invoices/${inv.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {inv.invoice_number}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{inv.student_name}</TableCell>
+                    <TableCell className="text-muted-foreground">
                       {fmtDate(inv.period_start)} — {fmtDate(inv.period_end)}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{currency(Number(inv.total_amount), currencySymbol)}</div>
-                    <Badge variant={statusVariant(inv.status)}>{inv.status}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {currency(Number(inv.total_amount), currencySymbol)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={statusVariant(inv.status)}>
+                        {inv.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </>
   );
