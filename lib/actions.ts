@@ -44,7 +44,7 @@ export async function loginAdmin(
 
 export async function logoutAdmin() {
   await destroyAdminSession();
-  redirect("/login");
+  redirect("/portal/admin");
 }
 
 // ---------- Student Portal Login ----------
@@ -69,7 +69,7 @@ export async function loginStudent(
 
 export async function logoutStudent() {
   await destroyStudentSession();
-  redirect("/portal");
+  redirect("/portal/student");
 }
 
 // ---------- Students ----------

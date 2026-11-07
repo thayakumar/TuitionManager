@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   BookOpen, ClipboardList, Megaphone, HelpCircle,
-  Calendar, ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fmtShortDate, fmtDateTime } from "@/lib/format";
-import { ClassroomActions, EditPostButton, DeletePostButton } from "@/components/classroom-post-dialog";
+import { fmtShortDate } from "@/lib/format";
+import { ClassroomActions } from "@/components/classroom-post-dialog";
 import { CreateTopicButton, TopicActions } from "@/components/classroom/topic-manager";
 import type { Post, PostType, Topic } from "@/lib/types";
 
@@ -50,34 +50,35 @@ export function ClassroomTabs({
   const submissionMap = new Map(submissions.map((s) => [s.post_id, s]));
   const basePath = isAdmin ? `/classroom/${studentId}` : `/portal/student/${studentId}/classroom`;
 
+  if (!isAdmin) {
+    return (
+      <ClassworkTab
+        posts={posts}
+        topics={topics}
+        studentId={studentId}
+        basePath={basePath}
+        isAdmin={false}
+        submissionMap={submissionMap}
+      />
+    );
+  }
+
   return (
-    <Tabs defaultValue="stream">
+    <Tabs defaultValue="classwork">
       <TabsList className="bg-transparent border-b border-border rounded-none h-auto p-0 w-full justify-start gap-0">
-        <TabsTrigger
-          value="stream"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium text-muted-foreground"
-        >
-          Stream
-        </TabsTrigger>
         <TabsTrigger
           value="classwork"
           className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium text-muted-foreground"
         >
           Classwork
         </TabsTrigger>
-        {isAdmin && (
-          <TabsTrigger
-            value="grades"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium text-muted-foreground"
-          >
-            Grades
-          </TabsTrigger>
-        )}
+        <TabsTrigger
+          value="grades"
+          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium text-muted-foreground"
+        >
+          Grades
+        </TabsTrigger>
       </TabsList>
-
-      <TabsContent value="stream" className="mt-4">
-        <StreamTab posts={posts} studentId={studentId} basePath={basePath} isAdmin={isAdmin} />
-      </TabsContent>
 
       <TabsContent value="classwork" className="mt-4">
         <ClassworkTab
@@ -85,98 +86,15 @@ export function ClassroomTabs({
           topics={topics}
           studentId={studentId}
           basePath={basePath}
-          isAdmin={isAdmin}
+          isAdmin
           submissionMap={submissionMap}
         />
       </TabsContent>
 
-      {isAdmin && (
-        <TabsContent value="grades" className="mt-4">
-          <GradesTab posts={posts} submissionMap={submissionMap} studentId={studentId} basePath={basePath} />
-        </TabsContent>
-      )}
+      <TabsContent value="grades" className="mt-4">
+        <GradesTab posts={posts} submissionMap={submissionMap} studentId={studentId} basePath={basePath} />
+      </TabsContent>
     </Tabs>
-  );
-}
-
-function StreamTab({
-  posts,
-  studentId,
-  basePath,
-  isAdmin,
-}: {
-  posts: Post[];
-  studentId: number;
-  basePath: string;
-  isAdmin: boolean;
-}) {
-  if (posts.length === 0) {
-    return (
-      <Card className="shadow-sm border-0">
-        <CardContent className="py-16 text-center">
-          <BookOpen size={40} className="mx-auto mb-3 text-muted-foreground/40" />
-          <p className="text-base font-medium text-foreground">No materials yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Post materials, assignments, and announcements for this student.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {posts.map((post) => {
-        const config = POST_TYPE_CONFIG[post.type] || POST_TYPE_CONFIG.material;
-        const Icon = config.icon;
-
-        return (
-          <Link key={post.id} href={`${basePath}/post/${post.id}`} className="block">
-            <Card className={`shadow-sm border-0 border-l-4 ${config.color} hover:shadow-md transition-shadow cursor-pointer`}>
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3">
-                  <div className={`flex size-10 items-center justify-center rounded-xl ${config.bg} shrink-0`}>
-                    <Icon size={20} className={config.textColor} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className={`text-[10px] ${config.textColor}`}>
-                          {config.label}
-                        </Badge>
-                        <span className="text-[11px] text-muted-foreground">
-                          {fmtDateTime(post.created_at)}
-                        </span>
-                      </div>
-                      {isAdmin && (
-                        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.preventDefault()}>
-                          <EditPostButton post={post} studentId={studentId} />
-                          <DeletePostButton postId={post.id} studentId={studentId} />
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground mt-1.5">
-                      {post.title}
-                    </h3>
-                    {post.body && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-3 whitespace-pre-line">
-                        {post.body}
-                      </p>
-                    )}
-                    {post.due_at && (
-                      <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
-                        <Calendar size={12} />
-                        Due: {fmtShortDate(post.due_at)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        );
-      })}
-    </div>
   );
 }
 

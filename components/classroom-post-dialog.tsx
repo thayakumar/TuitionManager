@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, Megaphone, Plus, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, ClipboardList, Megaphone, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -12,7 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, TextAreaField } from "@/components/form-field";
-import { createPostAction, updatePost, deletePostAction } from "@/lib/actions";
+import { createPostAction, updatePost, deletePostAction, createTopic } from "@/lib/actions";
 import type { Post, PostType, Topic } from "@/lib/types";
 
 const POST_TYPES = [
@@ -135,21 +135,11 @@ function PostDialog({
               defaultValue={editPost?.body || ""}
             />
 
-            {topics.length > 0 && (
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Topic</label>
-                <select
-                  name="topic_id"
-                  defaultValue={editPost?.topic_id?.toString() || ""}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">No topic</option>
-                  {topics.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <TopicSelector
+              topics={topics}
+              studentId={studentId}
+              defaultValue={editPost?.topic_id?.toString() || ""}
+            />
 
             {postType === "assignment" && (
               <>
@@ -239,5 +229,90 @@ export function DeletePostButton({ postId, studentId }: { postId: number; studen
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function TopicSelector({
+  topics,
+  studentId,
+  defaultValue,
+}: {
+  topics: Topic[];
+  studentId: number;
+  defaultValue: string;
+}) {
+  const router = useRouter();
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [selected, setSelected] = useState(defaultValue);
+  const [localTopics, setLocalTopics] = useState(topics);
+  const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleCreate() {
+    if (!newName.trim()) return;
+    startTransition(async () => {
+      await createTopic(studentId, newName.trim());
+      setNewName("");
+      setShowNew(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium text-foreground">Topic</label>
+      <div className="flex items-center gap-2">
+        <select
+          name="topic_id"
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="">No topic</option>
+          {localTopics.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+        {!showNew && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0 gap-1 text-xs h-9"
+            onClick={() => {
+              setShowNew(true);
+              setTimeout(() => inputRef.current?.focus(), 50);
+            }}
+          >
+            <Plus size={12} />
+            New
+          </Button>
+        )}
+      </div>
+      {showNew && (
+        <div className="flex items-center gap-2 mt-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); handleCreate(); }
+              if (e.key === "Escape") { setShowNew(false); setNewName(""); }
+            }}
+            placeholder="New topic name"
+            className="flex h-8 flex-1 rounded-md border border-input bg-transparent px-2.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            disabled={isPending}
+          />
+          <Button type="button" size="icon" variant="ghost" className="size-7" onClick={handleCreate} disabled={isPending || !newName.trim()}>
+            <Check size={14} />
+          </Button>
+          <Button type="button" size="icon" variant="ghost" className="size-7" onClick={() => { setShowNew(false); setNewName(""); }}>
+            <X size={14} />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
