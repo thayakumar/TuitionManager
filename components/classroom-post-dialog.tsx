@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BookOpen, ClipboardList, Megaphone, Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +12,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, TextAreaField } from "@/components/form-field";
-import { createPost, updatePost, deletePost } from "@/lib/actions";
-import type { Post, PostType } from "@/lib/types";
+import { createPostAction, updatePost, deletePostAction } from "@/lib/actions";
+import type { Post, PostType, Topic } from "@/lib/types";
 
 const POST_TYPES = [
   { value: "material" as PostType, label: "Post Material", icon: BookOpen, color: "text-blue-600" },
@@ -20,7 +21,7 @@ const POST_TYPES = [
   { value: "announcement" as PostType, label: "Post Announcement", icon: Megaphone, color: "text-emerald-600" },
 ];
 
-export function ClassroomActions({ studentId }: { studentId: number }) {
+export function ClassroomActions({ studentId, topics = [] }: { studentId: number; topics?: Topic[] }) {
   const [open, setOpen] = useState(false);
   const [postType, setPostType] = useState<PostType>("material");
 
@@ -53,30 +54,42 @@ export function ClassroomActions({ studentId }: { studentId: number }) {
         onOpenChange={setOpen}
         postType={postType}
         studentId={studentId}
+        topics={topics}
       />
     </>
   );
 }
 
 function PostDialog({
-  open, onOpenChange, postType, studentId, editPost,
+  open, onOpenChange, postType, studentId, editPost, topics = [],
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   postType: PostType;
   studentId: number;
   editPost?: Post;
+  topics?: Topic[];
 }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const config = POST_TYPES.find((p) => p.value === postType) || POST_TYPES[0];
   const isEdit = !!editPost;
 
-  async function handleSubmit(formData: FormData) {
-    if (isEdit) {
-      await updatePost(formData);
-    } else {
-      await createPost(formData);
-    }
-    onOpenChange(false);
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      if (isEdit) {
+        await updatePost(formData);
+      } else {
+        const title = String(formData.get("title") || "").trim();
+        const body = String(formData.get("body") || "").trim();
+        const dueAt = String(formData.get("due_at") || "") || null;
+        const topicId = formData.get("topic_id") ? Number(formData.get("topic_id")) : null;
+        const maxPoints = formData.get("max_points") ? Number(formData.get("max_points")) : null;
+        await createPostAction(studentId, postType, title, body, dueAt, topicId, maxPoints);
+      }
+      onOpenChange(false);
+      router.refresh();
+    });
   }
 
   return (
@@ -98,8 +111,8 @@ function PostDialog({
 
         <form action={handleSubmit}>
           {isEdit && <input type="hidden" name="id" value={editPost.id} />}
-          <input type="hidden" name="type" value={postType} />
-          <input type="hidden" name="student_id" value={studentId} />
+          {isEdit && <input type="hidden" name="type" value={postType} />}
+          {isEdit && <input type="hidden" name="student_id" value={studentId} />}
 
           <div className="space-y-4 py-2">
             <Field
@@ -122,13 +135,38 @@ function PostDialog({
               defaultValue={editPost?.body || ""}
             />
 
+            {topics.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Topic</label>
+                <select
+                  name="topic_id"
+                  defaultValue={editPost?.topic_id?.toString() || ""}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">No topic</option>
+                  {topics.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {postType === "assignment" && (
-              <Field
-                label="Due Date"
-                name="due_at"
-                type="datetime-local"
-                defaultValue={editPost?.due_at?.slice(0, 16) || ""}
-              />
+              <>
+                <Field
+                  label="Points"
+                  name="max_points"
+                  type="number"
+                  placeholder="e.g., 100"
+                  defaultValue={editPost?.max_points?.toString() || ""}
+                />
+                <Field
+                  label="Due Date"
+                  name="due_at"
+                  type="datetime-local"
+                  defaultValue={editPost?.due_at?.slice(0, 16) || ""}
+                />
+              </>
             )}
           </div>
 
@@ -136,8 +174,8 @@ function PostDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              {isEdit ? "Save Changes" : "Post"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Posting..." : isEdit ? "Save Changes" : "Post"}
             </Button>
           </DialogFooter>
         </form>
@@ -146,7 +184,7 @@ function PostDialog({
   );
 }
 
-export function EditPostButton({ post, studentId }: { post: Post; studentId: number }) {
+export function EditPostButton({ post, studentId, topics = [] }: { post: Post; studentId: number; topics?: Topic[] }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -160,17 +198,23 @@ export function EditPostButton({ post, studentId }: { post: Post; studentId: num
         postType={post.type}
         studentId={studentId}
         editPost={post}
+        topics={topics}
       />
     </>
   );
 }
 
 export function DeletePostButton({ postId, studentId }: { postId: number; studentId: number }) {
+  const router = useRouter();
   const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleDelete() {
-    await deletePost(postId, studentId);
-    setConfirming(false);
+  function handleDelete() {
+    startTransition(async () => {
+      await deletePostAction(postId, studentId);
+      setConfirming(false);
+      router.refresh();
+    });
   }
 
   return (
@@ -188,7 +232,9 @@ export function DeletePostButton({ postId, studentId }: { postId: number; studen
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirming(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+              {isPending ? "Deleting..." : "Delete"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

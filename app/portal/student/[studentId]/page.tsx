@@ -32,11 +32,17 @@ export default async function StudentDashboardPage({
 
   const [upcoming, recentCompleted, stats] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at LIMIT 5",
+      `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
+              status, attendance, recurrence_id, is_trial, cancel_reason,
+              rescheduled_from, meeting_room, created_at
+       FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at LIMIT 5`,
       [id, nowISO]
     ),
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'completed' ORDER BY scheduled_at DESC LIMIT 3",
+      `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
+              status, attendance, recurrence_id, is_trial, cancel_reason,
+              rescheduled_from, meeting_room, created_at
+       FROM classes WHERE student_id = ? AND status = 'completed' ORDER BY scheduled_at DESC LIMIT 3`,
       [id]
     ),
     queryOne<{

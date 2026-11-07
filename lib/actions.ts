@@ -909,12 +909,14 @@ export async function createPostAction(
   type: string,
   title: string,
   body: string,
-  dueAt: string | null
+  dueAt: string | null,
+  topicId: number | null = null,
+  maxPoints: number | null = null
 ): Promise<{ success: boolean; error?: string }> {
   if (!title.trim()) return { success: false, error: "Title is required" };
   await execute(
-    `INSERT INTO posts(type, title, body, student_id, due_at) VALUES (?, ?, ?, ?, ?)`,
-    [type, title.trim(), body.trim() || null, studentId, dueAt ? new Date(dueAt).toISOString() : null]
+    `INSERT INTO posts(type, title, body, student_id, due_at, topic_id, max_points) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [type, title.trim(), body.trim() || null, studentId, dueAt ? new Date(dueAt).toISOString() : null, topicId, maxPoints]
   );
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
@@ -940,10 +942,12 @@ export async function updatePost(formData: FormData) {
 
   const body = String(formData.get("body") || "") || null;
   const due_at = String(formData.get("due_at") || "") || null;
+  const topic_id = formData.get("topic_id") ? Number(formData.get("topic_id")) : null;
+  const max_points = formData.get("max_points") ? Number(formData.get("max_points")) : null;
 
   await execute(
-    "UPDATE posts SET title = ?, body = ?, due_at = ? WHERE id = ?",
-    [title, body, due_at ? new Date(due_at).toISOString() : null, id]
+    "UPDATE posts SET title = ?, body = ?, due_at = ?, topic_id = ?, max_points = ?, updated_at = datetime('now') WHERE id = ?",
+    [title, body, due_at ? new Date(due_at).toISOString() : null, topic_id, max_points, id]
   );
 
   const post = await queryOne<{ student_id: number | null }>("SELECT student_id FROM posts WHERE id = ?", [id]);
@@ -1012,6 +1016,76 @@ export async function submitQuizAnswers(formData: FormData) {
   }
 
   revalidatePath("/portal");
+}
+
+// ---------- Topics ----------
+
+export async function createTopic(studentId: number, name: string): Promise<{ success: boolean; id?: number }> {
+  if (!name.trim()) return { success: false };
+  const maxOrder = await queryOne<{ m: number }>("SELECT COALESCE(MAX(sort_order), -1) as m FROM topics WHERE student_id = ?", [studentId]);
+  const result = await execute(
+    "INSERT INTO topics(student_id, name, sort_order) VALUES (?, ?, ?)",
+    [studentId, name.trim(), (maxOrder?.m ?? -1) + 1]
+  );
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  return { success: true, id: Number(result.lastInsertRowid) };
+}
+
+export async function renameTopic(topicId: number, name: string, studentId: number): Promise<{ success: boolean }> {
+  if (!name.trim()) return { success: false };
+  await execute("UPDATE topics SET name = ? WHERE id = ?", [name.trim(), topicId]);
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  return { success: true };
+}
+
+export async function deleteTopic(topicId: number, studentId: number): Promise<{ success: boolean }> {
+  await execute("DELETE FROM topics WHERE id = ?", [topicId]);
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  return { success: true };
+}
+
+// ---------- Grading ----------
+
+export async function gradeSubmissionAction(
+  submissionId: number,
+  grade: string,
+  feedback: string,
+  studentId: number
+): Promise<{ success: boolean }> {
+  await execute(
+    "UPDATE submissions SET grade = ?, feedback = ?, graded_at = datetime('now') WHERE id = ?",
+    [grade, feedback || null, submissionId]
+  );
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  revalidatePath(`/portal/student/${studentId}/classroom`);
+  return { success: true };
+}
+
+// ---------- Post Attachments ----------
+
+export async function addPostAttachment(
+  postId: number,
+  fileName: string,
+  fileUrl: string,
+  fileType: string | null,
+  studentId: number
+): Promise<{ success: boolean }> {
+  await execute(
+    "INSERT INTO post_attachments(post_id, file_name, file_url, file_type) VALUES (?, ?, ?, ?)",
+    [postId, fileName, fileUrl, fileType]
+  );
+  revalidatePath(`/classroom/${studentId}`);
+  return { success: true };
+}
+
+export async function deletePostAttachment(attachmentId: number, studentId: number): Promise<{ success: boolean }> {
+  await execute("DELETE FROM post_attachments WHERE id = ?", [attachmentId]);
+  revalidatePath(`/classroom/${studentId}`);
+  return { success: true };
 }
 
 // ---------- Meeting Notes ----------

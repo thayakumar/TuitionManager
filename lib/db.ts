@@ -194,6 +194,15 @@ export async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS idx_quiz_answers_question ON quiz_answers(question_id);
     CREATE INDEX IF NOT EXISTS idx_quiz_answers_student ON quiz_answers(student_id);
+
+    CREATE TABLE IF NOT EXISTS topics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_topics_student ON topics(student_id);
   `);
 
   const alterColumns = [
@@ -205,6 +214,9 @@ export async function migrate() {
     "ALTER TABLE students ADD COLUMN username TEXT",
     "ALTER TABLE students ADD COLUMN password TEXT",
     "ALTER TABLE classes ADD COLUMN meeting_notes TEXT",
+    "ALTER TABLE posts ADD COLUMN topic_id INTEGER REFERENCES topics(id) ON DELETE SET NULL",
+    "ALTER TABLE posts ADD COLUMN max_points INTEGER",
+    "ALTER TABLE posts ADD COLUMN updated_at TEXT",
   ];
   for (const sql of alterColumns) {
     try {

@@ -67,7 +67,10 @@ export default async function StudentSchedulePage({
   const endISO = addMonths(now, 3).toISOString();
 
   const classes = await queryAll<ClassRow>(
-    `SELECT * FROM classes
+    `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
+            status, attendance, recurrence_id, is_trial, cancel_reason,
+            rescheduled_from, meeting_room, created_at
+     FROM classes
      WHERE student_id = ? AND scheduled_at BETWEEN ? AND ?
      ORDER BY scheduled_at DESC`,
     [id, startISO, endISO]

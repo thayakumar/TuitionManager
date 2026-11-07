@@ -122,6 +122,14 @@ export type ShareToken = {
 
 export type PostType = "material" | "assignment" | "quiz" | "announcement";
 
+export type Topic = {
+  id: number;
+  student_id: number;
+  name: string;
+  sort_order: number;
+  created_at: string;
+};
+
 export type Post = {
   id: number;
   type: PostType;
@@ -129,7 +137,16 @@ export type Post = {
   body: string | null;
   student_id: number | null;
   due_at: string | null;
+  topic_id: number | null;
+  max_points: number | null;
+  updated_at: string | null;
   created_at: string;
+};
+
+export type PostWithMeta = Post & {
+  topic_name: string | null;
+  submission_count: number;
+  graded_count: number;
 };
 
 export type PostAttachment = {

@@ -23,3 +23,7 @@ export function fmtDateInput(iso: string): string {
 export function fmtISODate(iso: string): string {
   return format(parseISO(iso), "yyyy-MM-dd");
 }
+
+export function fmtShortDate(iso: string): string {
+  return format(parseISO(iso), "MMM d");
+}
