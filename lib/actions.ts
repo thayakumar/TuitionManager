@@ -3,17 +3,91 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { queryAll, queryOne, execute, getClient, ensureMigrated } from "./db";
+import { createAdminSession, destroyAdminSession, createStudentSession, destroyStudentSession } from "./auth";
 import type { Attendance, ClassStatus, InvoiceStatus } from "./types";
 
+// ---------- Admin Login ----------
+
+export async function seedAdminCredentials() {
+  const existing = await queryOne<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'admin_username'"
+  );
+  if (!existing) {
+    await execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_username', 'admin')");
+    await execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_password', 'admin123')");
+  }
+}
+
+export async function loginAdmin(
+  formData: FormData
+): Promise<{ success: boolean; error?: string }> {
+  const username = String(formData.get("username") || "").trim();
+  const password = String(formData.get("password") || "").trim();
+  if (!username || !password) return { success: false, error: "Username and password required" };
+
+  await seedAdminCredentials();
+
+  const storedUser = await queryOne<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'admin_username'"
+  );
+  const storedPass = await queryOne<{ value: string }>(
+    "SELECT value FROM settings WHERE key = 'admin_password'"
+  );
+
+  if (storedUser?.value !== username || storedPass?.value !== password) {
+    return { success: false, error: "Invalid username or password" };
+  }
+
+  await createAdminSession();
+  return { success: true };
+}
+
+export async function logoutAdmin() {
+  await destroyAdminSession();
+  redirect("/login");
+}
+
+// ---------- Student Portal Login ----------
+
+export async function loginStudent(
+  formData: FormData
+): Promise<{ success: boolean; studentId?: number; error?: string }> {
+  const username = String(formData.get("username") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "").trim();
+  if (!username || !password) return { success: false, error: "Username and password required" };
+
+  const student = await queryOne<{ id: number }>(
+    "SELECT id FROM students WHERE LOWER(username) = ? AND password = ? AND active = 1",
+    [username, password]
+  );
+
+  if (!student) return { success: false, error: "Invalid username or password" };
+
+  await createStudentSession(student.id);
+  return { success: true, studentId: student.id };
+}
+
+export async function logoutStudent() {
+  await destroyStudentSession();
+  redirect("/portal");
+}
+
 // ---------- Students ----------
+
+function generateCredentials(name: string) {
+  const firstName = name.split(/\s+/)[0].toLowerCase();
+  return { username: firstName, password: `${firstName}123` };
+}
 
 export async function createStudent(formData: FormData) {
   const name = String(formData.get("name") || "").trim();
   if (!name) throw new Error("Name is required");
 
+  const { username, password } = generateCredentials(name);
+
   const result = await execute(
-    `INSERT INTO students(name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+    `INSERT INTO students(name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     [
       name,
       String(formData.get("subject") || "") || null,
@@ -24,11 +98,42 @@ export async function createStudent(formData: FormData) {
       String(formData.get("guardian_contact") || "") || null,
       Number(formData.get("hourly_rate") || 0),
       String(formData.get("notes") || "") || null,
+      username,
+      password,
     ]
   );
 
   revalidatePath("/students");
   redirect(`/students/${result.lastInsertRowid}`);
+}
+
+export async function createStudentQuick(formData: FormData): Promise<number> {
+  const name = String(formData.get("name") || "").trim();
+  if (!name) throw new Error("Name is required");
+
+  const { username, password } = generateCredentials(name);
+
+  const result = await execute(
+    `INSERT INTO students(name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+    [
+      name,
+      String(formData.get("subject") || "") || null,
+      String(formData.get("grade_level") || "") || null,
+      String(formData.get("phone") || "") || null,
+      String(formData.get("email") || "") || null,
+      String(formData.get("guardian_name") || "") || null,
+      String(formData.get("guardian_contact") || "") || null,
+      Number(formData.get("hourly_rate") || 0),
+      String(formData.get("notes") || "") || null,
+      username,
+      password,
+    ]
+  );
+
+  revalidatePath("/students");
+  revalidatePath("/");
+  return Number(result.lastInsertRowid);
 }
 
 export async function updateStudent(id: number, formData: FormData) {
@@ -55,6 +160,29 @@ export async function updateStudent(id: number, formData: FormData) {
   redirect(`/students/${id}`);
 }
 
+export async function updateStudentQuick(id: number, formData: FormData) {
+  await execute(
+    `UPDATE students SET name=?, subject=?, grade_level=?, phone=?, email=?, guardian_name=?, guardian_contact=?, hourly_rate=?, notes=?, active=?
+     WHERE id = ?`,
+    [
+      String(formData.get("name") || "").trim(),
+      String(formData.get("subject") || "") || null,
+      String(formData.get("grade_level") || "") || null,
+      String(formData.get("phone") || "") || null,
+      String(formData.get("email") || "") || null,
+      String(formData.get("guardian_name") || "") || null,
+      String(formData.get("guardian_contact") || "") || null,
+      Number(formData.get("hourly_rate") || 0),
+      String(formData.get("notes") || "") || null,
+      formData.get("active") === "on" ? 1 : 0,
+      id,
+    ]
+  );
+
+  revalidatePath("/students");
+  revalidatePath(`/students/${id}`);
+}
+
 export async function deleteStudent(id: number) {
   await execute("DELETE FROM students WHERE id = ?", [id]);
   revalidatePath("/students");
@@ -63,18 +191,24 @@ export async function deleteStudent(id: number) {
 
 // ---------- Classes ----------
 
+function generateMeetingRoom(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz";
+  const seg = (len: number) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return `tuitionhub-${seg(3)}-${seg(4)}-${seg(3)}`;
+}
+
 export async function createClass(formData: FormData) {
   const student_id = Number(formData.get("student_id"));
   const scheduled_at = String(formData.get("scheduled_at") || "");
   if (!student_id || !scheduled_at) throw new Error("Student and date required");
 
   const iso = new Date(scheduled_at).toISOString();
-
   const is_trial = formData.get("is_trial") === "on" ? 1 : 0;
+  const meeting_room = generateMeetingRoom();
 
   const result = await execute(
-    `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, is_trial)
-     VALUES (?, ?, ?, ?, ?, 'scheduled', ?)`,
+    `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, meeting_room)
+     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
     [
       student_id,
       iso,
@@ -82,12 +216,41 @@ export async function createClass(formData: FormData) {
       String(formData.get("subject") || "") || null,
       String(formData.get("location") || "") || null,
       is_trial,
+      meeting_room,
     ]
   );
 
   revalidatePath("/schedule");
   revalidatePath(`/students/${student_id}`);
   redirect(`/classes/${result.lastInsertRowid}`);
+}
+
+export async function createClassQuick(formData: FormData) {
+  const student_id = Number(formData.get("student_id"));
+  const scheduled_at = String(formData.get("scheduled_at") || "");
+  if (!student_id || !scheduled_at) throw new Error("Student and date required");
+
+  const iso = new Date(scheduled_at).toISOString();
+  const is_trial = formData.get("is_trial") === "on" ? 1 : 0;
+  const meeting_room = generateMeetingRoom();
+
+  await execute(
+    `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, meeting_room)
+     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+    [
+      student_id,
+      iso,
+      Number(formData.get("duration_minutes") || 60),
+      String(formData.get("subject") || "") || null,
+      String(formData.get("location") || "") || null,
+      is_trial,
+      meeting_room,
+    ]
+  );
+
+  revalidatePath("/schedule");
+  revalidatePath("/");
+  revalidatePath(`/students/${student_id}`);
 }
 
 export async function updateClass(id: number, formData: FormData) {
@@ -113,12 +276,18 @@ export async function updateClass(id: number, formData: FormData) {
 }
 
 export async function markAttendance(id: number, attendance: Attendance) {
+  const row = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM classes WHERE id = ?",
+    [id]
+  );
   await execute(
     `UPDATE classes SET attendance = ?, status = CASE WHEN ? = 'absent' THEN 'canceled' ELSE 'completed' END WHERE id = ?`,
     [attendance, attendance, id]
   );
   revalidatePath(`/classes/${id}`);
   revalidatePath("/schedule");
+  if (row) revalidatePath(`/students/${row.student_id}`);
+  revalidatePath("/");
 }
 
 export async function deleteClass(id: number) {
@@ -130,6 +299,31 @@ export async function deleteClass(id: number) {
   revalidatePath("/schedule");
   if (row) revalidatePath(`/students/${row.student_id}`);
   redirect("/schedule");
+}
+
+export async function deleteClassQuick(id: number) {
+  const row = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM classes WHERE id = ?",
+    [id]
+  );
+  await execute("DELETE FROM classes WHERE id = ?", [id]);
+  revalidatePath("/schedule");
+  if (row) revalidatePath(`/students/${row.student_id}`);
+}
+
+export async function cancelClassQuick(id: number) {
+  const row = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM classes WHERE id = ?",
+    [id]
+  );
+  await execute(
+    "UPDATE classes SET status = 'canceled', attendance = 'absent' WHERE id = ?",
+    [id]
+  );
+  revalidatePath(`/classes/${id}`);
+  revalidatePath("/schedule");
+  if (row) revalidatePath(`/students/${row.student_id}`);
+  revalidatePath("/");
 }
 
 // ---------- Reports ----------
@@ -169,6 +363,85 @@ export async function saveReport(class_id: number, formData: FormData) {
   );
 
   revalidatePath(`/classes/${class_id}`);
+}
+
+export async function saveReportQuick(class_id: number, formData: FormData) {
+  const existing = await queryOne<{ id: number }>(
+    "SELECT id FROM reports WHERE class_id = ?",
+    [class_id]
+  );
+
+  const values = [
+    String(formData.get("topics_covered") || "") || null,
+    String(formData.get("homework") || "") || null,
+    String(formData.get("performance") || "") || null,
+    String(formData.get("strengths") || "") || null,
+    String(formData.get("areas_to_improve") || "") || null,
+    String(formData.get("next_focus") || "") || null,
+    formData.get("rating") ? Number(formData.get("rating")) : null,
+  ];
+
+  if (existing) {
+    await execute(
+      `UPDATE reports SET topics_covered=?, homework=?, performance=?, strengths=?, areas_to_improve=?, next_focus=?, rating=?, updated_at=datetime('now') WHERE class_id=?`,
+      [...values, class_id]
+    );
+  } else {
+    await execute(
+      `INSERT INTO reports(class_id, topics_covered, homework, performance, strengths, areas_to_improve, next_focus, rating)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [class_id, ...values]
+    );
+  }
+
+  await execute(
+    "UPDATE classes SET status = 'completed' WHERE id = ? AND status != 'canceled'",
+    [class_id]
+  );
+
+  const cls = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM classes WHERE id = ?",
+    [class_id]
+  );
+  revalidatePath(`/classes/${class_id}`);
+  revalidatePath("/schedule");
+  if (cls) revalidatePath(`/students/${cls.student_id}`);
+  revalidatePath("/");
+}
+
+export async function rescheduleClassQuick(
+  cancelledClassId: number,
+  scheduledAt: string
+) {
+  const cls = await queryOne<{
+    student_id: number;
+    duration_minutes: number;
+    subject: string | null;
+    location: string | null;
+  }>(
+    "SELECT student_id, duration_minutes, subject, location FROM classes WHERE id = ?",
+    [cancelledClassId]
+  );
+  if (!cls) throw new Error("Class not found");
+
+  const iso = new Date(scheduledAt).toISOString();
+  const meeting_room = generateMeetingRoom();
+  await execute(
+    `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, meeting_room, rescheduled_from)
+     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+    [
+      cls.student_id,
+      iso,
+      cls.duration_minutes,
+      cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson",
+      cls.location,
+      meeting_room,
+      cancelledClassId,
+    ]
+  );
+
+  revalidatePath("/schedule");
+  revalidatePath(`/students/${cls.student_id}`);
 }
 
 // ---------- Invoices ----------
@@ -266,6 +539,87 @@ export async function generateInvoice(formData: FormData) {
   redirect(`/invoices/${invoice_id}`);
 }
 
+export async function generateInvoiceQuick(formData: FormData): Promise<number> {
+  const student_id = Number(formData.get("student_id"));
+  const period_start = String(formData.get("period_start") || "");
+  const period_end = String(formData.get("period_end") || "");
+  if (!student_id || !period_start || !period_end) {
+    throw new Error("Student and period required");
+  }
+
+  const startISO = new Date(period_start + "T00:00:00").toISOString();
+  const endISO = new Date(period_end + "T23:59:59").toISOString();
+
+  const classes = await queryAll<{
+    id: number;
+    scheduled_at: string;
+    duration_minutes: number;
+    subject: string | null;
+    status: string;
+    is_trial: number;
+    hourly_rate: number;
+    student_name: string;
+  }>(
+    `SELECT c.*, s.hourly_rate, s.name AS student_name
+     FROM classes c JOIN students s ON s.id = c.student_id
+     WHERE c.student_id = ?
+       AND c.status IN ('completed', 'canceled')
+       AND c.scheduled_at BETWEEN ? AND ?
+       AND NOT EXISTS (SELECT 1 FROM invoice_items ii WHERE ii.class_id = c.id)
+     ORDER BY c.scheduled_at`,
+    [student_id, startISO, endISO]
+  );
+
+  if (classes.length === 0) {
+    throw new Error("No un-invoiced classes in this period");
+  }
+
+  const invoiceNumber = await nextInvoiceNumber();
+  await ensureMigrated();
+  const client = getClient();
+
+  const total = classes.reduce((sum, c) => {
+    if (c.status === "canceled" || c.is_trial) return sum;
+    return sum + (Number(c.duration_minutes) / 60) * Number(c.hourly_rate);
+  }, 0);
+
+  const invResult = await client.execute({
+    sql: `INSERT INTO invoices(student_id, invoice_number, period_start, period_end, total_amount, status, notes)
+       VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
+    args: [
+      student_id,
+      invoiceNumber,
+      startISO,
+      endISO,
+      total,
+      String(formData.get("notes") || "") || null,
+    ],
+  });
+
+  const invoice_id = Number(invResult.lastInsertRowid);
+
+  for (const c of classes) {
+    const isCanceled = c.status === "canceled";
+    const isTrial = !!c.is_trial;
+    const hours = Number(c.duration_minutes) / 60;
+    const amount = (isCanceled || isTrial) ? 0 : hours * Number(c.hourly_rate);
+    const prefix = isCanceled ? "[CANCELLED] " : isTrial ? "[TRIAL] " : "";
+    const desc = `${prefix}${c.subject || "Lesson"} — ${new Date(c.scheduled_at).toLocaleDateString(
+      "en-GB",
+      { weekday: "short", day: "numeric", month: "short", year: "numeric" }
+    )} (${c.duration_minutes} min)`;
+    await client.execute({
+      sql: `INSERT INTO invoice_items(invoice_id, class_id, description, quantity, unit_amount, amount)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [invoice_id, c.id, desc, hours, (isCanceled || isTrial) ? 0 : Number(c.hourly_rate), amount],
+    });
+  }
+
+  revalidatePath("/invoices");
+  revalidatePath(`/students/${student_id}`);
+  return invoice_id;
+}
+
 export async function setInvoiceStatus(id: number, status: InvoiceStatus) {
   const paid_at = status === "paid" ? new Date().toISOString() : null;
   await execute("UPDATE invoices SET status = ?, paid_at = ? WHERE id = ?", [
@@ -302,8 +656,8 @@ export async function cancelClass(id: number, formData: FormData) {
   if (rescheduleDate) {
     const iso = new Date(rescheduleDate).toISOString();
     await execute(
-      `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, rescheduled_from)
-       VALUES (?, ?, ?, ?, ?, 'scheduled', ?)`,
+      `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, rescheduled_from)
+       VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?)`,
       [cls.student_id, iso, cls.duration_minutes, cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson", cls.location, id]
     );
   }
@@ -351,6 +705,40 @@ export async function createRecurrence(formData: FormData) {
   redirect("/schedule");
 }
 
+export async function createRecurrenceQuick(formData: FormData) {
+  const student_id = Number(formData.get("student_id"));
+  const daysRaw = formData.getAll("day_of_week");
+  const time = String(formData.get("time") || "");
+  const duration = Number(formData.get("duration_minutes") || 60);
+  const subject = String(formData.get("subject") || "") || null;
+  const location = String(formData.get("location") || "") || null;
+  const frequency = String(formData.get("frequency") || "weekly");
+  const customInterval = formData.get("custom_interval_days") ? Number(formData.get("custom_interval_days")) : null;
+  const startDate = String(formData.get("start_date") || "");
+  const endDate = String(formData.get("end_date") || "") || null;
+
+  if (!student_id || daysRaw.length === 0 || !time || !startDate) {
+    throw new Error("Student, day(s), time, and start date are required");
+  }
+
+  const holidays = await queryAll<{ date: string }>("SELECT date FROM holidays");
+  const holidaySet = new Set(holidays.map((h) => h.date));
+
+  for (const dayStr of daysRaw) {
+    const dayOfWeek = Number(dayStr);
+    const result = await execute(
+      `INSERT INTO recurrences(student_id, day_of_week, time, duration_minutes, subject, location, frequency, custom_interval_days, start_date, end_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [student_id, dayOfWeek, time, duration, subject, location, frequency, customInterval, startDate, endDate]
+    );
+    const recurrenceId = Number(result.lastInsertRowid);
+    await generateClassesForRecurrence(recurrenceId, holidaySet);
+  }
+
+  revalidatePath("/schedule");
+  revalidatePath(`/students/${student_id}`);
+}
+
 async function generateClassesForRecurrence(recurrenceId: number, holidaySet: Set<string>) {
   const rec = await queryOne<{
     student_id: number; day_of_week: number; time: string; duration_minutes: number;
@@ -376,8 +764,8 @@ async function generateClassesForRecurrence(recurrenceId: number, holidaySet: Se
       const classDate = new Date(cursor);
       classDate.setHours(hours, minutes, 0, 0);
       await execute(
-        `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, recurrence_id)
-         VALUES (?, ?, ?, ?, ?, 'scheduled', ?)`,
+        `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, recurrence_id)
+         VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?)`,
         [rec.student_id, classDate.toISOString(), rec.duration_minutes, rec.subject, rec.location, recurrenceId]
       );
     }
@@ -469,4 +857,167 @@ export async function saveDuitNowQR(formData: FormData) {
 export async function removeDuitNowQR() {
   await execute("DELETE FROM settings WHERE key = 'duitnow_qr'");
   revalidatePath("/settings");
+}
+
+// ---------- Classroom / Posts ----------
+
+export async function createPost(formData: FormData) {
+  const type = String(formData.get("type") || "material");
+  const title = String(formData.get("title") || "").trim();
+  if (!title) throw new Error("Title is required");
+
+  const student_id = formData.get("student_id") ? Number(formData.get("student_id")) : null;
+  const due_at = String(formData.get("due_at") || "") || null;
+  const body = String(formData.get("body") || "") || null;
+
+  const result = await execute(
+    `INSERT INTO posts(type, title, body, student_id, due_at) VALUES (?, ?, ?, ?, ?)`,
+    [type, title, body, student_id, due_at ? new Date(due_at).toISOString() : null]
+  );
+
+  const postId = Number(result.lastInsertRowid);
+
+  if (type === "quiz") {
+    const questionsJson = String(formData.get("questions") || "[]");
+    try {
+      const questions = JSON.parse(questionsJson) as Array<{
+        question: string; type: string; options?: string; correct_answer?: string; points?: number;
+      }>;
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        await execute(
+          `INSERT INTO quiz_questions(post_id, question, type, options, correct_answer, points, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [postId, q.question, q.type || "mcq", q.options || null, q.correct_answer || null, q.points || 1, i]
+        );
+      }
+    } catch {
+      // Invalid JSON, skip questions
+    }
+  }
+
+  revalidatePath("/classroom");
+  if (student_id) {
+    revalidatePath(`/classroom/${student_id}`);
+    revalidatePath(`/portal`);
+  }
+  redirect(student_id ? `/classroom/${student_id}` : "/classroom");
+}
+
+export async function createPostAction(
+  studentId: number,
+  type: string,
+  title: string,
+  body: string,
+  dueAt: string | null
+): Promise<{ success: boolean; error?: string }> {
+  if (!title.trim()) return { success: false, error: "Title is required" };
+  await execute(
+    `INSERT INTO posts(type, title, body, student_id, due_at) VALUES (?, ?, ?, ?, ?)`,
+    [type, title.trim(), body.trim() || null, studentId, dueAt ? new Date(dueAt).toISOString() : null]
+  );
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  revalidatePath("/portal");
+  return { success: true };
+}
+
+export async function deletePostAction(
+  postId: number,
+  studentId: number
+): Promise<{ success: boolean }> {
+  await execute("DELETE FROM posts WHERE id = ?", [postId]);
+  revalidatePath("/classroom");
+  revalidatePath(`/classroom/${studentId}`);
+  revalidatePath("/portal");
+  return { success: true };
+}
+
+export async function updatePost(formData: FormData) {
+  const id = Number(formData.get("id"));
+  const title = String(formData.get("title") || "").trim();
+  if (!title) throw new Error("Title is required");
+
+  const body = String(formData.get("body") || "") || null;
+  const due_at = String(formData.get("due_at") || "") || null;
+
+  await execute(
+    "UPDATE posts SET title = ?, body = ?, due_at = ? WHERE id = ?",
+    [title, body, due_at ? new Date(due_at).toISOString() : null, id]
+  );
+
+  const post = await queryOne<{ student_id: number | null }>("SELECT student_id FROM posts WHERE id = ?", [id]);
+  revalidatePath("/classroom");
+  if (post?.student_id) {
+    revalidatePath(`/classroom/${post.student_id}`);
+    revalidatePath("/portal");
+  }
+}
+
+export async function deletePost(id: number, studentId?: number) {
+  await execute("DELETE FROM posts WHERE id = ?", [id]);
+  revalidatePath("/classroom");
+  if (studentId) {
+    revalidatePath(`/classroom/${studentId}`);
+    revalidatePath("/portal");
+  }
+}
+
+export async function submitAssignment(formData: FormData) {
+  const post_id = Number(formData.get("post_id"));
+  const student_id = Number(formData.get("student_id"));
+  const content = String(formData.get("content") || "") || null;
+  const file_url = String(formData.get("file_url") || "") || null;
+
+  await execute(
+    `INSERT INTO submissions(post_id, student_id, content, file_url) VALUES (?, ?, ?, ?)`,
+    [post_id, student_id, content, file_url]
+  );
+
+  revalidatePath("/classroom");
+  revalidatePath("/portal");
+}
+
+export async function gradeSubmission(id: number, formData: FormData) {
+  const grade = String(formData.get("grade") || "");
+  const feedback = String(formData.get("feedback") || "") || null;
+
+  await execute(
+    `UPDATE submissions SET grade = ?, feedback = ?, graded_at = datetime('now') WHERE id = ?`,
+    [grade, feedback, id]
+  );
+
+  revalidatePath("/classroom");
+}
+
+export async function submitQuizAnswers(formData: FormData) {
+  const student_id = Number(formData.get("student_id"));
+  const post_id = Number(formData.get("post_id"));
+
+  const questions = await queryAll<{ id: number; correct_answer: string | null; type: string }>(
+    "SELECT id, correct_answer, type FROM quiz_questions WHERE post_id = ? ORDER BY sort_order",
+    [post_id]
+  );
+
+  for (const q of questions) {
+    const answer = String(formData.get(`answer_${q.id}`) || "");
+    if (!answer) continue;
+    const is_correct = q.type === "mcq" && q.correct_answer
+      ? (answer.trim().toLowerCase() === q.correct_answer.trim().toLowerCase() ? 1 : 0)
+      : null;
+    await execute(
+      `INSERT INTO quiz_answers(question_id, student_id, answer, is_correct) VALUES (?, ?, ?, ?)`,
+      [q.id, student_id, answer, is_correct]
+    );
+  }
+
+  revalidatePath("/portal");
+}
+
+// ---------- Meeting Notes ----------
+
+export async function saveMeetingNotes(classId: number, notes: string) {
+  await execute("UPDATE classes SET meeting_notes = ? WHERE id = ?", [notes, classId]);
+  revalidatePath(`/classes/${classId}`);
+  revalidatePath("/schedule");
 }

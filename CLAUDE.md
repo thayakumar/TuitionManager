@@ -2,13 +2,13 @@
 
 ## What This Is
 Personal tuition management system for Ananth — a private tutor managing students, classes, invoices.
-Built with **Next.js 14 App Router** + **Turso** (cloud SQLite) + **shadcn/ui** (base-nova style).
+Built with **Next.js 14 App Router** + **Turso** (cloud SQLite) + **shadcn/ui** (new-york style) + **ReUI** component registry.
 
 ## Tech Stack
 - **Framework**: Next.js 14 (App Router, server components, server actions)
 - **Database**: Turso (libSQL) — async API via `@libsql/client`
-- **UI**: shadcn/ui base-nova style + custom wrappers (page-header, empty-state, form-field)
-- **Styling**: Tailwind CSS v4, LMS teal palette (oklch), Poppins + Open Sans fonts
+- **UI**: shadcn/ui new-york style + ReUI registry + custom wrappers (page-header, empty-state, form-field)
+- **Styling**: Tailwind CSS v4, neutral palette (oklch, monochrome), Inter font
 - **Deployment target**: Vercel + Turso cloud
 
 ## Key Architecture

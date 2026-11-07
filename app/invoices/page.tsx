@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { Receipt, DollarSign, TrendingUp, FileText } from "lucide-react";
+import {
+  Receipt, DollarSign, TrendingUp, FileText, Wallet,
+  CheckCircle2, AlertCircle, Clock, CreditCard, ArrowRight,
+} from "lucide-react";
 import { queryAll, getSetting } from "@/lib/db";
+import type { Student } from "@/lib/types";
+import { GenerateInvoiceDialog } from "@/components/generate-invoice-dialog";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { currency, fmtDate } from "@/lib/format";
 import type { Invoice } from "@/lib/types";
 import { ExportButton } from "@/components/export-button";
@@ -36,7 +42,25 @@ function statusVariant(status: string) {
   }
 }
 
+function statusIcon(status: string) {
+  switch (status) {
+    case "paid":
+      return <CheckCircle2 size={14} className="text-emerald-500" />;
+    case "overdue":
+      return <AlertCircle size={14} className="text-red-500" />;
+    case "sent":
+      return <Clock size={14} className="text-blue-500" />;
+    default:
+      return <FileText size={14} className="text-gray-400" />;
+  }
+}
+
 export default async function InvoicesPage() {
+  const activeStudents = await queryAll<Student>(
+    "SELECT id, name FROM students WHERE active = 1 ORDER BY name"
+  );
+  const studentOpts = activeStudents.map((s) => ({ id: s.id, name: s.name }));
+
   const [invoices, currencySymbol] = await Promise.all([
     queryAll<InvoiceWithStudent>(
       `SELECT i.*, s.name AS student_name
@@ -59,126 +83,182 @@ export default async function InvoicesPage() {
     })
     .reduce((s, i) => s + Number(i.total_amount), 0);
 
+  const paidCount = invoices.filter((i) => i.status === "paid").length;
+  const paidRatio = invoices.length > 0 ? Math.round((paidCount / invoices.length) * 100) : 0;
+
+  const draftCount = invoices.filter((i) => i.status === "draft").length;
+  const sentCount = invoices.filter((i) => i.status === "sent").length;
+  const overdueCount = invoices.filter((i) => i.status === "overdue").length;
+
+  const statCards = [
+    {
+      label: "Outstanding",
+      value: currency(outstanding, currencySymbol),
+      sub: `${invoices.filter((i) => ["draft", "sent", "overdue"].includes(i.status)).length} unpaid`,
+      icon: Wallet,
+      bg: "bg-rose-50",
+      iconColor: "text-rose-500",
+    },
+    {
+      label: "Paid This Month",
+      value: currency(paidThisMonth, currencySymbol),
+      sub: "Collected revenue",
+      icon: TrendingUp,
+      bg: "bg-emerald-50",
+      iconColor: "text-emerald-500",
+    },
+    {
+      label: "Total Invoices",
+      value: String(invoices.length),
+      sub: "All time",
+      icon: FileText,
+      bg: "bg-blue-50",
+      iconColor: "text-blue-500",
+    },
+    {
+      label: "Collection Rate",
+      value: `${paidRatio}%`,
+      sub: `${paidCount} of ${invoices.length} paid`,
+      icon: CreditCard,
+      bg: "bg-violet-50",
+      iconColor: "text-violet-500",
+    },
+  ];
+
   return (
     <>
       <PageHeader
         title="Invoices"
-        subtitle={`${invoices.length} total`}
+        subtitle={`${invoices.length} total · ${currency(outstanding, currencySymbol)} outstanding`}
         action={
           <div className="flex gap-2">
             <ExportButton getData={exportInvoicesCsv} filename="invoices.csv" />
-            <Link href="/invoices/new">
-              <Button>
-                <Receipt size={16} /> Generate invoice
-              </Button>
-            </Link>
+            <GenerateInvoiceDialog students={studentOpts} />
           </div>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Outstanding</CardDescription>
-            <DollarSign className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-heading font-semibold">
-              {currency(outstanding, currencySymbol)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Unpaid invoices
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Paid This Month</CardDescription>
-            <TrendingUp className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-heading font-semibold">
-              {currency(paidThisMonth, currencySymbol)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Collected revenue
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardDescription>Total Invoices</CardDescription>
-            <FileText className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-heading font-semibold">
-              {invoices.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              All time
-            </p>
-          </CardContent>
-        </Card>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {statCards.map((card) => (
+          <Card key={card.label} className="shadow-sm border-0">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{card.label}</p>
+                  <p className="text-2xl font-bold mt-1 text-foreground">{card.value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{card.sub}</p>
+                </div>
+                <div className={`flex size-10 items-center justify-center rounded-xl ${card.bg}`}>
+                  <card.icon size={20} className={card.iconColor} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="default" className="px-3 py-1 cursor-pointer">
+            All ({invoices.length})
+          </Badge>
+          {draftCount > 0 && (
+            <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-secondary">
+              <FileText size={12} className="mr-1" /> Draft ({draftCount})
+            </Badge>
+          )}
+          {sentCount > 0 && (
+            <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-secondary">
+              <Clock size={12} className="mr-1 text-blue-500" /> Sent ({sentCount})
+            </Badge>
+          )}
+          {paidCount > 0 && (
+            <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-secondary">
+              <CheckCircle2 size={12} className="mr-1 text-emerald-500" /> Paid ({paidCount})
+            </Badge>
+          )}
+          {overdueCount > 0 && (
+            <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-secondary">
+              <AlertCircle size={12} className="mr-1 text-red-500" /> Overdue ({overdueCount})
+            </Badge>
+          )}
+        </div>
       </div>
 
       {invoices.length === 0 ? (
         <EmptyState
           title="No invoices yet"
           description="Generate an invoice from completed classes."
-          action={
-            <Link href="/invoices/new">
-              <Button>
-                <Receipt size={16} /> Generate invoice
-              </Button>
-            </Link>
-          }
+          action={<GenerateInvoiceDialog students={studentOpts} />}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>All Invoices</CardTitle>
-            <CardDescription>
-              A list of all invoices including status and amount.
-            </CardDescription>
+        <Card className="shadow-sm border-0">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Receipt size={18} className="text-indigo-500" />
+                  All Invoices
+                </CardTitle>
+                <CardDescription>
+                  Manage and track all your invoices
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
+            <div className="overflow-x-auto -mx-6 px-6">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Invoice</TableHead>
                   <TableHead>Student</TableHead>
-                  <TableHead>Period</TableHead>
+                  <TableHead className="hidden md:table-cell">Period</TableHead>
+                  <TableHead className="hidden sm:table-cell">Issued</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {invoices.map((inv) => (
-                  <TableRow key={inv.id} className="cursor-pointer">
+                  <TableRow key={inv.id} className="cursor-pointer group">
                     <TableCell>
                       <Link
                         href={`/invoices/${inv.id}`}
-                        className="font-medium hover:underline"
+                        className="font-semibold text-primary hover:underline"
                       >
                         {inv.invoice_number}
                       </Link>
                     </TableCell>
-                    <TableCell>{inv.student_name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell>
+                      <div className="font-medium">{inv.student_name}</div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                       {fmtDate(inv.period_start)} — {fmtDate(inv.period_end)}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {currency(Number(inv.total_amount), currencySymbol)}
+                    <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
+                      {fmtDate(inv.issued_at)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={statusVariant(inv.status)}>
-                        {inv.status}
-                      </Badge>
+                      <span className="text-base font-bold text-foreground">
+                        {currency(Number(inv.total_amount), currencySymbol)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        {statusIcon(inv.status)}
+                        <Badge variant={statusVariant(inv.status)} className="capitalize">
+                          {inv.status}
+                        </Badge>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

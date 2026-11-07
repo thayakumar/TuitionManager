@@ -13,6 +13,7 @@ export function getClient(): Client {
 
 export async function migrate() {
   const c = getClient();
+  await c.execute("PRAGMA foreign_keys = ON");
   await c.executeMultiple(`
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,11 +136,75 @@ export async function migrate() {
     INSERT OR IGNORE INTO settings(key, value) VALUES ('payment_instructions', 'Bank transfer within 7 days.');
   `);
 
+  await c.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('material','assignment','quiz','announcement')),
+      title TEXT NOT NULL,
+      body TEXT,
+      student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+      due_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_posts_student ON posts(student_id);
+    CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);
+
+    CREATE TABLE IF NOT EXISTS post_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      file_name TEXT NOT NULL,
+      file_url TEXT NOT NULL,
+      file_type TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_post_attachments_post ON post_attachments(post_id);
+
+    CREATE TABLE IF NOT EXISTS submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      content TEXT,
+      file_url TEXT,
+      grade TEXT,
+      feedback TEXT,
+      submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      graded_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_submissions_post ON submissions(post_id);
+    CREATE INDEX IF NOT EXISTS idx_submissions_student ON submissions(student_id);
+
+    CREATE TABLE IF NOT EXISTS quiz_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      question TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('mcq','short_answer')),
+      options TEXT,
+      correct_answer TEXT,
+      points INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_quiz_questions_post ON quiz_questions(post_id);
+
+    CREATE TABLE IF NOT EXISTS quiz_answers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      question_id INTEGER NOT NULL REFERENCES quiz_questions(id) ON DELETE CASCADE,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      answer TEXT NOT NULL,
+      is_correct INTEGER,
+      submitted_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_quiz_answers_question ON quiz_answers(question_id);
+    CREATE INDEX IF NOT EXISTS idx_quiz_answers_student ON quiz_answers(student_id);
+  `);
+
   const alterColumns = [
     "ALTER TABLE classes ADD COLUMN recurrence_id INTEGER REFERENCES recurrences(id) ON DELETE SET NULL",
     "ALTER TABLE classes ADD COLUMN is_trial INTEGER NOT NULL DEFAULT 0",
     "ALTER TABLE classes ADD COLUMN cancel_reason TEXT",
     "ALTER TABLE classes ADD COLUMN rescheduled_from INTEGER REFERENCES classes(id) ON DELETE SET NULL",
+    "ALTER TABLE classes ADD COLUMN meeting_room TEXT",
+    "ALTER TABLE students ADD COLUMN username TEXT",
+    "ALTER TABLE students ADD COLUMN password TEXT",
+    "ALTER TABLE classes ADD COLUMN meeting_notes TEXT",
   ];
   for (const sql of alterColumns) {
     try {
@@ -148,6 +213,9 @@ export async function migrate() {
       // Column already exists — safe to ignore
     }
   }
+
+  await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_username', 'admin')");
+  await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_password', 'admin123')");
 }
 
 let _migrated = false;

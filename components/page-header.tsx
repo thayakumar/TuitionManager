@@ -14,7 +14,7 @@ export function PageHeader({
     <div className="mb-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-semibold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {subtitle && (

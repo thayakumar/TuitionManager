@@ -1,0 +1,152 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Monitor, AlertTriangle } from "lucide-react";
+
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI: any;
+  }
+}
+
+export function JitsiMeeting({
+  roomName,
+  displayName,
+  onClose,
+  onHangup,
+}: {
+  roomName: string;
+  displayName: string;
+  onClose?: () => void;
+  onHangup?: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const apiRef = useRef<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function initJitsi() {
+      if (cancelled || !containerRef.current) return;
+      if (apiRef.current) return;
+
+      try {
+        apiRef.current = new window.JitsiMeetExternalAPI("meet.jit.si", {
+          roomName,
+          parentNode: containerRef.current,
+          configOverwrite: {
+            prejoinConfig: { enabled: false },
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            disableDeepLinking: true,
+            toolbarButtons: [
+              "microphone", "camera", "desktop", "chat",
+              "raisehand", "participants-pane", "tileview",
+              "select-background", "fullscreen",
+            ],
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            SHOW_BRAND_WATERMARK: false,
+            DEFAULT_BACKGROUND: "#1a1a2e",
+            TOOLBAR_ALWAYS_VISIBLE: true,
+          },
+          userInfo: { displayName },
+        });
+
+        apiRef.current.addListener("videoConferenceJoined", () => {
+          if (!cancelled) {
+            clearTimeout(timeoutId);
+            setLoading(false);
+          }
+        });
+
+        apiRef.current.addListener("readyToClose", () => {
+          onHangup?.();
+          onClose?.();
+        });
+
+        // If meeting doesn't connect in 10s, hide loading overlay anyway
+        // (common cause: browser extensions blocking Jitsi iframe)
+        timeoutId = setTimeout(() => {
+          if (!cancelled) {
+            setLoading(false);
+            const iframe = containerRef.current?.querySelector("iframe");
+            if (!iframe) {
+              setError("Could not load the meeting. A browser extension may be blocking it. Try opening in incognito or disabling ad-blockers.");
+            }
+          }
+        }, 10000);
+      } catch (e) {
+        if (!cancelled) {
+          setLoading(false);
+          setError("Failed to initialize meeting. Try refreshing the page.");
+        }
+      }
+    }
+
+    if (window.JitsiMeetExternalAPI) {
+      initJitsi();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://meet.jit.si/external_api.js";
+      script.async = true;
+      script.onload = initJitsi;
+      script.onerror = () => {
+        if (!cancelled) {
+          setLoading(false);
+          setError("Could not load Jitsi. A browser extension may be blocking it. Try incognito mode.");
+        }
+      };
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      if (apiRef.current) {
+        apiRef.current.dispose();
+        apiRef.current = null;
+      }
+    };
+  }, [roomName, displayName, onClose, onHangup]);
+
+  return (
+    <div className="relative h-full w-full">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
+          <div className="flex flex-col items-center gap-3">
+            <Monitor size={32} className="text-indigo-400 animate-pulse" />
+            <span className="text-sm text-gray-400 animate-pulse">
+              Connecting to meeting...
+            </span>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
+          <div className="flex flex-col items-center gap-3 max-w-sm text-center px-6">
+            <AlertTriangle size={32} className="text-amber-400" />
+            <p className="text-sm text-gray-300">{error}</p>
+            <a
+              href={`https://meet.jit.si/${roomName}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 text-sm text-indigo-400 underline hover:text-indigo-300"
+            >
+              Open meeting in new tab instead
+            </a>
+          </div>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className="h-full w-full overflow-hidden"
+      />
+    </div>
+  );
+}

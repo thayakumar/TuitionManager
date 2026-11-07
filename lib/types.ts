@@ -9,6 +9,8 @@ export type Student = {
   guardian_contact: string | null;
   hourly_rate: number;
   notes: string | null;
+  username: string | null;
+  password: string | null;
   active: number;
   created_at: string;
 };
@@ -29,6 +31,8 @@ export type ClassRow = {
   is_trial: number;
   cancel_reason: string | null;
   rescheduled_from: number | null;
+  meeting_room: string | null;
+  meeting_notes: string | null;
   created_at: string;
 };
 
@@ -114,4 +118,56 @@ export type ShareToken = {
   token: string;
   active: number;
   created_at: string;
+};
+
+export type PostType = "material" | "assignment" | "quiz" | "announcement";
+
+export type Post = {
+  id: number;
+  type: PostType;
+  title: string;
+  body: string | null;
+  student_id: number | null;
+  due_at: string | null;
+  created_at: string;
+};
+
+export type PostAttachment = {
+  id: number;
+  post_id: number;
+  file_name: string;
+  file_url: string;
+  file_type: string | null;
+};
+
+export type Submission = {
+  id: number;
+  post_id: number;
+  student_id: number;
+  content: string | null;
+  file_url: string | null;
+  grade: string | null;
+  feedback: string | null;
+  submitted_at: string;
+  graded_at: string | null;
+};
+
+export type QuizQuestion = {
+  id: number;
+  post_id: number;
+  question: string;
+  type: "mcq" | "short_answer";
+  options: string | null;
+  correct_answer: string | null;
+  points: number;
+  sort_order: number;
+};
+
+export type QuizAnswer = {
+  id: number;
+  question_id: number;
+  student_id: number;
+  answer: string;
+  is_correct: number | null;
+  submitted_at: string;
 };

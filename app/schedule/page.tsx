@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { CalendarPlus, Repeat } from "lucide-react";
 import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { ScheduleCalendar } from "@/components/schedule-calendar";
+import { ScheduleCalendarWrapper } from "@/components/schedule-calendar-wrapper";
 import { ExportButton } from "@/components/export-button";
 import { exportClassesCsv } from "@/lib/export";
-import type { ClassWithStudent } from "@/lib/types";
+import { ScheduleClassDialog } from "@/components/schedule-class-dialog";
+import { RecurringScheduleDialog } from "@/components/recurring-schedule-dialog";
+import type { ClassWithStudent, Student } from "@/lib/types";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -16,13 +17,18 @@ export default async function SchedulePage() {
   const startISO = startOfMonth(subMonths(now, 1)).toISOString();
   const endISO = endOfMonth(addMonths(now, 2)).toISOString();
 
-  const classes = await queryAll<ClassWithStudent>(
-    `SELECT c.*, s.name AS student_name, s.hourly_rate
-     FROM classes c JOIN students s ON s.id = c.student_id
-     WHERE c.scheduled_at BETWEEN ? AND ?
-     ORDER BY c.scheduled_at`,
-    [startISO, endISO]
-  );
+  const [classes, students] = await Promise.all([
+    queryAll<ClassWithStudent>(
+      `SELECT c.*, s.name AS student_name, s.hourly_rate
+       FROM classes c JOIN students s ON s.id = c.student_id
+       WHERE c.scheduled_at BETWEEN ? AND ?
+       ORDER BY c.scheduled_at`,
+      [startISO, endISO]
+    ),
+    queryAll<Student>(
+      `SELECT id, name, subject FROM students WHERE active = 1 ORDER BY name`
+    ),
+  ]);
 
   const calendarData = classes.map((c) => ({
     id: c.id,
@@ -34,31 +40,31 @@ export default async function SchedulePage() {
     status: c.status,
     attendance: c.attendance,
     is_trial: c.is_trial,
+    meeting_room: c.meeting_room,
+    meeting_notes: c.meeting_notes,
+  }));
+
+  const studentList = students.map((s) => ({
+    id: s.id,
+    name: s.name,
+    subject: s.subject,
   }));
 
   return (
     <>
       <PageHeader
         title="Schedule"
-        subtitle="Calendar view"
+        subtitle="Click on any day to add a class"
         action={
           <div className="flex gap-2">
             <ExportButton getData={exportClassesCsv} filename="classes.csv" />
-            <Link href="/schedule/recurring/new">
-              <Button variant="secondary">
-                <Repeat size={16} /> Recurring
-              </Button>
-            </Link>
-            <Link href="/schedule/new">
-              <Button>
-                <CalendarPlus size={16} /> Schedule class
-              </Button>
-            </Link>
+            <RecurringScheduleDialog students={studentList} />
+            <ScheduleClassDialog students={studentList} />
           </div>
         }
       />
 
-      <ScheduleCalendar classes={calendarData} />
+      <ScheduleCalendarWrapper classes={calendarData} students={studentList} />
     </>
   );
 }

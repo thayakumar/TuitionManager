@@ -35,11 +35,11 @@ function statusVariant(status: string) {
 function statusColor(status: string) {
   switch (status) {
     case "completed":
-      return "bg-primary";
+      return "bg-foreground";
     case "canceled":
       return "bg-destructive";
     default:
-      return "bg-primary/60";
+      return "bg-foreground/50";
   }
 }
 
@@ -66,7 +66,6 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-6">
-      {/* Calendar panel */}
       <div className="lg:sticky lg:top-8 self-start">
         <Card>
           <CardContent className="p-3">
@@ -91,18 +90,18 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                 width: 4px;
                 height: 4px;
                 border-radius: 50%;
-                background: var(--primary);
+                background: var(--foreground);
               }
             `}</style>
           </CardContent>
           <div className="px-4 pb-3">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-primary" />
+                <span className="size-2 rounded-full bg-foreground/50" />
                 Scheduled
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-primary/60" />
+                <span className="size-2 rounded-full bg-foreground" />
                 Completed
               </span>
               <span className="flex items-center gap-1.5">
@@ -113,7 +112,6 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
           </div>
         </Card>
 
-        {/* Stats */}
         <Card className="mt-4">
           <CardContent className="pt-4">
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -140,7 +138,6 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
         </Card>
       </div>
 
-      {/* Class list for selected date */}
       <div>
         <Card>
           <CardHeader>
@@ -163,11 +160,10 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                     <Link key={c.id} href={`/classes/${c.id}`} className="block">
                       <div
                         className={cn(
-                          "group relative flex items-start gap-3 rounded-lg border p-3 transition-all hover:border-primary hover:shadow-sm",
+                          "group relative flex items-start gap-3 rounded-lg border p-3 transition-all hover:bg-secondary/50 hover:shadow-sm",
                           c.status === "canceled" && "opacity-60"
                         )}
                       >
-                        {/* Time indicator */}
                         <div className="flex flex-col items-center gap-0.5 min-w-[52px]">
                           <span className="text-sm font-semibold text-foreground">
                             {format(parseISO(c.scheduled_at), "h:mm")}
@@ -177,13 +173,11 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                           </span>
                         </div>
 
-                        {/* Divider */}
                         <div className="flex flex-col items-center self-stretch py-0.5">
                           <div className={cn("size-2 rounded-full shrink-0", statusColor(c.status))} />
                           <div className="w-px flex-1 bg-border mt-1" />
                         </div>
 
-                        {/* Details */}
                         <div className={cn("flex-1 min-w-0", c.status === "canceled" && "line-through")}>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm font-medium text-foreground truncate">
@@ -191,7 +185,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                             </span>
                             <div className="flex gap-1.5 shrink-0">
                               {c.is_trial ? (
-                                <Badge variant="outline" className="text-[10px] border-accent text-accent-foreground">
+                                <Badge variant="outline" className="text-[10px]">
                                   TRIAL
                                 </Badge>
                               ) : null}
@@ -227,7 +221,6 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
           </CardContent>
         </Card>
 
-        {/* Upcoming classes list below calendar */}
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>This month&apos;s classes</CardTitle>
@@ -247,8 +240,8 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                       type="button"
                       onClick={() => setSelectedDate(parseISO(day))}
                       className={cn(
-                        "w-full flex items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50",
-                        isSameDay(parseISO(day), selectedDate) && "bg-muted"
+                        "w-full flex items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-secondary/50",
+                        isSameDay(parseISO(day), selectedDate) && "bg-secondary"
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -269,7 +262,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                                 c.status === "canceled"
                                   ? "bg-destructive/10 text-destructive line-through"
                                   : c.status === "completed"
-                                    ? "bg-primary/10 text-primary"
+                                    ? "bg-foreground/10 text-foreground"
                                     : "bg-secondary text-secondary-foreground"
                               )}
                             >
