@@ -42,7 +42,9 @@ export default async function StudentProfilePage({
 }) {
   const id = Number(params.studentId);
   const student = await queryOne<Student>(
-    "SELECT * FROM students WHERE id = ? AND active = 1",
+    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
+            guardian_contact, username, password, active, created_at
+     FROM students WHERE id = ? AND active = 1`,
     [id]
   );
   if (!student) notFound();

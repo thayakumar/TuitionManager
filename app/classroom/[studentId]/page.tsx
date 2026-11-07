@@ -43,7 +43,7 @@ export default async function StudentClassroomPage({ params }: { params: { stude
             All Classrooms
           </Button>
         </Link>
-        <ClassroomActions studentId={studentId} />
+        <ClassroomActions studentId={studentId} topics={topics} />
       </div>
 
       <ClassroomBanner studentName={student.name} subject={student.subject} />

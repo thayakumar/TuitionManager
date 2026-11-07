@@ -34,7 +34,9 @@ export default async function StudentPostDetailPage({
 
   const [student, post] = await Promise.all([
     queryOne<Student>(
-      "SELECT * FROM students WHERE id = ? AND active = 1",
+      `SELECT id, name, subject, grade_level, phone, email, guardian_name,
+              guardian_contact, username, active, created_at
+       FROM students WHERE id = ? AND active = 1`,
       [studentId]
     ),
     queryOne<Post>("SELECT * FROM posts WHERE id = ?", [postId]),

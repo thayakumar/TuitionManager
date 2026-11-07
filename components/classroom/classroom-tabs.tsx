@@ -126,7 +126,7 @@ function ClassworkTab({
     <div className="space-y-4">
       {isAdmin && (
         <div className="flex items-center justify-between">
-          <ClassroomActions studentId={studentId} />
+          <ClassroomActions studentId={studentId} topics={topics} />
           <CreateTopicButton studentId={studentId} />
         </div>
       )}

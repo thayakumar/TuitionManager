@@ -15,6 +15,7 @@ export function MeetingRoom({
   classId,
   roomName,
   studentName,
+  studentId,
   scheduledAt,
   subject,
   initialNotes,
@@ -23,6 +24,7 @@ export function MeetingRoom({
   classId: number;
   roomName: string;
   studentName: string;
+  studentId: number;
   scheduledAt: string;
   subject: string;
   initialNotes: string;
@@ -80,7 +82,7 @@ export function MeetingRoom({
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
-      router.push("/portal");
+      router.push(`/portal/student/${studentId}`);
     }
   }
 
@@ -89,7 +91,7 @@ export function MeetingRoom({
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
-      router.push("/portal");
+      router.push(`/portal/student/${studentId}`);
     }
   }
 

@@ -17,11 +17,13 @@ export default async function StudentPortalLayout({
 
   const sessionStudentId = await getStudentSession();
   if (!sessionStudentId || sessionStudentId !== id) {
-    redirect("/portal");
+    redirect("/portal/student");
   }
 
   const student = await queryOne<Student>(
-    "SELECT * FROM students WHERE id = ? AND active = 1",
+    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
+            guardian_contact, username, active, created_at
+     FROM students WHERE id = ? AND active = 1`,
     [id]
   );
   if (!student) notFound();

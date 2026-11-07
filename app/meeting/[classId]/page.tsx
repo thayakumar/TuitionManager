@@ -8,12 +8,6 @@ export const dynamic = "force-dynamic";
 
 export default async function MeetingPage({ params }: { params: { classId: string } }) {
   const classId = Number(params.classId);
-  const cls = await queryOne<ClassRow>("SELECT * FROM classes WHERE id = ?", [classId]);
-  if (!cls || !cls.meeting_room) notFound();
-
-  const student = await queryOne<Student>("SELECT * FROM students WHERE id = ?", [cls.student_id]);
-  if (!student) notFound();
-
   const cookieStore = cookies();
   const sessionToken = cookieStore.get("admin_session")?.value;
   let isAdmin = false;
@@ -22,11 +16,26 @@ export default async function MeetingPage({ params }: { params: { classId: strin
     isAdmin = !!stored && stored === sessionToken;
   }
 
+  const cls = await queryOne<ClassRow & { meeting_notes?: string }>(
+    isAdmin
+      ? "SELECT * FROM classes WHERE id = ?"
+      : `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
+                status, attendance, recurrence_id, is_trial, cancel_reason,
+                rescheduled_from, meeting_room, created_at
+         FROM classes WHERE id = ?`,
+    [classId]
+  );
+  if (!cls || !cls.meeting_room) notFound();
+
+  const student = await queryOne<Student>("SELECT * FROM students WHERE id = ?", [cls.student_id]);
+  if (!student) notFound();
+
   return (
     <MeetingRoom
       classId={classId}
       roomName={cls.meeting_room}
       studentName={student.name}
+      studentId={cls.student_id}
       scheduledAt={cls.scheduled_at}
       subject={cls.subject || student.subject || "Lesson"}
       initialNotes={isAdmin ? (cls.meeting_notes || "") : ""}
