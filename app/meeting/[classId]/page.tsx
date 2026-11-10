@@ -1,22 +1,20 @@
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { queryOne, getSetting } from "@/lib/db";
+import { notFound, redirect } from "next/navigation";
+import { queryOne } from "@/lib/db";
+import { getStudentSession, isAdminRequest } from "@/lib/auth";
 import { MeetingRoom } from "@/components/meeting-room";
-import type { ClassRow, Student } from "@/lib/types";
+import type { ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function MeetingPage({ params }: { params: { classId: string } }) {
   const classId = Number(params.classId);
-  const cookieStore = cookies();
-  const sessionToken = cookieStore.get("admin_session")?.value;
-  let isAdmin = false;
-  if (sessionToken) {
-    const stored = await getSetting("admin_session_token");
-    isAdmin = !!stored && stored === sessionToken;
-  }
 
-  const cls = await queryOne<ClassRow & { meeting_notes?: string }>(
+  const isAdmin = await isAdminRequest();
+  const sessionStudentId = isAdmin ? null : await getStudentSession();
+
+  // Admins get every column; students get an explicit list that omits
+  // meeting_notes so tutor notes never enter their RSC payload.
+  const cls = await queryOne<ClassRow>(
     isAdmin
       ? "SELECT * FROM classes WHERE id = ?"
       : `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
@@ -27,8 +25,21 @@ export default async function MeetingPage({ params }: { params: { classId: strin
   );
   if (!cls || !cls.meeting_room) notFound();
 
-  const student = await queryOne<Student>("SELECT * FROM students WHERE id = ?", [cls.student_id]);
+  // A student may only join their own class meeting.
+  if (!isAdmin && sessionStudentId !== Number(cls.student_id)) {
+    redirect("/portal/student");
+  }
+
+  const student = await queryOne<{ id: number; name: string; subject: string | null }>(
+    "SELECT id, name, subject FROM students WHERE id = ?",
+    [cls.student_id]
+  );
   if (!student) notFound();
+
+  const note = await queryOne<{ content: string }>(
+    "SELECT content FROM class_notes WHERE class_id = ? AND scope = ?",
+    [classId, isAdmin ? "teacher" : "student"]
+  );
 
   return (
     <MeetingRoom
@@ -38,7 +49,7 @@ export default async function MeetingPage({ params }: { params: { classId: strin
       studentId={cls.student_id}
       scheduledAt={cls.scheduled_at}
       subject={cls.subject || student.subject || "Lesson"}
-      initialNotes={isAdmin ? (cls.meeting_notes || "") : ""}
+      initialNotes={note?.content || ""}
       isAdmin={isAdmin}
     />
   );

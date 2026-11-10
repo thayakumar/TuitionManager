@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { queryAll, queryOne, execute, getClient, ensureMigrated } from "./db";
-import { createAdminSession, destroyAdminSession, createStudentSession, destroyStudentSession } from "./auth";
+import {
+  createAdminSession, destroyAdminSession, createStudentSession, destroyStudentSession,
+  getStudentSession, isAdminRequest,
+} from "./auth";
 import type { Attendance, ClassStatus, InvoiceStatus } from "./types";
 
 // ---------- Admin Login ----------
@@ -1088,10 +1091,50 @@ export async function deletePostAttachment(attachmentId: number, studentId: numb
   return { success: true };
 }
 
-// ---------- Meeting Notes ----------
+// ---------- Meeting Notes (Teacher + Student) ----------
 
-export async function saveMeetingNotes(classId: number, notes: string) {
-  await execute("UPDATE classes SET meeting_notes = ? WHERE id = ?", [notes, classId]);
+async function upsertClassNote(
+  classId: number,
+  scope: "student" | "teacher",
+  content: string
+) {
+  await execute(
+    `INSERT INTO class_notes(class_id, scope, content, updated_at)
+     VALUES (?, ?, ?, datetime('now'))
+     ON CONFLICT(class_id, scope)
+     DO UPDATE SET content = excluded.content, updated_at = datetime('now')`,
+    [classId, scope, content]
+  );
+}
+
+async function classBelongsToStudent(classId: number, studentId: number): Promise<boolean> {
+  const row = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM classes WHERE id = ?",
+    [classId]
+  );
+  return !!row && Number(row.student_id) === studentId;
+}
+
+/** Admin-only notes for a meeting. Never exposed to students. */
+export async function saveTeacherNotes(classId: number, notes: string) {
+  if (!(await isAdminRequest())) throw new Error("Not authorized");
+  await upsertClassNote(classId, "teacher", notes);
   revalidatePath(`/classes/${classId}`);
   revalidatePath("/schedule");
+}
+
+/** Notes owned by the signed-in student for one of their own meetings. */
+export async function saveStudentNotes(classId: number, notes: string) {
+  const studentId = await getStudentSession();
+  if (!studentId || !(await classBelongsToStudent(classId, studentId))) {
+    throw new Error("Not authorized");
+  }
+  await upsertClassNote(classId, "student", notes);
+  revalidatePath(`/portal/student/${studentId}`);
+  revalidatePath(`/portal/student/${studentId}/notes`);
+}
+
+/** @deprecated Use saveTeacherNotes — kept for older callers. */
+export async function saveMeetingNotes(classId: number, notes: string) {
+  return saveTeacherNotes(classId, notes);
 }

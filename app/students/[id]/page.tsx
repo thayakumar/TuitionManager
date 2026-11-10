@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   CalendarPlus, Receipt, Pencil, Trash2, Phone, Mail, UserCircle,
   BookOpen, Clock, CheckCircle2, XCircle, Calendar, Wallet,
@@ -7,6 +7,7 @@ import {
   TrendingUp, KeyRound,
 } from "lucide-react";
 import { queryAll, queryOne, getSetting } from "@/lib/db";
+import { isAdminRequest } from "@/lib/auth";
 import { addStudentNote, deleteStudentNote } from "@/lib/actions";
 import { EditStudentDialog } from "@/components/edit-student-dialog";
 import { ScheduleClassDialog } from "@/components/schedule-class-dialog";
@@ -51,6 +52,7 @@ function getInitials(name: string) {
 }
 
 export default async function StudentDetailPage({ params }: { params: { id: string } }) {
+  if (!(await isAdminRequest())) redirect("/portal/admin");
   const id = Number(params.id);
   const [student, currencySymbol] = await Promise.all([
     queryOne<Student>("SELECT * FROM students WHERE id = ?", [id]),
@@ -63,7 +65,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
   );
   const studentOpts = allStudents.map((s) => ({ id: s.id, name: s.name, subject: s.subject }));
 
-  const [upcoming, past, invoices, notes, classNotes, classReports, shareTokenRow, statsRow] = await Promise.all([
+  const [upcoming, past, invoices, notes, teacherNotes, classReports, shareTokenRow, statsRow] = await Promise.all([
     queryAll<ClassRow>(
       "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' ORDER BY scheduled_at LIMIT 10",
       [id]
@@ -80,10 +82,12 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
       "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC LIMIT 20",
       [id]
     ),
-    queryAll<{ id: number; scheduled_at: string; subject: string | null; meeting_notes: string }>(
-      `SELECT id, scheduled_at, subject, meeting_notes FROM classes
-       WHERE student_id = ? AND meeting_notes IS NOT NULL AND meeting_notes != ''
-       ORDER BY scheduled_at DESC LIMIT 20`,
+    queryAll<{ id: number; scheduled_at: string; subject: string | null; teacher_notes: string }>(
+      `SELECT c.id, c.scheduled_at, c.subject, n.content AS teacher_notes
+       FROM class_notes n
+       JOIN classes c ON c.id = n.class_id
+       WHERE c.student_id = ? AND n.scope = 'teacher' AND TRIM(n.content) != ''
+       ORDER BY c.scheduled_at DESC LIMIT 20`,
       [id]
     ),
     queryAll<{
@@ -489,17 +493,17 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         </CardContent>
       </Card>
 
-      {/* Class Notes */}
+      {/* Teacher Notes */}
       <Card className="shadow-sm border-0 mb-6">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <StickyNote size={18} className="text-amber-500" />
-            Class Notes
+            Teacher Notes
           </CardTitle>
-          <CardDescription>Notes taken during live class sessions</CardDescription>
+          <CardDescription>Private notes taken during live class sessions — never shown to students</CardDescription>
         </CardHeader>
         <CardContent>
-          {classNotes.length === 0 ? (
+          {teacherNotes.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <StickyNote size={32} className="mx-auto mb-2 opacity-40" />
               <p className="text-sm">No class notes yet</p>
@@ -515,7 +519,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                   </tr>
                 </thead>
                 <tbody>
-                  {classNotes.map((cn) => (
+                  {teacherNotes.map((cn) => (
                     <tr key={cn.id} className="border-b border-border/50 hover:bg-amber-50/30 transition-colors">
                       <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
                         <Link href={`/classes/${cn.id}`} className="hover:text-indigo-600 hover:underline">
@@ -523,7 +527,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                         </Link>
                       </td>
                       <td className="py-2.5 px-3 text-foreground">{cn.subject || student.subject || "Lesson"}</td>
-                      <td className="py-2.5 px-3 text-foreground whitespace-pre-line">{cn.meeting_notes}</td>
+                      <td className="py-2.5 px-3 text-foreground whitespace-pre-line">{cn.teacher_notes}</td>
                     </tr>
                   ))}
                 </tbody>

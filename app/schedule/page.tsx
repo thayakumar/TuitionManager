@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { CalendarPlus, Repeat } from "lucide-react";
 import { queryAll } from "@/lib/db";
+import { isAdminRequest } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { ScheduleCalendarWrapper } from "@/components/schedule-calendar-wrapper";
@@ -13,13 +15,15 @@ import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage() {
+  if (!(await isAdminRequest())) redirect("/portal/admin");
   const now = new Date();
   const startISO = startOfMonth(subMonths(now, 1)).toISOString();
   const endISO = endOfMonth(addMonths(now, 2)).toISOString();
 
   const [classes, students] = await Promise.all([
-    queryAll<ClassWithStudent>(
-      `SELECT c.*, s.name AS student_name, s.hourly_rate
+    queryAll<ClassWithStudent & { teacher_notes: string | null }>(
+      `SELECT c.*, s.name AS student_name, s.hourly_rate,
+              (SELECT content FROM class_notes WHERE class_id = c.id AND scope = 'teacher') AS teacher_notes
        FROM classes c JOIN students s ON s.id = c.student_id
        WHERE c.scheduled_at BETWEEN ? AND ?
        ORDER BY c.scheduled_at`,
@@ -41,7 +45,7 @@ export default async function SchedulePage() {
     attendance: c.attendance,
     is_trial: c.is_trial,
     meeting_room: c.meeting_room,
-    meeting_notes: c.meeting_notes,
+    teacher_notes: c.teacher_notes,
   }));
 
   const studentList = students.map((s) => ({

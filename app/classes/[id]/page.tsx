@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
   Check, X, Clock, Trash2, Pencil, BookOpen, Star,
@@ -8,6 +8,7 @@ import {
   ArrowLeft, UserCircle, Wallet, Video,
 } from "lucide-react";
 import { queryOne } from "@/lib/db";
+import { isAdminRequest } from "@/lib/auth";
 import { markAttendance, saveReport, deleteClass, updateClass } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -48,13 +49,18 @@ function attendanceConfig(attendance: string | null) {
 }
 
 export default async function ClassDetailPage({ params }: { params: { id: string } }) {
+  if (!(await isAdminRequest())) redirect("/portal/admin");
   const id = Number(params.id);
   const cls = await queryOne<ClassRow>("SELECT * FROM classes WHERE id = ?", [id]);
   if (!cls) notFound();
 
-  const [student, report] = await Promise.all([
+  const [student, report, teacherNote] = await Promise.all([
     queryOne<Student>("SELECT * FROM students WHERE id = ?", [cls.student_id]),
     queryOne<Report>("SELECT * FROM reports WHERE class_id = ?", [id]),
+    queryOne<{ content: string }>(
+      "SELECT content FROM class_notes WHERE class_id = ? AND scope = 'teacher'",
+      [id]
+    ),
   ]);
   if (!student) notFound();
 
@@ -204,19 +210,19 @@ export default async function ClassDetailPage({ params }: { params: { id: string
         </Card>
       </div>
 
-      {/* Meeting Notes */}
-      {cls.meeting_notes && (
+      {/* Teacher Notes */}
+      {teacherNote?.content && (
         <Card className="mb-6 shadow-sm border-0">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <MessageSquare size={18} className="text-amber-500" />
-              Class Notes
+              Teacher Notes
             </CardTitle>
-            <CardDescription>Notes taken during the live class</CardDescription>
+            <CardDescription>Private notes from the live class — never shown to students</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-foreground whitespace-pre-wrap">
-              {cls.meeting_notes}
+              {teacherNote.content}
             </div>
           </CardContent>
         </Card>

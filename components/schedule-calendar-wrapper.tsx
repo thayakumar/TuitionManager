@@ -45,7 +45,7 @@ type ClassData = {
   attendance: string | null;
   is_trial: number;
   meeting_room: string | null;
-  meeting_notes: string | null;
+  teacher_notes: string | null;
 };
 
 type Student = { id: number; name: string; subject: string | null };
@@ -290,14 +290,14 @@ export function ScheduleCalendarWrapper({
                 </div>
               )}
 
-              {/* Meeting Notes */}
-              {selectedClass.meeting_notes && (
+              {/* Teacher Notes */}
+              {selectedClass.teacher_notes && (
                 <div className="px-5 pb-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Class Notes
+                    Teacher Notes
                   </p>
                   <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
-                    {selectedClass.meeting_notes}
+                    {selectedClass.teacher_notes}
                   </div>
                 </div>
               )}

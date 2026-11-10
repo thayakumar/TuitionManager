@@ -203,6 +203,16 @@ export async function migrate() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_topics_student ON topics(student_id);
+
+    CREATE TABLE IF NOT EXISTS class_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+      scope TEXT NOT NULL CHECK(scope IN ('student','teacher')),
+      content TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(class_id, scope)
+    );
+    CREATE INDEX IF NOT EXISTS idx_class_notes_class ON class_notes(class_id);
   `);
 
   const alterColumns = [
@@ -224,6 +234,24 @@ export async function migrate() {
     } catch {
       // Column already exists — safe to ignore
     }
+  }
+
+  // One-time move of the old single meeting_notes column into the scoped
+  // class_notes table. Existing notes were all tutor-authored, so they become
+  // teacher notes; students start with an empty slate.
+  const notesSplit = await c.execute(
+    "SELECT value FROM settings WHERE key = 'notes_split_v1'"
+  );
+  if (notesSplit.rows.length === 0) {
+    await c.execute(`
+      INSERT OR IGNORE INTO class_notes(class_id, scope, content, updated_at)
+      SELECT id, 'teacher', meeting_notes, datetime('now')
+      FROM classes
+      WHERE meeting_notes IS NOT NULL AND TRIM(meeting_notes) != ''
+    `);
+    await c.execute(
+      "INSERT OR REPLACE INTO settings(key, value) VALUES ('notes_split_v1', '1')"
+    );
   }
 
   await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_username', 'admin')");

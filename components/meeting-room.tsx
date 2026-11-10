@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JitsiMeeting } from "@/components/jitsi-meeting";
-import { saveMeetingNotes } from "@/lib/actions";
+import { saveTeacherNotes, saveStudentNotes } from "@/lib/actions";
 import { fmtDateTime } from "@/lib/format";
 
 export function MeetingRoom({
@@ -42,11 +42,15 @@ export function MeetingRoom({
   const doSave = useCallback(
     (text: string) => {
       startTransition(async () => {
-        await saveMeetingNotes(classId, text);
+        if (isAdmin) {
+          await saveTeacherNotes(classId, text);
+        } else {
+          await saveStudentNotes(classId, text);
+        }
         setSaved(true);
       });
     },
-    [classId, startTransition]
+    [classId, isAdmin, startTransition]
   );
 
   function handleNotesChange(value: string) {
@@ -78,7 +82,7 @@ export function MeetingRoom({
   }
 
   function handleLeave() {
-    if (isAdmin && !saved) doSave(notes);
+    if (!saved) doSave(notes);
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
@@ -87,7 +91,7 @@ export function MeetingRoom({
   }
 
   function handleHangup() {
-    if (isAdmin && !saved) doSave(notes);
+    if (!saved) doSave(notes);
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
@@ -134,18 +138,16 @@ export function MeetingRoom({
             )}
           </Button>
 
-          {/* Toggle notes panel (admin only) */}
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setNotesOpen(!notesOpen)}
-              title={notesOpen ? "Hide notes" : "Show notes"}
-            >
-              {notesOpen ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-              <span className="text-xs hidden sm:inline">Notes</span>
-            </Button>
-          )}
+          {/* Toggle notes panel */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setNotesOpen(!notesOpen)}
+            title={notesOpen ? "Hide notes" : "Show notes"}
+          >
+            {notesOpen ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
+            <span className="text-xs hidden sm:inline">Notes</span>
+          </Button>
 
           {/* Leave meeting */}
           <Button variant="destructive" size="sm" onClick={handleLeave}>
@@ -166,14 +168,14 @@ export function MeetingRoom({
           />
         </div>
 
-        {/* Notes side panel (admin only) */}
-        {isAdmin && notesOpen && (
+        {/* Notes panel — teacher notes for the tutor, student notes for the student */}
+        {notesOpen && (
           <div className="w-72 sm:w-80 border-l border-border bg-card flex flex-col shrink-0">
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
               <div className="flex items-center gap-2">
                 <StickyNote size={14} className="text-amber-500" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Class Notes
+                  {isAdmin ? "Teacher Notes" : "Student Notes"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -202,7 +204,11 @@ export function MeetingRoom({
             <textarea
               value={notes}
               onChange={(e) => handleNotesChange(e.target.value)}
-              placeholder="Take notes during the class..."
+              placeholder={
+                isAdmin
+                  ? "Private tutor notes — students never see these..."
+                  : "Your private notes for this class..."
+              }
               className="flex-1 w-full resize-none border-0 bg-transparent px-3 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/50"
             />
           </div>

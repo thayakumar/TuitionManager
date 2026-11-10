@@ -180,6 +180,16 @@ export type QuizQuestion = {
   sort_order: number;
 };
 
+export type NoteScope = "student" | "teacher";
+
+export type ClassNote = {
+  id: number;
+  class_id: number;
+  scope: NoteScope;
+  content: string;
+  updated_at: string;
+};
+
 export type QuizAnswer = {
   id: number;
   question_id: number;
