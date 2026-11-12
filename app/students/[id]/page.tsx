@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareTokenButton } from "@/components/share-token-button";
 import { CopyLinkButton } from "@/components/copy-link-button";
+import { CopyLoginButton } from "@/components/copy-login-button";
 import { ReportRow } from "@/components/report-row";
 import { currency, fmtDateTime, fmtDate } from "@/lib/format";
 import { StickyNote } from "lucide-react";
@@ -280,7 +281,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                     <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Password</div>
                     <div className="text-sm font-mono font-medium">{student.password || "—"}</div>
                   </div>
-                  <CopyLinkButton url="/portal/student" label="Copy login link" relative />
+                  <CopyLoginButton username={student.username || "—"} password={student.password || "—"} />
                 </div>
               </div>
             </>

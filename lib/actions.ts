@@ -477,7 +477,7 @@ export async function rescheduleClassQuick(
   const meeting_room = generateMeetingRoom();
   await execute(
     `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, meeting_room, rescheduled_from)
-     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, ?, ?)`,
     [
       cls.student_id,
       iso,
@@ -744,7 +744,7 @@ export async function cancelClass(id: number, formData: FormData) {
     const meetingRoom = generateMeetingRoom();
     await execute(
       `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, meeting_room, rescheduled_from)
-       VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, ?, ?)`,
       [cls.student_id, iso, cls.duration_minutes, cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson", cls.location, meetingRoom, id]
     );
   }
