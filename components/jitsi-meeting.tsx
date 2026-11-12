@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Monitor, AlertTriangle } from "lucide-react";
 
 declare global {
@@ -32,6 +32,11 @@ export function JitsiMeeting({
   const apiRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const onCloseRef = useRef(onClose);
+  const onHangupRef = useRef(onHangup);
+  onCloseRef.current = onClose;
+  onHangupRef.current = onHangup;
 
   const useJaas = !!jwt;
   const domain = useJaas ? JAAS_DOMAIN : FREE_DOMAIN;
@@ -79,8 +84,8 @@ export function JitsiMeeting({
         });
 
         apiRef.current.addListener("readyToClose", () => {
-          onHangup?.();
-          onClose?.();
+          onHangupRef.current?.();
+          onCloseRef.current?.();
         });
 
         timeoutId = setTimeout(() => {
@@ -124,7 +129,9 @@ export function JitsiMeeting({
         apiRef.current = null;
       }
     };
-  }, [roomName, displayName, onClose, onHangup, jwt, domain, scriptUrl]);
+  // Only re-run when the meeting identity changes, not on callback changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomName, domain, scriptUrl]);
 
   return (
     <div className="relative h-full w-full">
