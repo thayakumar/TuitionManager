@@ -22,6 +22,7 @@ import { ShareTokenButton } from "@/components/share-token-button";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { CopyLoginButton } from "@/components/copy-login-button";
 import { ReportRow } from "@/components/report-row";
+import { NotesTable } from "@/components/notes-table";
 import { currency, fmtDateTime, fmtDate } from "@/lib/format";
 import { StickyNote } from "lucide-react";
 import type { Student, ClassRow, Invoice, StudentNote } from "@/lib/types";
@@ -80,7 +81,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
       [id]
     ),
     queryAll<StudentNote>(
-      "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC LIMIT 20",
+      "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC",
       [id]
     ),
     queryAll<{ id: number; scheduled_at: string; subject: string | null; content: string }>(
@@ -601,36 +602,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
               </Button>
             </div>
           </form>
-          {notes.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <MessageSquare size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No notes yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {notes.map((n, i) => (
-                <div
-                  key={n.id}
-                  className="flex items-start gap-3 rounded-lg border border-border/50 p-3 transition-all hover:bg-secondary/30"
-                >
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-violet-50 shrink-0 mt-0.5">
-                    <MessageSquare size={14} className="text-violet-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm whitespace-pre-wrap">{n.content}</div>
-                    <div className="text-xs text-muted-foreground mt-1.5">
-                      {new Date(n.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                  <form action={deleteStudentNote.bind(null, n.id, id)}>
-                    <Button type="submit" variant="ghost" size="icon-sm" title="Delete note" className="shrink-0 opacity-0 group-hover:opacity-100 hover:!opacity-100 text-muted-foreground hover:text-red-500">
-                      <Trash2 size={14} />
-                    </Button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          )}
+          <NotesTable notes={notes} studentId={id} deleteAction={deleteStudentNote} />
         </CardContent>
       </Card>
     </>
