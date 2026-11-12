@@ -20,6 +20,7 @@ export function MeetingRoom({
   subject,
   initialNotes,
   isAdmin = true,
+  jwt,
 }: {
   classId: number;
   roomName: string;
@@ -29,6 +30,7 @@ export function MeetingRoom({
   subject: string;
   initialNotes: string;
   isAdmin?: boolean;
+  jwt?: string;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -37,7 +39,7 @@ export function MeetingRoom({
   const [saved, setSaved] = useState(true);
   const [isPending, startTransition] = useTransition();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const meetingUrl = `https://meet.jit.si/${roomName}`;
+  const meetingUrl = `https://8x8.vc/${roomName}`;
   const scope = isAdmin ? "teacher" : "student";
 
   const doSave = useCallback(
@@ -158,6 +160,7 @@ export function MeetingRoom({
             roomName={roomName}
             displayName={isAdmin ? "Tutor" : studentName}
             onHangup={handleHangup}
+            jwt={jwt}
           />
         </div>
 

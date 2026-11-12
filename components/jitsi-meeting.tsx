@@ -9,16 +9,21 @@ declare global {
   }
 }
 
+const JAAS_DOMAIN = "8x8.vc";
+const JAAS_SCRIPT = `https://${JAAS_DOMAIN}/vpaas-magic-cookie-4f3905459ade48a9b9ccc2f876fbc944/external_api.js`;
+
 export function JitsiMeeting({
   roomName,
   displayName,
   onClose,
   onHangup,
+  jwt,
 }: {
   roomName: string;
   displayName: string;
   onClose?: () => void;
   onHangup?: () => void;
+  jwt?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
@@ -34,9 +39,10 @@ export function JitsiMeeting({
       if (apiRef.current) return;
 
       try {
-        apiRef.current = new window.JitsiMeetExternalAPI("meet.jit.si", {
+        apiRef.current = new window.JitsiMeetExternalAPI(JAAS_DOMAIN, {
           roomName,
           parentNode: containerRef.current,
+          jwt,
           configOverwrite: {
             prejoinConfig: { enabled: false },
             startWithAudioMuted: false,
@@ -70,8 +76,6 @@ export function JitsiMeeting({
           onClose?.();
         });
 
-        // If meeting doesn't connect in 10s, hide loading overlay anyway
-        // (common cause: browser extensions blocking Jitsi iframe)
         timeoutId = setTimeout(() => {
           if (!cancelled) {
             setLoading(false);
@@ -93,7 +97,7 @@ export function JitsiMeeting({
       initJitsi();
     } else {
       const script = document.createElement("script");
-      script.src = "https://meet.jit.si/external_api.js";
+      script.src = JAAS_SCRIPT;
       script.async = true;
       script.onload = initJitsi;
       script.onerror = () => {
@@ -113,7 +117,7 @@ export function JitsiMeeting({
         apiRef.current = null;
       }
     };
-  }, [roomName, displayName, onClose, onHangup]);
+  }, [roomName, displayName, onClose, onHangup, jwt]);
 
   return (
     <div className="relative h-full w-full">
@@ -133,7 +137,7 @@ export function JitsiMeeting({
             <AlertTriangle size={32} className="text-amber-400" />
             <p className="text-sm text-gray-300">{error}</p>
             <a
-              href={`https://meet.jit.si/${roomName}`}
+              href={`https://${JAAS_DOMAIN}/${roomName}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 text-sm text-indigo-400 underline hover:text-indigo-300"

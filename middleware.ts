@@ -29,6 +29,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Meeting routes accept either admin or student session
+  if (pathname.startsWith("/meeting/")) {
+    const adminSession = request.cookies.get("admin_session")?.value;
+    const studentSession = request.cookies.get("student_session")?.value;
+    if (!adminSession && !studentSession) {
+      const loginUrl = new URL("/portal/student", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
   // Admin routes require admin_session cookie
   const session = request.cookies.get("admin_session")?.value;
   if (!session) {
