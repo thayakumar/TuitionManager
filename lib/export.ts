@@ -1,6 +1,7 @@
 "use server";
 
 import { queryAll } from "./db";
+import { verifyAdminSession } from "./auth";
 
 function toCsv(headers: string[], rows: string[][]): string {
   const escape = (v: string) => {
@@ -17,6 +18,8 @@ function toCsv(headers: string[], rows: string[][]): string {
 }
 
 export async function exportStudentsCsv(): Promise<string> {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) throw new Error("Unauthorized");
   const students = await queryAll<Record<string, unknown>>(
     "SELECT name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, active, created_at FROM students ORDER BY name"
   );
@@ -31,6 +34,8 @@ export async function exportStudentsCsv(): Promise<string> {
 }
 
 export async function exportClassesCsv(): Promise<string> {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) throw new Error("Unauthorized");
   const classes = await queryAll<Record<string, unknown>>(
     `SELECT s.name AS student_name, c.scheduled_at, c.duration_minutes, c.subject, c.location, c.status, c.attendance
      FROM classes c JOIN students s ON s.id = c.student_id ORDER BY c.scheduled_at DESC`
@@ -44,6 +49,8 @@ export async function exportClassesCsv(): Promise<string> {
 }
 
 export async function exportInvoicesCsv(): Promise<string> {
+  const isAdmin = await verifyAdminSession();
+  if (!isAdmin) throw new Error("Unauthorized");
   const invoices = await queryAll<Record<string, unknown>>(
     `SELECT i.invoice_number, s.name AS student_name, i.period_start, i.period_end, i.total_amount, i.status, i.issued_at, i.paid_at
      FROM invoices i JOIN students s ON s.id = i.student_id ORDER BY i.issued_at DESC`

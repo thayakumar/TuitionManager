@@ -5,9 +5,19 @@ import { redirect } from "next/navigation";
 import { queryAll, queryOne, execute, getClient, ensureMigrated } from "./db";
 import {
   createAdminSession, destroyAdminSession, createStudentSession, destroyStudentSession,
-  getStudentSession, isAdminRequest,
+  verifyAdminSession, getStudentSession, isAdminRequest,
 } from "./auth";
 import type { Attendance, ClassStatus, InvoiceStatus } from "./types";
+
+async function requireAdmin() {
+  const ok = await verifyAdminSession();
+  if (!ok) throw new Error("Unauthorized");
+}
+
+async function requireStudentSession(expectedId: number) {
+  const sid = await getStudentSession();
+  if (sid !== expectedId) throw new Error("Unauthorized");
+}
 
 // ---------- Admin Login ----------
 
@@ -77,16 +87,28 @@ export async function logoutStudent() {
 
 // ---------- Students ----------
 
-function generateCredentials(name: string) {
+async function generateCredentials(name: string) {
   const firstName = name.split(/\s+/)[0].toLowerCase();
-  return { username: firstName, password: `${firstName}123` };
+  let username = firstName;
+  let suffix = 1;
+  while (true) {
+    const existing = await queryOne<{ id: number }>(
+      "SELECT id FROM students WHERE username = ?",
+      [username]
+    );
+    if (!existing) break;
+    suffix++;
+    username = `${firstName}${suffix}`;
+  }
+  return { username, password: `${username}123` };
 }
 
 export async function createStudent(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") || "").trim();
   if (!name) throw new Error("Name is required");
 
-  const { username, password } = generateCredentials(name);
+  const { username, password } = await generateCredentials(name);
 
   const result = await execute(
     `INSERT INTO students(name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active)
@@ -111,10 +133,11 @@ export async function createStudent(formData: FormData) {
 }
 
 export async function createStudentQuick(formData: FormData): Promise<number> {
+  await requireAdmin();
   const name = String(formData.get("name") || "").trim();
   if (!name) throw new Error("Name is required");
 
-  const { username, password } = generateCredentials(name);
+  const { username, password } = await generateCredentials(name);
 
   const result = await execute(
     `INSERT INTO students(name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active)
@@ -140,6 +163,7 @@ export async function createStudentQuick(formData: FormData): Promise<number> {
 }
 
 export async function updateStudent(id: number, formData: FormData) {
+  await requireAdmin();
   await execute(
     `UPDATE students SET name=?, subject=?, grade_level=?, phone=?, email=?, guardian_name=?, guardian_contact=?, hourly_rate=?, notes=?, active=?
      WHERE id = ?`,
@@ -164,6 +188,7 @@ export async function updateStudent(id: number, formData: FormData) {
 }
 
 export async function updateStudentQuick(id: number, formData: FormData) {
+  await requireAdmin();
   await execute(
     `UPDATE students SET name=?, subject=?, grade_level=?, phone=?, email=?, guardian_name=?, guardian_contact=?, hourly_rate=?, notes=?, active=?
      WHERE id = ?`,
@@ -187,7 +212,8 @@ export async function updateStudentQuick(id: number, formData: FormData) {
 }
 
 export async function deleteStudent(id: number) {
-  await execute("DELETE FROM students WHERE id = ?", [id]);
+  await requireAdmin();
+  await execute("UPDATE students SET active = 0 WHERE id = ?", [id]);
   revalidatePath("/students");
   redirect("/students");
 }
@@ -201,6 +227,7 @@ function generateMeetingRoom(): string {
 }
 
 export async function createClass(formData: FormData) {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const scheduled_at = String(formData.get("scheduled_at") || "");
   if (!student_id || !scheduled_at) throw new Error("Student and date required");
@@ -229,6 +256,7 @@ export async function createClass(formData: FormData) {
 }
 
 export async function createClassQuick(formData: FormData) {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const scheduled_at = String(formData.get("scheduled_at") || "");
   if (!student_id || !scheduled_at) throw new Error("Student and date required");
@@ -257,6 +285,7 @@ export async function createClassQuick(formData: FormData) {
 }
 
 export async function updateClass(id: number, formData: FormData) {
+  await requireAdmin();
   const scheduled_at = String(formData.get("scheduled_at") || "");
   const iso = new Date(scheduled_at).toISOString();
 
@@ -279,6 +308,7 @@ export async function updateClass(id: number, formData: FormData) {
 }
 
 export async function markAttendance(id: number, attendance: Attendance) {
+  await requireAdmin();
   const row = await queryOne<{ student_id: number }>(
     "SELECT student_id FROM classes WHERE id = ?",
     [id]
@@ -294,6 +324,7 @@ export async function markAttendance(id: number, attendance: Attendance) {
 }
 
 export async function deleteClass(id: number) {
+  await requireAdmin();
   const row = await queryOne<{ student_id: number }>(
     "SELECT student_id FROM classes WHERE id = ?",
     [id]
@@ -305,6 +336,7 @@ export async function deleteClass(id: number) {
 }
 
 export async function deleteClassQuick(id: number) {
+  await requireAdmin();
   const row = await queryOne<{ student_id: number }>(
     "SELECT student_id FROM classes WHERE id = ?",
     [id]
@@ -315,6 +347,7 @@ export async function deleteClassQuick(id: number) {
 }
 
 export async function cancelClassQuick(id: number) {
+  await requireAdmin();
   const row = await queryOne<{ student_id: number }>(
     "SELECT student_id FROM classes WHERE id = ?",
     [id]
@@ -332,6 +365,7 @@ export async function cancelClassQuick(id: number) {
 // ---------- Reports ----------
 
 export async function saveReport(class_id: number, formData: FormData) {
+  await requireAdmin();
   const existing = await queryOne<{ id: number }>(
     "SELECT id FROM reports WHERE class_id = ?",
     [class_id]
@@ -369,6 +403,7 @@ export async function saveReport(class_id: number, formData: FormData) {
 }
 
 export async function saveReportQuick(class_id: number, formData: FormData) {
+  await requireAdmin();
   const existing = await queryOne<{ id: number }>(
     "SELECT id FROM reports WHERE class_id = ?",
     [class_id]
@@ -416,6 +451,7 @@ export async function rescheduleClassQuick(
   cancelledClassId: number,
   scheduledAt: string
 ) {
+  await requireAdmin();
   const cls = await queryOne<{
     student_id: number;
     duration_minutes: number;
@@ -449,7 +485,7 @@ export async function rescheduleClassQuick(
 
 // ---------- Invoices ----------
 
-async function nextInvoiceNumber(): Promise<string> {
+async function nextInvoiceNumber(retries = 3): Promise<string> {
   const row = await queryOne<{ invoice_number: string }>(
     "SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1"
   );
@@ -462,6 +498,7 @@ async function nextInvoiceNumber(): Promise<string> {
 }
 
 export async function generateInvoice(formData: FormData) {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const period_start = String(formData.get("period_start") || "");
   const period_end = String(formData.get("period_end") || "");
@@ -482,7 +519,7 @@ export async function generateInvoice(formData: FormData) {
     hourly_rate: number;
     student_name: string;
   }>(
-    `SELECT c.*, s.hourly_rate, s.name AS student_name
+    `SELECT c.id, c.scheduled_at, c.duration_minutes, c.subject, c.status, c.is_trial, s.hourly_rate, s.name AS student_name
      FROM classes c JOIN students s ON s.id = c.student_id
      WHERE c.student_id = ?
        AND c.status IN ('completed', 'canceled')
@@ -496,7 +533,7 @@ export async function generateInvoice(formData: FormData) {
     throw new Error("No un-invoiced classes in this period");
   }
 
-  const invoiceNumber = await nextInvoiceNumber();
+  let invoiceNumber = await nextInvoiceNumber();
   await ensureMigrated();
   const client = getClient();
 
@@ -505,18 +542,31 @@ export async function generateInvoice(formData: FormData) {
     return sum + (Number(c.duration_minutes) / 60) * Number(c.hourly_rate);
   }, 0);
 
-  const invResult = await client.execute({
-    sql: `INSERT INTO invoices(student_id, invoice_number, period_start, period_end, total_amount, status, notes)
-       VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
-    args: [
-      student_id,
-      invoiceNumber,
-      startISO,
-      endISO,
-      total,
-      String(formData.get("notes") || "") || null,
-    ],
-  });
+  let invResult;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      invResult = await client.execute({
+        sql: `INSERT INTO invoices(student_id, invoice_number, period_start, period_end, total_amount, status, notes)
+           VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
+        args: [
+          student_id,
+          invoiceNumber,
+          startISO,
+          endISO,
+          total,
+          String(formData.get("notes") || "") || null,
+        ],
+      });
+      break;
+    } catch (e: unknown) {
+      if (attempt < 2 && e instanceof Error && e.message.includes("UNIQUE")) {
+        invoiceNumber = await nextInvoiceNumber();
+        continue;
+      }
+      throw e;
+    }
+  }
+  if (!invResult) throw new Error("Failed to generate invoice number");
 
   const invoice_id = Number(invResult.lastInsertRowid);
 
@@ -543,6 +593,7 @@ export async function generateInvoice(formData: FormData) {
 }
 
 export async function generateInvoiceQuick(formData: FormData): Promise<number> {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const period_start = String(formData.get("period_start") || "");
   const period_end = String(formData.get("period_end") || "");
@@ -563,7 +614,7 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
     hourly_rate: number;
     student_name: string;
   }>(
-    `SELECT c.*, s.hourly_rate, s.name AS student_name
+    `SELECT c.id, c.scheduled_at, c.duration_minutes, c.subject, c.status, c.is_trial, s.hourly_rate, s.name AS student_name
      FROM classes c JOIN students s ON s.id = c.student_id
      WHERE c.student_id = ?
        AND c.status IN ('completed', 'canceled')
@@ -577,7 +628,7 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
     throw new Error("No un-invoiced classes in this period");
   }
 
-  const invoiceNumber = await nextInvoiceNumber();
+  let invoiceNumber = await nextInvoiceNumber();
   await ensureMigrated();
   const client = getClient();
 
@@ -586,18 +637,31 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
     return sum + (Number(c.duration_minutes) / 60) * Number(c.hourly_rate);
   }, 0);
 
-  const invResult = await client.execute({
-    sql: `INSERT INTO invoices(student_id, invoice_number, period_start, period_end, total_amount, status, notes)
-       VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
-    args: [
-      student_id,
-      invoiceNumber,
-      startISO,
-      endISO,
-      total,
-      String(formData.get("notes") || "") || null,
-    ],
-  });
+  let invResult;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      invResult = await client.execute({
+        sql: `INSERT INTO invoices(student_id, invoice_number, period_start, period_end, total_amount, status, notes)
+           VALUES (?, ?, ?, ?, ?, 'draft', ?)`,
+        args: [
+          student_id,
+          invoiceNumber,
+          startISO,
+          endISO,
+          total,
+          String(formData.get("notes") || "") || null,
+        ],
+      });
+      break;
+    } catch (e: unknown) {
+      if (attempt < 2 && e instanceof Error && e.message.includes("UNIQUE")) {
+        invoiceNumber = await nextInvoiceNumber();
+        continue;
+      }
+      throw e;
+    }
+  }
+  if (!invResult) throw new Error("Failed to generate invoice number");
 
   const invoice_id = Number(invResult.lastInsertRowid);
 
@@ -624,6 +688,7 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
 }
 
 export async function setInvoiceStatus(id: number, status: InvoiceStatus) {
+  await requireAdmin();
   const paid_at = status === "paid" ? new Date().toISOString() : null;
   await execute("UPDATE invoices SET status = ?, paid_at = ? WHERE id = ?", [
     status,
@@ -635,6 +700,7 @@ export async function setInvoiceStatus(id: number, status: InvoiceStatus) {
 }
 
 export async function deleteInvoice(id: number) {
+  await requireAdmin();
   await execute("DELETE FROM invoices WHERE id = ?", [id]);
   revalidatePath("/invoices");
   redirect("/invoices");
@@ -643,6 +709,7 @@ export async function deleteInvoice(id: number) {
 // ---------- Cancel / Reschedule (Phase 3) ----------
 
 export async function cancelClass(id: number, formData: FormData) {
+  await requireAdmin();
   const reason = String(formData.get("cancel_reason") || "") || null;
   const rescheduleDate = String(formData.get("reschedule_date") || "");
   const cls = await queryOne<{ student_id: number; duration_minutes: number; subject: string | null; location: string | null }>(
@@ -658,10 +725,11 @@ export async function cancelClass(id: number, formData: FormData) {
 
   if (rescheduleDate) {
     const iso = new Date(rescheduleDate).toISOString();
+    const meetingRoom = generateMeetingRoom();
     await execute(
-      `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, rescheduled_from)
-       VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?)`,
-      [cls.student_id, iso, cls.duration_minutes, cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson", cls.location, id]
+      `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, meeting_room, rescheduled_from)
+       VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+      [cls.student_id, iso, cls.duration_minutes, cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson", cls.location, meetingRoom, id]
     );
   }
 
@@ -674,6 +742,7 @@ export async function cancelClass(id: number, formData: FormData) {
 // ---------- Recurring Scheduling (Phase 4) ----------
 
 export async function createRecurrence(formData: FormData) {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const daysRaw = formData.getAll("day_of_week");
   const time = String(formData.get("time") || "");
@@ -709,6 +778,7 @@ export async function createRecurrence(formData: FormData) {
 }
 
 export async function createRecurrenceQuick(formData: FormData) {
+  await requireAdmin();
   const student_id = Number(formData.get("student_id"));
   const daysRaw = formData.getAll("day_of_week");
   const time = String(formData.get("time") || "");
@@ -777,6 +847,7 @@ async function generateClassesForRecurrence(recurrenceId: number, holidaySet: Se
 }
 
 export async function deleteRecurrence(id: number) {
+  await requireAdmin();
   const rec = await queryOne<{ student_id: number }>("SELECT student_id FROM recurrences WHERE id = ?", [id]);
   await execute("DELETE FROM classes WHERE recurrence_id = ? AND status = 'scheduled'", [id]);
   await execute("DELETE FROM recurrences WHERE id = ?", [id]);
@@ -788,6 +859,7 @@ export async function deleteRecurrence(id: number) {
 // ---------- Holidays (Phase 5) ----------
 
 export async function addHoliday(formData: FormData) {
+  await requireAdmin();
   const name = String(formData.get("name") || "").trim();
   const date = String(formData.get("date") || "");
   if (!name || !date) throw new Error("Name and date required");
@@ -796,6 +868,7 @@ export async function addHoliday(formData: FormData) {
 }
 
 export async function deleteHoliday(id: number) {
+  await requireAdmin();
   await execute("DELETE FROM holidays WHERE id = ?", [id]);
   revalidatePath("/settings");
 }
@@ -803,6 +876,7 @@ export async function deleteHoliday(id: number) {
 // ---------- Student Notes (Phase 11) ----------
 
 export async function addStudentNote(studentId: number, formData: FormData) {
+  await requireAdmin();
   const content = String(formData.get("content") || "").trim();
   if (!content) throw new Error("Note content required");
   await execute("INSERT INTO student_notes(student_id, content) VALUES (?, ?)", [studentId, content]);
@@ -810,6 +884,7 @@ export async function addStudentNote(studentId: number, formData: FormData) {
 }
 
 export async function deleteStudentNote(noteId: number, studentId: number) {
+  await requireAdmin();
   await execute("DELETE FROM student_notes WHERE id = ?", [noteId]);
   revalidatePath(`/students/${studentId}`);
 }
@@ -817,6 +892,7 @@ export async function deleteStudentNote(noteId: number, studentId: number) {
 // ---------- Share Tokens (Phase 13) ----------
 
 export async function generateShareToken(studentId: number) {
+  await requireAdmin();
   const token = crypto.randomUUID();
   await execute("UPDATE share_tokens SET active = 0 WHERE student_id = ?", [studentId]);
   await execute("INSERT INTO share_tokens(student_id, token) VALUES (?, ?)", [studentId, token]);
@@ -825,6 +901,7 @@ export async function generateShareToken(studentId: number) {
 }
 
 export async function revokeShareToken(studentId: number) {
+  await requireAdmin();
   await execute("UPDATE share_tokens SET active = 0 WHERE student_id = ?", [studentId]);
   revalidatePath(`/students/${studentId}`);
 }
@@ -832,6 +909,7 @@ export async function revokeShareToken(studentId: number) {
 // ---------- Settings ----------
 
 export async function saveSettings(formData: FormData) {
+  await requireAdmin();
   const keys = ["business_name", "business_contact", "currency", "payment_instructions"];
   for (const k of keys) {
     await execute(
@@ -844,8 +922,10 @@ export async function saveSettings(formData: FormData) {
 }
 
 export async function saveDuitNowQR(formData: FormData) {
+  await requireAdmin();
   const file = formData.get("qr_image") as File | null;
   if (!file || file.size === 0) return;
+  if (file.size > 512000) throw new Error("QR image must be under 500KB");
   const buffer = await file.arrayBuffer();
   const base64 = Buffer.from(buffer).toString("base64");
   const dataUrl = `data:${file.type};base64,${base64}`;
@@ -858,54 +938,12 @@ export async function saveDuitNowQR(formData: FormData) {
 }
 
 export async function removeDuitNowQR() {
+  await requireAdmin();
   await execute("DELETE FROM settings WHERE key = 'duitnow_qr'");
   revalidatePath("/settings");
 }
 
 // ---------- Classroom / Posts ----------
-
-export async function createPost(formData: FormData) {
-  const type = String(formData.get("type") || "material");
-  const title = String(formData.get("title") || "").trim();
-  if (!title) throw new Error("Title is required");
-
-  const student_id = formData.get("student_id") ? Number(formData.get("student_id")) : null;
-  const due_at = String(formData.get("due_at") || "") || null;
-  const body = String(formData.get("body") || "") || null;
-
-  const result = await execute(
-    `INSERT INTO posts(type, title, body, student_id, due_at) VALUES (?, ?, ?, ?, ?)`,
-    [type, title, body, student_id, due_at ? new Date(due_at).toISOString() : null]
-  );
-
-  const postId = Number(result.lastInsertRowid);
-
-  if (type === "quiz") {
-    const questionsJson = String(formData.get("questions") || "[]");
-    try {
-      const questions = JSON.parse(questionsJson) as Array<{
-        question: string; type: string; options?: string; correct_answer?: string; points?: number;
-      }>;
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-        await execute(
-          `INSERT INTO quiz_questions(post_id, question, type, options, correct_answer, points, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [postId, q.question, q.type || "mcq", q.options || null, q.correct_answer || null, q.points || 1, i]
-        );
-      }
-    } catch {
-      // Invalid JSON, skip questions
-    }
-  }
-
-  revalidatePath("/classroom");
-  if (student_id) {
-    revalidatePath(`/classroom/${student_id}`);
-    revalidatePath(`/portal`);
-  }
-  redirect(student_id ? `/classroom/${student_id}` : "/classroom");
-}
 
 export async function createPostAction(
   studentId: number,
@@ -916,6 +954,7 @@ export async function createPostAction(
   topicId: number | null = null,
   maxPoints: number | null = null
 ): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
   if (!title.trim()) return { success: false, error: "Title is required" };
   await execute(
     `INSERT INTO posts(type, title, body, student_id, due_at, topic_id, max_points) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -931,6 +970,7 @@ export async function deletePostAction(
   postId: number,
   studentId: number
 ): Promise<{ success: boolean }> {
+  await requireAdmin();
   await execute("DELETE FROM posts WHERE id = ?", [postId]);
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
@@ -939,6 +979,7 @@ export async function deletePostAction(
 }
 
 export async function updatePost(formData: FormData) {
+  await requireAdmin();
   const id = Number(formData.get("id"));
   const title = String(formData.get("title") || "").trim();
   if (!title) throw new Error("Title is required");
@@ -962,6 +1003,7 @@ export async function updatePost(formData: FormData) {
 }
 
 export async function deletePost(id: number, studentId?: number) {
+  await requireAdmin();
   await execute("DELETE FROM posts WHERE id = ?", [id]);
   revalidatePath("/classroom");
   if (studentId) {
@@ -973,11 +1015,14 @@ export async function deletePost(id: number, studentId?: number) {
 export async function submitAssignment(formData: FormData) {
   const post_id = Number(formData.get("post_id"));
   const student_id = Number(formData.get("student_id"));
+  await requireStudentSession(student_id);
   const content = String(formData.get("content") || "") || null;
   const file_url = String(formData.get("file_url") || "") || null;
 
   await execute(
-    `INSERT INTO submissions(post_id, student_id, content, file_url) VALUES (?, ?, ?, ?)`,
+    `INSERT INTO submissions(post_id, student_id, content, file_url)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(post_id, student_id) DO UPDATE SET content = excluded.content, file_url = excluded.file_url, submitted_at = datetime('now')`,
     [post_id, student_id, content, file_url]
   );
 
@@ -986,6 +1031,7 @@ export async function submitAssignment(formData: FormData) {
 }
 
 export async function gradeSubmission(id: number, formData: FormData) {
+  await requireAdmin();
   const grade = String(formData.get("grade") || "");
   const feedback = String(formData.get("feedback") || "") || null;
 
@@ -999,7 +1045,13 @@ export async function gradeSubmission(id: number, formData: FormData) {
 
 export async function submitQuizAnswers(formData: FormData) {
   const student_id = Number(formData.get("student_id"));
+  await requireStudentSession(student_id);
   const post_id = Number(formData.get("post_id"));
+
+  await execute(
+    "DELETE FROM quiz_answers WHERE question_id IN (SELECT id FROM quiz_questions WHERE post_id = ?) AND student_id = ?",
+    [post_id, student_id]
+  );
 
   const questions = await queryAll<{ id: number; correct_answer: string | null; type: string }>(
     "SELECT id, correct_answer, type FROM quiz_questions WHERE post_id = ? ORDER BY sort_order",
@@ -1024,6 +1076,7 @@ export async function submitQuizAnswers(formData: FormData) {
 // ---------- Topics ----------
 
 export async function createTopic(studentId: number, name: string): Promise<{ success: boolean; id?: number }> {
+  await requireAdmin();
   if (!name.trim()) return { success: false };
   const maxOrder = await queryOne<{ m: number }>("SELECT COALESCE(MAX(sort_order), -1) as m FROM topics WHERE student_id = ?", [studentId]);
   const result = await execute(
@@ -1036,6 +1089,7 @@ export async function createTopic(studentId: number, name: string): Promise<{ su
 }
 
 export async function renameTopic(topicId: number, name: string, studentId: number): Promise<{ success: boolean }> {
+  await requireAdmin();
   if (!name.trim()) return { success: false };
   await execute("UPDATE topics SET name = ? WHERE id = ?", [name.trim(), topicId]);
   revalidatePath("/classroom");
@@ -1044,6 +1098,7 @@ export async function renameTopic(topicId: number, name: string, studentId: numb
 }
 
 export async function deleteTopic(topicId: number, studentId: number): Promise<{ success: boolean }> {
+  await requireAdmin();
   await execute("DELETE FROM topics WHERE id = ?", [topicId]);
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
@@ -1058,6 +1113,7 @@ export async function gradeSubmissionAction(
   feedback: string,
   studentId: number
 ): Promise<{ success: boolean }> {
+  await requireAdmin();
   await execute(
     "UPDATE submissions SET grade = ?, feedback = ?, graded_at = datetime('now') WHERE id = ?",
     [grade, feedback || null, submissionId]
@@ -1077,6 +1133,7 @@ export async function addPostAttachment(
   fileType: string | null,
   studentId: number
 ): Promise<{ success: boolean }> {
+  await requireAdmin();
   await execute(
     "INSERT INTO post_attachments(post_id, file_name, file_url, file_type) VALUES (?, ?, ?, ?)",
     [postId, fileName, fileUrl, fileType]
@@ -1086,6 +1143,7 @@ export async function addPostAttachment(
 }
 
 export async function deletePostAttachment(attachmentId: number, studentId: number): Promise<{ success: boolean }> {
+  await requireAdmin();
   await execute("DELETE FROM post_attachments WHERE id = ?", [attachmentId]);
   revalidatePath(`/classroom/${studentId}`);
   return { success: true };
@@ -1115,15 +1173,13 @@ async function classBelongsToStudent(classId: number, studentId: number): Promis
   return !!row && Number(row.student_id) === studentId;
 }
 
-/** Admin-only notes for a meeting. Never exposed to students. */
 export async function saveTeacherNotes(classId: number, notes: string) {
-  if (!(await isAdminRequest())) throw new Error("Not authorized");
+  await requireAdmin();
   await upsertClassNote(classId, "teacher", notes);
   revalidatePath(`/classes/${classId}`);
   revalidatePath("/schedule");
 }
 
-/** Notes owned by the signed-in student for one of their own meetings. */
 export async function saveStudentNotes(classId: number, notes: string) {
   const studentId = await getStudentSession();
   if (!studentId || !(await classBelongsToStudent(classId, studentId))) {
@@ -1132,6 +1188,13 @@ export async function saveStudentNotes(classId: number, notes: string) {
   await upsertClassNote(classId, "student", notes);
   revalidatePath(`/portal/student/${studentId}`);
   revalidatePath(`/portal/student/${studentId}/notes`);
+}
+
+export async function saveClassNotes(classId: number, scope: "teacher" | "student", content: string) {
+  if (scope === "teacher") {
+    return saveTeacherNotes(classId, content);
+  }
+  return saveStudentNotes(classId, content);
 }
 
 /** @deprecated Use saveTeacherNotes — kept for older callers. */

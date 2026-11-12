@@ -9,7 +9,7 @@ import { ExportButton } from "@/components/export-button";
 import { exportClassesCsv } from "@/lib/export";
 import { ScheduleClassDialog } from "@/components/schedule-class-dialog";
 import { RecurringScheduleDialog } from "@/components/recurring-schedule-dialog";
-import type { ClassWithStudent, Student } from "@/lib/types";
+import type { ClassWithTeacherNotes, Student } from "@/lib/types";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +21,10 @@ export default async function SchedulePage() {
   const endISO = endOfMonth(addMonths(now, 2)).toISOString();
 
   const [classes, students] = await Promise.all([
-    queryAll<ClassWithStudent & { teacher_notes: string | null }>(
-      `SELECT c.*, s.name AS student_name, s.hourly_rate,
-              (SELECT content FROM class_notes WHERE class_id = c.id AND scope = 'teacher') AS teacher_notes
+    queryAll<ClassWithTeacherNotes>(
+      `SELECT c.id, c.student_id, c.scheduled_at, c.duration_minutes, c.subject, c.location, c.status, c.attendance, c.recurrence_id, c.is_trial, c.cancel_reason, c.rescheduled_from, c.meeting_room, c.created_at, s.name AS student_name, s.hourly_rate, cn.content AS teacher_notes
        FROM classes c JOIN students s ON s.id = c.student_id
+       LEFT JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'
        WHERE c.scheduled_at BETWEEN ? AND ?
        ORDER BY c.scheduled_at`,
       [startISO, endISO]
@@ -45,7 +45,7 @@ export default async function SchedulePage() {
     attendance: c.attendance,
     is_trial: c.is_trial,
     meeting_room: c.meeting_room,
-    teacher_notes: c.teacher_notes,
+    teacher_notes: c.teacher_notes ?? null,
   }));
 
   const studentList = students.map((s) => ({

@@ -1,0 +1,202 @@
+{
+  "fixes": [
+    {
+      "id": "A-1",
+      "severity": "BLOCKER",
+      "description": "Added requireAdmin() and requireStudentSession() auth guards to ALL server actions",
+      "files": ["lib/actions.ts", "lib/auth.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-6",
+      "severity": "CRITICAL",
+      "description": "Added UNIQUE index on students.username + async dedup in generateCredentials()",
+      "files": ["lib/db.ts", "lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-7",
+      "severity": "HIGH",
+      "description": "Added verifyAdminSession() guard to all 3 export actions",
+      "files": ["lib/export.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-8",
+      "severity": "HIGH",
+      "description": "Replaced SELECT * FROM students with explicit columns in share invoice page",
+      "files": ["app/share/[token]/invoices/[invoiceId]/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-9",
+      "severity": "HIGH",
+      "description": "Replaced SELECT * FROM classes with explicit columns in share attendance page",
+      "files": ["app/share/[token]/attendance/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-10",
+      "severity": "HIGH",
+      "description": "Removed /meeting/ from PUBLIC_PATHS — meetings now require auth",
+      "files": ["middleware.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-12",
+      "severity": "HIGH",
+      "description": "Added retry-on-conflict for invoice number race condition",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-14",
+      "severity": "HIGH",
+      "description": "Added generateMeetingRoom() to cancelClass reschedule INSERT",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-15",
+      "severity": "HIGH",
+      "description": "Created admin_sessions table, refactored auth.ts for multi-session support",
+      "files": ["lib/db.ts", "lib/auth.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-16",
+      "severity": "HIGH",
+      "description": "Replaced SELECT * queries in classes detail page with explicit columns",
+      "files": ["app/classes/[id]/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-17",
+      "severity": "HIGH",
+      "description": "Removed 'Default: admin / admin123' hint from login page",
+      "files": ["app/portal/admin/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-18",
+      "severity": "MEDIUM",
+      "description": "Changed submitAssignment to upsert with ON CONFLICT",
+      "files": ["lib/actions.ts", "lib/db.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-19",
+      "severity": "MEDIUM",
+      "description": "Changed submitQuizAnswers to delete-before-insert pattern",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-21",
+      "severity": "MEDIUM",
+      "description": "Added 500KB file size limit on QR upload",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-22",
+      "severity": "MEDIUM",
+      "description": "Changed deleteStudent to soft-delete (UPDATE active=0)",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-23",
+      "severity": "MEDIUM",
+      "description": "Removed meeting_notes from ClassRow type, added ClassWithTeacherNotes",
+      "files": ["lib/types.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-25",
+      "severity": "LOW",
+      "description": "Removed dead createPost function (replaced by createPostAction)",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-28",
+      "severity": "LOW",
+      "description": "Fixed (c as any).teacher_notes type bypass in schedule page",
+      "files": ["app/schedule/page.tsx", "lib/types.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "A-29",
+      "severity": "LOW",
+      "description": "Removed /api/ from PUBLIC_PATHS",
+      "files": ["middleware.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "SELECT-*-classroom",
+      "severity": "HIGH",
+      "description": "Replaced SELECT * in admin classroom pages with explicit columns",
+      "files": ["app/classroom/[studentId]/page.tsx", "app/classroom/[studentId]/post/[postId]/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "SELECT-*-invoices",
+      "severity": "HIGH",
+      "description": "Replaced SELECT * in invoice detail page with explicit columns",
+      "files": ["app/invoices/[id]/page.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "SELECT-*-actions",
+      "severity": "HIGH",
+      "description": "Replaced SELECT c.* in invoice generation with explicit columns",
+      "files": ["lib/actions.ts"],
+      "status": "fixed",
+      "verification": "build pass"
+    },
+    {
+      "id": "class-notes-migration",
+      "severity": "MEDIUM",
+      "description": "Migrated meeting_notes to class_notes table (scoped teacher/student), updated all references",
+      "files": ["lib/db.ts", "lib/auth.ts", "lib/actions.ts", "lib/types.ts", "app/classes/[id]/page.tsx", "app/schedule/page.tsx", "components/meeting-room.tsx", "components/schedule-calendar-wrapper.tsx"],
+      "status": "fixed",
+      "verification": "build pass"
+    }
+  ],
+  "deferred": [
+    {"id": "A-2", "reason": "Q1: leave as-is, personal app — no password hashing"},
+    {"id": "A-4", "reason": "Q1: leave as-is, personal app — plaintext admin credentials"},
+    {"id": "A-5", "reason": "Q2: keep current firstName123 scheme"},
+    {"id": "A-13", "reason": "Transaction wrapping for invoice generation — retry logic added instead"},
+    {"id": "A-20", "reason": "Dead createPost function removed, quiz JSON issue no longer applies"},
+    {"id": "A-24", "reason": "Q7: accept vestigial meeting_notes column in DB"},
+    {"id": "A-30-38", "reason": "Style, duplication, and minor issues — deferred as low priority"}
+  ],
+  "build_verification": {
+    "command": "npx next build",
+    "result": "PASS",
+    "timestamp": "2026-11-11"
+  }
+}

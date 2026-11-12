@@ -4,14 +4,18 @@ import crypto from "crypto";
 
 const COOKIE_NAME = "admin_session";
 const STUDENT_COOKIE = "student_session";
+const SESSION_EXPIRY_DAYS = 7;
 
 export async function verifyAdminSession(): Promise<boolean> {
   const cookieStore = cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return false;
 
-  const stored = await getSetting("admin_session_token");
-  return !!stored && stored === token;
+  const session = await queryOne<{ id: number }>(
+    "SELECT id FROM admin_sessions WHERE token = ? AND expires_at > datetime('now')",
+    [token]
+  );
+  return !!session;
 }
 
 export async function isAdminRequest(): Promise<boolean> {
@@ -22,10 +26,21 @@ export async function isAdminRequest(): Promise<boolean> {
   }
 }
 
+export async function requireAdmin(): Promise<void> {
+  const ok = await verifyAdminSession();
+  if (!ok) throw new Error("Unauthorized");
+}
+
+export async function requireStudent(expectedId: number): Promise<void> {
+  const sid = await getStudentSession();
+  if (sid !== expectedId) throw new Error("Unauthorized");
+}
+
 export async function createAdminSession(): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
+  const expiryDays = SESSION_EXPIRY_DAYS;
   await execute(
-    "INSERT OR REPLACE INTO settings(key, value) VALUES ('admin_session_token', ?)",
+    `INSERT INTO admin_sessions(token, expires_at) VALUES (?, datetime('now', '+${expiryDays} days'))`,
     [token]
   );
   const cookieStore = cookies();
@@ -34,16 +49,17 @@ export async function createAdminSession(): Promise<string> {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24 * expiryDays,
   });
   return token;
 }
 
 export async function destroyAdminSession() {
-  await execute(
-    "DELETE FROM settings WHERE key = 'admin_session_token'"
-  );
   const cookieStore = cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (token) {
+    await execute("DELETE FROM admin_sessions WHERE token = ?", [token]);
+  }
   cookieStore.delete(COOKIE_NAME);
 }
 

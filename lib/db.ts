@@ -207,13 +207,25 @@ export async function migrate() {
     CREATE TABLE IF NOT EXISTS class_notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
-      scope TEXT NOT NULL CHECK(scope IN ('student','teacher')),
+      scope TEXT NOT NULL CHECK(scope IN ('teacher','student')),
       content TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(class_id, scope)
     );
     CREATE INDEX IF NOT EXISTS idx_class_notes_class ON class_notes(class_id);
+
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
   `);
+
+  // Unique constraints added idempotently
+  try { await c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_students_username ON students(username)"); } catch {}
+  try { await c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_submissions_unique ON submissions(post_id, student_id)"); } catch {}
 
   const alterColumns = [
     "ALTER TABLE classes ADD COLUMN recurrence_id INTEGER REFERENCES recurrences(id) ON DELETE SET NULL",
@@ -256,6 +268,9 @@ export async function migrate() {
 
   await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_username', 'admin')");
   await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_password', 'admin123')");
+
+  // Clean up expired admin sessions
+  await c.execute("DELETE FROM admin_sessions WHERE expires_at < datetime('now')");
 }
 
 let _migrated = false;

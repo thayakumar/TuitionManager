@@ -84,9 +84,6 @@ export default function AdminLoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Default: admin / admin123
-        </p>
       </div>
     </div>
   );

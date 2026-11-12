@@ -7,9 +7,7 @@ const PUBLIC_PATHS = [
   "/portal/student",
   "/portal",
   "/share/",
-  "/meeting/",
   "/_next/",
-  "/api/",
   "/favicon.ico",
 ];
 

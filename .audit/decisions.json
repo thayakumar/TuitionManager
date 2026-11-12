@@ -1,0 +1,15 @@
+{
+  "decisions": [
+    { "id": "Q1", "issue": "A-2, A-4", "question": "Password hashing strategy", "answer": "Option C — leave as-is, personal app", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q2", "issue": "A-5", "question": "Student credential generation", "answer": "Option C — keep current firstName123 scheme", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q3", "issue": "A-10", "question": "/meeting/ auth requirement", "answer": "Option A — remove from PUBLIC_PATHS, require login", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q4", "issue": "A-15", "question": "Single admin session", "answer": "Option B — support multiple concurrent sessions (multi-device)", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q5", "issue": "A-18, A-19", "question": "Assignment/quiz resubmission policy", "answer": "Option A — upsert, latest replaces previous", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q6", "issue": "A-22", "question": "Student deletion behavior", "answer": "Option A — soft-delete (set active=0, preserve data)", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q7", "issue": "A-24", "question": "Legacy meeting_notes column", "answer": "Option A — accept vestigial column", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q8", "issue": "A-25", "question": "createPost vs createPostAction", "answer": "Option A — remove createPost if unused", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q9", "issue": "A-29", "question": "/api/ public path", "answer": "Option A — remove from PUBLIC_PATHS", "answered_by": "Ananth", "timestamp": "2026-11-11" },
+    { "id": "Q10", "issue": "A-38", "question": "Test coverage", "answer": "Option C — skip, personal app", "answered_by": "Ananth", "timestamp": "2026-11-11" }
+  ],
+  "deferred": []
+}

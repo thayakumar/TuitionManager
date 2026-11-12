@@ -36,22 +36,22 @@ export default async function PostDetailPage({
 
   const [student, post] = await Promise.all([
     queryOne<Student>(
-      "SELECT * FROM students WHERE id = ? AND active = 1",
+      "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
       [studentId]
     ),
-    queryOne<Post>("SELECT * FROM posts WHERE id = ?", [postId]),
+    queryOne<Post>("SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE id = ?", [postId]),
   ]);
 
   if (!student || !post) notFound();
 
   const [attachments, submission] = await Promise.all([
     queryAll<PostAttachment>(
-      "SELECT * FROM post_attachments WHERE post_id = ? ORDER BY id",
+      "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
       [postId]
     ),
     post.type === "assignment"
       ? queryOne<Submission>(
-          "SELECT * FROM submissions WHERE post_id = ? AND student_id = ? ORDER BY submitted_at DESC",
+          "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at FROM submissions WHERE post_id = ? AND student_id = ? ORDER BY submitted_at DESC",
           [postId, studentId]
         )
       : Promise.resolve(undefined),

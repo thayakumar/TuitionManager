@@ -32,13 +32,16 @@ export type ClassRow = {
   cancel_reason: string | null;
   rescheduled_from: number | null;
   meeting_room: string | null;
-  meeting_notes: string | null;
   created_at: string;
 };
 
 export type ClassWithStudent = ClassRow & {
   student_name: string;
   hourly_rate: number;
+};
+
+export type ClassWithTeacherNotes = ClassWithStudent & {
+  teacher_notes: string | null;
 };
 
 export type Report = {

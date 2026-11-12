@@ -13,18 +13,18 @@ export const dynamic = "force-dynamic";
 export default async function StudentClassroomPage({ params }: { params: { studentId: string } }) {
   const studentId = Number(params.studentId);
   const student = await queryOne<Student>(
-    "SELECT * FROM students WHERE id = ? AND active = 1",
+    "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
     [studentId]
   );
   if (!student) notFound();
 
   const [posts, topics, submissions] = await Promise.all([
     queryAll<Post>(
-      "SELECT * FROM posts WHERE student_id = ? ORDER BY created_at DESC",
+      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE student_id = ? ORDER BY created_at DESC",
       [studentId]
     ),
     queryAll<Topic>(
-      "SELECT * FROM topics WHERE student_id = ? ORDER BY sort_order, name",
+      "SELECT id, student_id, name, sort_order FROM topics WHERE student_id = ? ORDER BY sort_order, name",
       [studentId]
     ),
     queryAll<{ post_id: number; grade: string | null; graded_at: string | null; submitted_at: string }>(

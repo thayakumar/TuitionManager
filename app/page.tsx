@@ -23,8 +23,9 @@ import { format } from "date-fns";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const nowISO = new Date().toISOString();
   const now = new Date();
+  const nowISO = now.toISOString();
+  const todayLocal = now.toLocaleDateString("en-CA", { timeZone: "Asia/Kuala_Lumpur" });
   const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
   const currencySymbol = await getSetting("currency");
   const businessName = await getSetting("business_name");
@@ -90,8 +91,9 @@ export default async function DashboardPage() {
     queryAll<ClassWithStudent>(
       `SELECT c.*, s.name AS student_name, s.hourly_rate
        FROM classes c JOIN students s ON s.id = c.student_id
-       WHERE date(c.scheduled_at) = date('now')
+       WHERE date(c.scheduled_at) = ?
        ORDER BY c.scheduled_at`,
+      [todayLocal]
     ),
     queryOne<{ present: number; late: number; absent: number; total: number }>(
       `SELECT
@@ -237,7 +239,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {todayClasses.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}`}>
+                  <Link key={c.id} href={`/classes/${c.id}?from=dashboard`}>
                     <div className="flex items-start gap-3 rounded-lg border border-border/50 p-3 transition-all hover:bg-secondary/50 hover:shadow-sm">
                       <div className="min-w-[52px] text-center">
                         <div className="text-xs font-semibold text-foreground">
@@ -325,7 +327,7 @@ export default async function DashboardPage() {
                   {upcoming.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell>
-                        <Link href={`/classes/${c.id}`} className="font-medium text-primary hover:underline">
+                        <Link href={`/classes/${c.id}?from=dashboard`} className="font-medium text-primary hover:underline">
                           {fmtDateTime(c.scheduled_at)}
                         </Link>
                       </TableCell>
@@ -370,7 +372,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {needsReport.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}`}>
+                  <Link key={c.id} href={`/classes/${c.id}?from=dashboard`}>
                     <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2.5 transition-all hover:bg-secondary/50">
                       <div className="flex items-center gap-3">
                         <div className="flex size-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
@@ -411,7 +413,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {recentActivity.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}`}>
+                  <Link key={c.id} href={`/classes/${c.id}?from=dashboard`}>
                     <div className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2.5 transition-all hover:bg-secondary/50">
                       <div className="flex items-center gap-3">
                         <div className={`flex size-8 items-center justify-center rounded-lg ${

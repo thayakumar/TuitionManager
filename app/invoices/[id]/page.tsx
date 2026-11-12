@@ -64,12 +64,12 @@ function statusColor(status: string) {
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
-  const inv = await queryOne<Invoice>("SELECT * FROM invoices WHERE id = ?", [id]);
+  const inv = await queryOne<Invoice>("SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes FROM invoices WHERE id = ?", [id]);
   if (!inv) notFound();
 
   const [student, items, businessName, businessContact, paymentInstructions, currencySymbol, duitnowQr] =
     await Promise.all([
-      queryOne<Student>("SELECT * FROM students WHERE id = ?", [inv.student_id]),
+      queryOne<Student>("SELECT id, name, email, phone, guardian_name, guardian_contact, hourly_rate, notes, active, created_at FROM students WHERE id = ?", [inv.student_id]),
       queryAll<InvoiceItem>(
         "SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id",
         [id]

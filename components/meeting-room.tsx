@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Copy, Check, PhoneOff, PanelRightClose,
-  PanelRightOpen, Save, StickyNote, Monitor,
+  PanelRightOpen, Save, StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JitsiMeeting } from "@/components/jitsi-meeting";
-import { saveTeacherNotes, saveStudentNotes } from "@/lib/actions";
+import { saveClassNotes } from "@/lib/actions";
 import { fmtDateTime } from "@/lib/format";
 
 export function MeetingRoom({
@@ -38,19 +38,16 @@ export function MeetingRoom({
   const [isPending, startTransition] = useTransition();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meetingUrl = `https://meet.jit.si/${roomName}`;
+  const scope = isAdmin ? "teacher" : "student";
 
   const doSave = useCallback(
     (text: string) => {
       startTransition(async () => {
-        if (isAdmin) {
-          await saveTeacherNotes(classId, text);
-        } else {
-          await saveStudentNotes(classId, text);
-        }
+        await saveClassNotes(classId, scope, text);
         setSaved(true);
       });
     },
-    [classId, isAdmin, startTransition]
+    [classId, scope, startTransition]
   );
 
   function handleNotesChange(value: string) {
@@ -118,7 +115,6 @@ export function MeetingRoom({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          {/* Copy meeting link */}
           <Button
             variant="outline"
             size="sm"
@@ -138,7 +134,6 @@ export function MeetingRoom({
             )}
           </Button>
 
-          {/* Toggle notes panel */}
           <Button
             variant="outline"
             size="sm"
@@ -149,7 +144,6 @@ export function MeetingRoom({
             <span className="text-xs hidden sm:inline">Notes</span>
           </Button>
 
-          {/* Leave meeting */}
           <Button variant="destructive" size="sm" onClick={handleLeave}>
             <PhoneOff size={14} />
             <span className="hidden sm:inline">Leave</span>
@@ -159,7 +153,6 @@ export function MeetingRoom({
 
       {/* Main content: Jitsi + Notes panel */}
       <div className="flex-1 flex min-h-0">
-        {/* Jitsi area */}
         <div className="flex-1 min-w-0 bg-gray-900">
           <JitsiMeeting
             roomName={roomName}
@@ -168,14 +161,13 @@ export function MeetingRoom({
           />
         </div>
 
-        {/* Notes panel — teacher notes for the tutor, student notes for the student */}
         {notesOpen && (
           <div className="w-72 sm:w-80 border-l border-border bg-card flex flex-col shrink-0">
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
               <div className="flex items-center gap-2">
-                <StickyNote size={14} className="text-amber-500" />
+                <StickyNote size={14} className={isAdmin ? "text-amber-500" : "text-blue-500"} />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {isAdmin ? "Teacher Notes" : "Student Notes"}
+                  {isAdmin ? "Teacher Notes" : "My Notes"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -204,11 +196,7 @@ export function MeetingRoom({
             <textarea
               value={notes}
               onChange={(e) => handleNotesChange(e.target.value)}
-              placeholder={
-                isAdmin
-                  ? "Private tutor notes — students never see these..."
-                  : "Your private notes for this class..."
-              }
+              placeholder={isAdmin ? "Take notes during the class..." : "Jot down your own notes..."}
               className="flex-1 w-full resize-none border-0 bg-transparent px-3 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/50"
             />
           </div>

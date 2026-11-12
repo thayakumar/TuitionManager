@@ -48,15 +48,14 @@ function attendanceConfig(attendance: string | null) {
   }
 }
 
-export default async function ClassDetailPage({ params }: { params: { id: string } }) {
-  if (!(await isAdminRequest())) redirect("/portal/admin");
+export default async function ClassDetailPage({ params, searchParams }: { params: { id: string }; searchParams: { from?: string; report?: string } }) {
   const id = Number(params.id);
-  const cls = await queryOne<ClassRow>("SELECT * FROM classes WHERE id = ?", [id]);
+  const cls = await queryOne<ClassRow>("SELECT id, student_id, scheduled_at, duration_minutes, subject, location, status, attendance, recurrence_id, is_trial, cancel_reason, rescheduled_from, meeting_room, created_at FROM classes WHERE id = ?", [id]);
   if (!cls) notFound();
 
   const [student, report, teacherNote] = await Promise.all([
-    queryOne<Student>("SELECT * FROM students WHERE id = ?", [cls.student_id]),
-    queryOne<Report>("SELECT * FROM reports WHERE class_id = ?", [id]),
+    queryOne<Student>("SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active, created_at FROM students WHERE id = ?", [cls.student_id]),
+    queryOne<Report>("SELECT id, class_id, topics_covered, homework, performance, strengths, areas_to_improve, next_focus, rating, created_at, updated_at FROM reports WHERE class_id = ?", [id]),
     queryOne<{ content: string }>(
       "SELECT content FROM class_notes WHERE class_id = ? AND scope = 'teacher'",
       [id]
@@ -71,13 +70,14 @@ export default async function ClassDetailPage({ params }: { params: { id: string
 
   const sc = statusConfig(cls.status);
   const ac = attendanceConfig(cls.attendance);
+  const backHref = searchParams.from === "dashboard" ? "/" : "/schedule";
 
   return (
     <>
       <PageHeader
         title={
           <div className="flex items-center gap-3">
-            <Link href="/schedule" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={backHref} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft size={20} />
             </Link>
             <span className={cls.status === "canceled" ? "line-through opacity-60" : ""}>

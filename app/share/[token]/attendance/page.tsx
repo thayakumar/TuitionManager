@@ -22,7 +22,7 @@ export default async function ParentAttendancePage({ params }: { params: { token
 
   const [classes, stats] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? ORDER BY scheduled_at DESC",
+      "SELECT id, student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, cancel_reason, rescheduled_from, created_at FROM classes WHERE student_id = ? ORDER BY scheduled_at DESC",
       [studentId]
     ),
     queryOne<{ total: number; present: number; late: number; absent: number }>(
