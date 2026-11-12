@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       isAdmin
         ? "SELECT * FROM students WHERE id = ?"
         : `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-                  guardian_phone, guardian_email, active, created_at, username
+                  guardian_contact, active, created_at, username
            FROM students WHERE id = ?`,
       [cls.student_id]
     );
