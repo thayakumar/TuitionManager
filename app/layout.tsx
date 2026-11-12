@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import Nav from "@/components/Nav";
 import { LayoutShell } from "@/components/layout-shell";
 import { MainWrapper } from "@/components/main-wrapper";
+import { Toaster } from "sonner";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </MainWrapper>
         </LayoutShell>
+        <Toaster richColors position="top-right" closeButton />
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { gradeSubmissionAction } from "@/lib/actions";
 import { fmtDateTime } from "@/lib/format";
+import { toast } from "sonner";
 import type { Submission } from "@/lib/types";
 
 const inputClass =
@@ -32,6 +33,7 @@ export function GradeSubmissionForm({
       const result = await gradeSubmissionAction(submission.id, grade, feedback, studentId);
       if (result?.success) {
         setSuccess(true);
+        toast.success("Grade returned successfully");
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       }
