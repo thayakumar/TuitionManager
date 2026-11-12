@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { updateStudentQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -35,6 +36,7 @@ export function EditStudentDialog({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await boundAction(formData);
+      toast.success("Student updated");
       setOpen(false);
       router.refresh();
     });

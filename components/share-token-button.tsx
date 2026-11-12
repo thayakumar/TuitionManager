@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Link2, Copy, Check, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { generateShareToken, revokeShareToken } from "@/lib/actions";
 
@@ -11,11 +12,13 @@ export function ShareTokenButton({ studentId, existingToken }: { studentId: numb
   async function handleGenerate() {
     const newToken = await generateShareToken(studentId);
     setToken(newToken);
+    toast.success("Share link generated");
   }
 
   async function handleRevoke() {
     await revokeShareToken(studentId);
     setToken(null);
+    toast.success("Share link revoked");
   }
 
   function handleCopy() {

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Repeat } from "lucide-react";
+import { toast } from "sonner";
 import { createRecurrenceQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -43,6 +44,7 @@ export function RecurringScheduleDialog({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await createRecurrenceQuick(formData);
+      toast.success("Recurring schedule created");
       setOpen(false);
       router.refresh();
     });

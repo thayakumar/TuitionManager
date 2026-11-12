@@ -240,7 +240,7 @@ export async function createClass(formData: FormData) {
 
   const result = await execute(
     `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, meeting_room)
-     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, ?, ?)`,
     [
       student_id,
       iso,
@@ -250,6 +250,12 @@ export async function createClass(formData: FormData) {
       is_trial,
       meeting_room,
     ]
+  );
+
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('student', ?, 'class_scheduled', 'New Class Scheduled', ?, ?)`,
+    [student_id, `A new class has been scheduled.`, `/portal/student/${student_id}/schedule`]
   );
 
   revalidatePath("/schedule");
@@ -270,7 +276,7 @@ export async function createClassQuick(formData: FormData) {
 
   await execute(
     `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, meeting_room)
-     VALUES (?, ?, ?, ?, ?, 'scheduled', 'present', ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, ?, ?)`,
     [
       student_id,
       iso,
@@ -280,6 +286,12 @@ export async function createClassQuick(formData: FormData) {
       is_trial,
       meeting_room,
     ]
+  );
+
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('student', ?, 'class_scheduled', 'New Class Scheduled', ?, ?)`,
+    [student_id, `A new class has been scheduled.`, `/portal/student/${student_id}/schedule`]
   );
 
   revalidatePath("/schedule");
@@ -365,7 +377,14 @@ export async function cancelClassQuick(id: number) {
   );
   revalidatePath(`/classes/${id}`);
   revalidatePath("/schedule");
-  if (row) revalidatePath(`/students/${row.student_id}`);
+  if (row) {
+    revalidatePath(`/students/${row.student_id}`);
+    await execute(
+      `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+       VALUES ('student', ?, 'class_cancelled', 'Class Cancelled', ?, ?)`,
+      [row.student_id, "One of your classes has been cancelled.", `/portal/student/${row.student_id}/schedule`]
+    );
+  }
   revalidatePath("/");
   revalidatePath("/share", "layout");
 }
@@ -976,6 +995,14 @@ export async function createPostAction(
     `INSERT INTO posts(type, title, body, student_id, due_at, topic_id, max_points) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [type, title.trim(), body.trim() || null, studentId, dueAt ? new Date(dueAt).toISOString() : null, topicId, maxPoints]
   );
+  const notifType = type === "assignment" ? "new_assignment" : "new_material";
+  const notifTitle = type === "assignment" ? "New Assignment" : "New Material";
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('student', ?, ?, ?, ?, ?)`,
+    [studentId, notifType, notifTitle, `${title.trim()} has been posted in your classroom.`, `/portal/student/${studentId}/classroom`]
+  );
+
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
   revalidatePath("/portal/student", "layout");
@@ -1218,4 +1245,130 @@ export async function saveClassNotes(classId: number, scope: "teacher" | "studen
 /** @deprecated Use saveTeacherNotes — kept for older callers. */
 export async function saveMeetingNotes(classId: number, notes: string) {
   return saveTeacherNotes(classId, notes);
+}
+
+// ── Reschedule Requests ──────────────────────────────────────────
+
+export async function createRescheduleRequest(formData: FormData) {
+  const classId = Number(formData.get("class_id"));
+  const studentId = Number(formData.get("student_id"));
+  const reason = (formData.get("reason") as string) || null;
+  const t1 = formData.get("preferred_time_1") as string;
+  const t2 = (formData.get("preferred_time_2") as string) || null;
+  const t3 = (formData.get("preferred_time_3") as string) || null;
+
+  if (!classId || !studentId || !t1) return { error: "Missing required fields" };
+
+  await execute(
+    `INSERT INTO reschedule_requests(class_id, student_id, reason, preferred_time_1, preferred_time_2, preferred_time_3)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [classId, studentId, reason, new Date(t1).toISOString(), t2 ? new Date(t2).toISOString() : null, t3 ? new Date(t3).toISOString() : null]
+  );
+
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('admin', NULL, 'reschedule_request', 'Reschedule Request', ?, '/requests')`,
+    [`A student has requested to reschedule a class.`]
+  );
+
+  revalidatePath("/requests");
+  revalidatePath(`/portal/student/${studentId}`);
+  return { success: true };
+}
+
+export async function approveRescheduleRequest(requestId: number, approvedTime: string, adminNote: string | null) {
+  await requireAdmin();
+  const req = await queryOne<{ class_id: number; student_id: number }>(
+    "SELECT class_id, student_id FROM reschedule_requests WHERE id = ?",
+    [requestId]
+  );
+  if (!req) return { error: "Request not found" };
+
+  await execute(
+    `UPDATE reschedule_requests SET status = 'approved', approved_time = ?, admin_note = ?, resolved_at = datetime('now') WHERE id = ?`,
+    [new Date(approvedTime).toISOString(), adminNote, requestId]
+  );
+
+  const cls = await queryOne<{ student_id: number; duration_minutes: number; subject: string | null; location: string | null }>(
+    "SELECT student_id, duration_minutes, subject, location FROM classes WHERE id = ?",
+    [req.class_id]
+  );
+  if (cls) {
+    await execute(
+      `UPDATE classes SET status = 'canceled', cancel_reason = 'Rescheduled via student request' WHERE id = ?`,
+      [req.class_id]
+    );
+    const meeting_room = generateMeetingRoom();
+    await execute(
+      `INSERT INTO classes(student_id, scheduled_at, duration_minutes, subject, location, status, attendance, meeting_room, rescheduled_from)
+       VALUES (?, ?, ?, ?, ?, 'scheduled', NULL, ?, ?)`,
+      [cls.student_id, new Date(approvedTime).toISOString(), cls.duration_minutes, cls.subject ? `[RESCHEDULED] ${cls.subject}` : "[RESCHEDULED] Lesson", cls.location, meeting_room, req.class_id]
+    );
+  }
+
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('student', ?, 'reschedule_approved', 'Reschedule Approved', ?, ?)`,
+    [req.student_id, "Your reschedule request has been approved.", `/portal/student/${req.student_id}/schedule`]
+  );
+
+  revalidatePath("/requests");
+  revalidatePath("/schedule");
+  revalidatePath("/");
+  revalidatePath(`/portal/student/${req.student_id}`, "layout");
+  revalidatePath("/share", "layout");
+  return { success: true };
+}
+
+export async function rejectRescheduleRequest(requestId: number, adminNote: string | null) {
+  await requireAdmin();
+  const req = await queryOne<{ student_id: number }>(
+    "SELECT student_id FROM reschedule_requests WHERE id = ?",
+    [requestId]
+  );
+  if (!req) return { error: "Request not found" };
+
+  await execute(
+    `UPDATE reschedule_requests SET status = 'rejected', admin_note = ?, resolved_at = datetime('now') WHERE id = ?`,
+    [adminNote, requestId]
+  );
+
+  await execute(
+    `INSERT INTO notifications(recipient_type, recipient_id, type, title, message, link)
+     VALUES ('student', ?, 'reschedule_rejected', 'Reschedule Request Declined', ?, ?)`,
+    [req.student_id, adminNote ? `Your reschedule request was declined: ${adminNote}` : "Your reschedule request was declined.", `/portal/student/${req.student_id}/schedule`]
+  );
+
+  revalidatePath("/requests");
+  revalidatePath(`/portal/student/${req.student_id}`, "layout");
+  return { success: true };
+}
+
+// ── Notifications ──────────────────────────────────────────────
+
+export async function getNotifications(recipientType: "admin" | "student", recipientId: number | null, limit = 20) {
+  if (recipientType === "admin") {
+    return queryAll<{ id: number; type: string; title: string; message: string; link: string | null; read: number; created_at: string }>(
+      `SELECT id, type, title, message, link, read, created_at FROM notifications
+       WHERE recipient_type = 'admin' ORDER BY created_at DESC LIMIT ?`,
+      [limit]
+    );
+  }
+  return queryAll<{ id: number; type: string; title: string; message: string; link: string | null; read: number; created_at: string }>(
+    `SELECT id, type, title, message, link, read, created_at FROM notifications
+     WHERE recipient_type = 'student' AND recipient_id = ? ORDER BY created_at DESC LIMIT ?`,
+    [recipientId, limit]
+  );
+}
+
+export async function markNotificationRead(notificationId: number) {
+  await execute("UPDATE notifications SET read = 1 WHERE id = ?", [notificationId]);
+}
+
+export async function markAllNotificationsRead(recipientType: "admin" | "student", recipientId: number | null) {
+  if (recipientType === "admin") {
+    await execute("UPDATE notifications SET read = 1 WHERE recipient_type = 'admin' AND read = 0");
+  } else {
+    await execute("UPDATE notifications SET read = 1 WHERE recipient_type = 'student' AND recipient_id = ? AND read = 0", [recipientId]);
+  }
 }

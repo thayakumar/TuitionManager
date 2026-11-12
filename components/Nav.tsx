@@ -13,6 +13,8 @@ import {
   Video,
   PanelLeftClose,
   PanelLeftOpen,
+  CalendarClock,
+  Bell,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -37,9 +39,11 @@ const managementLinks = [
   { href: "/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/invoices", label: "Invoices", icon: Receipt },
   { href: "/classroom", label: "Classroom", icon: BookOpen },
+  { href: "/requests", label: "Requests", icon: CalendarClock },
 ];
 
 const systemLinks = [
+  { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { createClassQuick, markAttendance, deleteClassQuick, cancelClassQuick, rescheduleClassQuick } from "@/lib/actions";
 import { format, addMinutes, addDays } from "date-fns";
 import type { Attendance } from "@/lib/types";
@@ -107,6 +108,7 @@ export function ScheduleCalendarWrapper({
   function handleAddSubmit(formData: FormData) {
     startAddTransition(async () => {
       await createClassQuick(formData);
+      toast.success("Class scheduled");
       setAddDialogOpen(false);
       router.refresh();
     });
@@ -116,6 +118,7 @@ export function ScheduleCalendarWrapper({
     if (!selectedClass) return;
     startActionTransition(async () => {
       await markAttendance(selectedClass.id, attendance);
+      toast.success("Attendance marked");
       setDetailOpen(false);
       router.refresh();
     });
@@ -125,6 +128,7 @@ export function ScheduleCalendarWrapper({
     if (!selectedClass) return;
     startActionTransition(async () => {
       await cancelClassQuick(selectedClass.id);
+      toast.success("Class cancelled");
       setCancelledClassId(selectedClass.id);
       setDetailOpen(false);
       setRescheduleOpen(true);
@@ -136,6 +140,7 @@ export function ScheduleCalendarWrapper({
     if (!selectedClass) return;
     startActionTransition(async () => {
       await cancelClassQuick(selectedClass.id);
+      toast.success("Class cancelled");
       setCancelledClassId(selectedClass.id);
       setDetailOpen(false);
       setRescheduleOpen(true);
@@ -149,6 +154,7 @@ export function ScheduleCalendarWrapper({
     if (!scheduledAt) return;
     startRescheduleTransition(async () => {
       await rescheduleClassQuick(cancelledClassId, scheduledAt);
+      toast.success("Class rescheduled");
       setRescheduleOpen(false);
       setCancelledClassId(null);
       router.refresh();

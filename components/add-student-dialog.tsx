@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import { createStudentQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -30,6 +31,7 @@ export function AddStudentDialog({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const id = await createStudentQuick(formData);
+      toast.success("Student added");
       setOpen(false);
       router.refresh();
       router.push(`/students/${id}`);

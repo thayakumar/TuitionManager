@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Ban } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cancelClass } from "@/lib/actions";
 

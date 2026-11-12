@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import { createTopic, renameTopic, deleteTopic } from "@/lib/actions";
 
 export function CreateTopicButton({ studentId }: { studentId: number }) {
@@ -23,6 +24,7 @@ export function CreateTopicButton({ studentId }: { studentId: number }) {
     if (!name.trim()) return;
     startTransition(async () => {
       await createTopic(studentId, name.trim());
+      toast.success("Topic created");
       setName("");
       setShowInput(false);
       router.refresh();
@@ -93,6 +95,7 @@ export function TopicActions({
     }
     startTransition(async () => {
       await renameTopic(topicId, newName.trim(), studentId);
+      toast.success("Topic renamed");
       setRenaming(false);
       router.refresh();
     });
@@ -101,6 +104,7 @@ export function TopicActions({
   function handleDelete() {
     startTransition(async () => {
       await deleteTopic(topicId, studentId);
+      toast.success("Topic deleted");
       router.refresh();
     });
   }

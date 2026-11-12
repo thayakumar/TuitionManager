@@ -201,3 +201,40 @@ export type QuizAnswer = {
   is_correct: number | null;
   submitted_at: string;
 };
+
+export type RescheduleRequestStatus = "pending" | "approved" | "rejected";
+
+export type RescheduleRequest = {
+  id: number;
+  class_id: number;
+  student_id: number;
+  reason: string | null;
+  preferred_time_1: string;
+  preferred_time_2: string | null;
+  preferred_time_3: string | null;
+  status: RescheduleRequestStatus;
+  admin_note: string | null;
+  approved_time: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export type RescheduleRequestWithDetails = RescheduleRequest & {
+  student_name: string;
+  subject: string | null;
+  scheduled_at: string;
+};
+
+export type NotificationRecipient = "admin" | "student";
+
+export type AppNotification = {
+  id: number;
+  recipient_type: NotificationRecipient;
+  recipient_id: number | null;
+  type: string;
+  title: string;
+  message: string;
+  link: string | null;
+  read: number;
+  created_at: string;
+};

@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { saveReportQuick } from "@/lib/actions";
 
 export function PostClassReportDialog({
@@ -45,6 +46,7 @@ export function PostClassReportDialog({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await saveReportQuick(classId, formData);
+      toast.success("Report saved");
       setSaved(true);
       setTimeout(() => {
         setOpen(false);

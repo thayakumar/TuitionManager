@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Menu,
   LogOut,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import { logoutStudent } from "@/lib/actions";
@@ -38,6 +39,7 @@ function getLinks(role: "student" | "parent", base: string): { main: NavItem[]; 
         { href: `${base}/schedule`, label: "My Schedule", icon: CalendarDays },
         { href: `${base}/classroom`, label: "My Class", icon: BookOpen },
         { href: `${base}/notes`, label: "Student Notes", icon: StickyNote },
+        { href: `${base}/notifications`, label: "Notifications", icon: Bell },
         { href: `${base}/profile`, label: "My Profile", icon: UserCircle },
       ],
     };

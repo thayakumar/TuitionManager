@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt } from "lucide-react";
+import { toast } from "sonner";
 import { generateInvoiceQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -52,6 +53,7 @@ export function GenerateInvoiceDialog({
     startTransition(async () => {
       try {
         const id = await generateInvoiceQuick(formData);
+        toast.success("Invoice generated");
         setOpen(false);
         router.refresh();
         router.push(`/invoices/${id}`);

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarPlus } from "lucide-react";
+import { toast } from "sonner";
 import { createClassQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -43,6 +44,7 @@ export function ScheduleClassDialog({
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await createClassQuick(formData);
+      toast.success("Class scheduled");
       setOpen(false);
       router.refresh();
     });

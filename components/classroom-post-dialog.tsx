@@ -12,6 +12,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, TextAreaField } from "@/components/form-field";
+import { toast } from "sonner";
 import { createPostAction, updatePost, deletePostAction, createTopic } from "@/lib/actions";
 import type { Post, PostType, Topic } from "@/lib/types";
 
@@ -79,6 +80,7 @@ function PostDialog({
     startTransition(async () => {
       if (isEdit) {
         await updatePost(formData);
+        toast.success("Post updated");
       } else {
         const title = String(formData.get("title") || "").trim();
         const body = String(formData.get("body") || "").trim();
@@ -86,6 +88,7 @@ function PostDialog({
         const topicId = formData.get("topic_id") ? Number(formData.get("topic_id")) : null;
         const maxPoints = formData.get("max_points") ? Number(formData.get("max_points")) : null;
         await createPostAction(studentId, postType, title, body, dueAt, topicId, maxPoints);
+        toast.success("Post created");
       }
       onOpenChange(false);
       router.refresh();
@@ -202,6 +205,7 @@ export function DeletePostButton({ postId, studentId }: { postId: number; studen
   function handleDelete() {
     startTransition(async () => {
       await deletePostAction(postId, studentId);
+      toast.success("Post deleted");
       setConfirming(false);
       router.refresh();
     });
@@ -253,6 +257,7 @@ function TopicSelector({
     if (!newName.trim()) return;
     startTransition(async () => {
       await createTopic(studentId, newName.trim());
+      toast.success("Topic created");
       setNewName("");
       setShowNew(false);
       router.refresh();

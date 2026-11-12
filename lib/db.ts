@@ -221,6 +221,35 @@ export async function migrate() {
       expires_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON admin_sessions(token);
+
+    CREATE TABLE IF NOT EXISTS reschedule_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      reason TEXT,
+      preferred_time_1 TEXT NOT NULL,
+      preferred_time_2 TEXT,
+      preferred_time_3 TEXT,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+      admin_note TEXT,
+      approved_time TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      resolved_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_reschedule_requests_status ON reschedule_requests(status);
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipient_type TEXT NOT NULL CHECK(recipient_type IN ('admin','student')),
+      recipient_id INTEGER,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      link TEXT,
+      read INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_type, recipient_id, read);
   `);
 
   // Unique constraints added idempotently

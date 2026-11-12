@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDateTime } from "@/lib/format";
 import { format, parseISO, subMonths, addMonths } from "date-fns";
+import { RescheduleRequestDialog } from "@/components/reschedule-request-dialog";
 import type { Student, ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -147,12 +148,17 @@ export default async function StudentSchedulePage({
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           {attendanceBadge(c.attendance)}
                           {statusBadge(c.status)}
-                          {c.status === "scheduled" && c.meeting_room && (
-                            <Link href={`/meeting/${c.id}`}>
-                              <Button variant="outline" size="sm" className="h-7">
-                                <Video size={13} /> Join
-                              </Button>
-                            </Link>
+                          {c.status === "scheduled" && (
+                            <>
+                              <RescheduleRequestDialog classId={c.id} studentId={id} />
+                              {c.meeting_room && (
+                                <Link href={`/meeting/${c.id}`}>
+                                  <Button variant="outline" size="sm" className="h-7">
+                                    <Video size={13} /> Join
+                                  </Button>
+                                </Link>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

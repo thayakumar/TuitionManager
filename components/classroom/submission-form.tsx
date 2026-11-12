@@ -4,6 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Paperclip, X, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { submitAssignment } from "@/lib/actions";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -91,6 +92,7 @@ export function SubmissionForm({
       fd.set("file_url", finalFileUrl);
 
       await submitAssignment(fd);
+      toast.success("Work submitted");
       router.refresh();
     });
   }
