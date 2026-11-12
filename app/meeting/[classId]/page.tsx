@@ -50,7 +50,6 @@ export default async function MeetingPage({ params }: { params: { classId: strin
 
   const displayName = isAdmin ? "Tutor" : student.name;
   const jwt = await generateJaasJwt({
-    roomName: cls.meeting_room,
     userName: displayName,
     isModerator: isAdmin,
     userId: isAdmin ? "admin" : `student-${cls.student_id}`,

@@ -19,7 +19,6 @@ export function isJaasConfigured() {
 }
 
 export async function generateJaasJwt(opts: {
-  roomName: string;
   userName: string;
   isModerator: boolean;
   userId: string;
@@ -36,7 +35,7 @@ export async function generateJaasJwt(opts: {
     aud: "jitsi",
     iss: "chat",
     sub: APP_ID,
-    room: opts.roomName,
+    room: "*",
     context: {
       user: {
         id: opts.userId,
