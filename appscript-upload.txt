@@ -1,0 +1,41 @@
+// Google Apps Script - TuitionManager File Upload Connector
+// Deploy as web app: Execute as "Me", Who has access: "Anyone"
+// Set the deployed URL as APPS_SCRIPT_UPLOAD_URL env var in Vercel
+
+const FOLDER_ID = "1RNTO1DfalHV_4yqoLZbAtECLyHqWutb0";
+
+function doPost(e) {
+  try {
+    const postData = JSON.parse(e.postData.contents);
+
+    if (!postData.fileBase64 || !postData.fileName) {
+      return ContentService.createTextOutput(
+        JSON.stringify({ success: false, error: "Missing file data" })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const folder = DriveApp.getFolderById(FOLDER_ID);
+    const decodedBytes = Utilities.base64Decode(postData.fileBase64);
+    const mimeType = postData.fileMimeType || "application/octet-stream";
+    const studentName = postData.studentName || "student";
+    const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
+    const safeName = studentName.replace(/[^a-zA-Z0-9]/g, "_");
+    const fileName = safeName + "_" + timestamp + "_" + postData.fileName;
+
+    const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        success: true,
+        fileUrl: file.getUrl(),
+        fileName: file.getName(),
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ success: false, error: err.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}

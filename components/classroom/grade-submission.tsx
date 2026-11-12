@@ -25,17 +25,29 @@ export function GradeSubmissionForm({
   const [isPending, startTransition] = useTransition();
   const [grade, setGrade] = useState(submission.grade || "");
   const [feedback, setFeedback] = useState(submission.feedback || "");
+  const [success, setSuccess] = useState(false);
 
   function handleSubmit() {
     startTransition(async () => {
-      await gradeSubmissionAction(submission.id, grade, feedback, studentId);
-      router.refresh();
+      const result = await gradeSubmissionAction(submission.id, grade, feedback, studentId);
+      if (result?.success) {
+        setSuccess(true);
+        router.refresh();
+        setTimeout(() => setSuccess(false), 3000);
+      }
     });
   }
 
   return (
     <div className="space-y-4">
-      {submission.graded_at && (
+      {success && (
+        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700">
+          <CheckCircle2 size={16} />
+          Grade returned successfully
+        </div>
+      )}
+
+      {submission.graded_at && !success && (
         <div className="flex items-center gap-2 text-xs text-emerald-600">
           <CheckCircle2 size={14} />
           Graded on {fmtDateTime(submission.graded_at)}
@@ -98,12 +110,12 @@ export function SubmissionCard({
           Submitted {fmtDateTime(submission.submitted_at)}
         </span>
         {submission.graded_at ? (
-          <Badge className="text-[10px] bg-emerald-500 text-white">Graded</Badge>
+          <Badge className="text-xs bg-emerald-500 text-white">Graded</Badge>
         ) : (
-          <Badge variant="secondary" className="text-[10px]">Turned in</Badge>
+          <Badge variant="secondary" className="text-xs">Turned in</Badge>
         )}
         {submission.grade && (
-          <Badge variant="outline" className="text-[10px] font-mono">
+          <Badge variant="outline" className="text-xs font-mono">
             {submission.grade}{maxPoints ? `/${maxPoints}` : ""}
           </Badge>
         )}

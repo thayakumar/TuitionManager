@@ -196,7 +196,7 @@ function TopicSection({
           className="flex items-center gap-2 flex-1 text-left"
         >
           <Chevron size={16} className="text-muted-foreground shrink-0" />
-          <span className="text-base font-semibold text-foreground">{name}</span>
+          <span className="text-lg font-semibold text-foreground">{name}</span>
           <span className="text-xs text-muted-foreground">({posts.length})</span>
         </button>
         {isAdmin && topicId !== undefined && studentId !== undefined && (
@@ -218,17 +218,17 @@ function TopicSection({
                 <Link
                   key={post.id}
                   href={`${basePath}/post/${post.id}`}
-                  className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-muted/40 transition-colors group"
+                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-muted/40 transition-colors group"
                 >
-                  <div className={`flex size-8 items-center justify-center rounded-lg ${config.bg} shrink-0`}>
-                    <Icon size={16} className={config.textColor} />
+                  <div className={`flex size-9 items-center justify-center rounded-lg ${config.bg} shrink-0`}>
+                    <Icon size={18} className={config.textColor} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                    <p className="text-base font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {post.title}
                     </p>
                   </div>
-                  <div className="text-xs text-muted-foreground shrink-0">
+                  <div className="text-sm text-muted-foreground shrink-0">
                     {post.due_at
                       ? `Due ${fmtShortDate(post.due_at)}`
                       : `Posted ${fmtShortDate(post.created_at)}`}
@@ -250,7 +250,7 @@ function TopicSection({
                       statusClass = "border-muted-foreground/30 text-muted-foreground";
                     }
                     return (
-                      <Badge variant="outline" className={`text-[10px] shrink-0 ${statusClass}`}>
+                      <Badge variant="outline" className={`text-xs px-2.5 py-0.5 shrink-0 ${statusClass}`}>
                         {status}
                       </Badge>
                     );
@@ -341,7 +341,7 @@ function GradesTab({
                       : "—"}
                   </td>
                   <td className="p-3 text-center">
-                    <Badge variant="outline" className={`text-[10px] ${statusClass}`}>
+                    <Badge variant="outline" className={`text-xs px-2.5 py-0.5 ${statusClass}`}>
                       {status}
                     </Badge>
                   </td>

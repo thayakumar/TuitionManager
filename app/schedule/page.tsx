@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { CalendarPlus, Repeat } from "lucide-react";
+import { Repeat } from "lucide-react";
 import { queryAll } from "@/lib/db";
 import { isAdminRequest } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScheduleCalendarWrapper } from "@/components/schedule-calendar-wrapper";
 import { ExportButton } from "@/components/export-button";
 import { exportClassesCsv } from "@/lib/export";
-import { ScheduleClassDialog } from "@/components/schedule-class-dialog";
+
 import { RecurringScheduleDialog } from "@/components/recurring-schedule-dialog";
 import type { ClassWithTeacherNotes, Student } from "@/lib/types";
 import { startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
@@ -63,7 +63,6 @@ export default async function SchedulePage() {
           <div className="flex gap-2">
             <ExportButton getData={exportClassesCsv} filename="classes.csv" />
             <RecurringScheduleDialog students={studentList} />
-            <ScheduleClassDialog students={studentList} />
           </div>
         }
       />
