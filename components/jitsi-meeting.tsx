@@ -10,7 +10,10 @@ declare global {
 }
 
 const JAAS_DOMAIN = "8x8.vc";
-const JAAS_SCRIPT = `https://${JAAS_DOMAIN}/vpaas-magic-cookie-4f3905459ade48a9b9ccc2f876fbc944/external_api.js`;
+const JAAS_APP_ID = "vpaas-magic-cookie-4f3905459ade48a9b9ccc2f876fbc944";
+const JAAS_SCRIPT = `https://${JAAS_DOMAIN}/${JAAS_APP_ID}/external_api.js`;
+const FREE_DOMAIN = "meet.jit.si";
+const FREE_SCRIPT = `https://${FREE_DOMAIN}/external_api.js`;
 
 export function JitsiMeeting({
   roomName,
@@ -30,6 +33,10 @@ export function JitsiMeeting({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const useJaas = !!jwt;
+  const domain = useJaas ? JAAS_DOMAIN : FREE_DOMAIN;
+  const scriptUrl = useJaas ? JAAS_SCRIPT : FREE_SCRIPT;
+
   useEffect(() => {
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -39,10 +46,10 @@ export function JitsiMeeting({
       if (apiRef.current) return;
 
       try {
-        apiRef.current = new window.JitsiMeetExternalAPI(JAAS_DOMAIN, {
+        apiRef.current = new window.JitsiMeetExternalAPI(domain, {
           roomName,
           parentNode: containerRef.current,
-          jwt,
+          ...(jwt ? { jwt } : {}),
           configOverwrite: {
             prejoinConfig: { enabled: false },
             startWithAudioMuted: false,
@@ -97,7 +104,7 @@ export function JitsiMeeting({
       initJitsi();
     } else {
       const script = document.createElement("script");
-      script.src = JAAS_SCRIPT;
+      script.src = scriptUrl;
       script.async = true;
       script.onload = initJitsi;
       script.onerror = () => {
@@ -117,7 +124,7 @@ export function JitsiMeeting({
         apiRef.current = null;
       }
     };
-  }, [roomName, displayName, onClose, onHangup, jwt]);
+  }, [roomName, displayName, onClose, onHangup, jwt, domain, scriptUrl]);
 
   return (
     <div className="relative h-full w-full">
@@ -137,7 +144,7 @@ export function JitsiMeeting({
             <AlertTriangle size={32} className="text-amber-400" />
             <p className="text-sm text-gray-300">{error}</p>
             <a
-              href={`https://${JAAS_DOMAIN}/${roomName}`}
+              href={`https://${domain}/${roomName}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 text-sm text-indigo-400 underline hover:text-indigo-300"

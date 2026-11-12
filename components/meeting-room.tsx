@@ -39,7 +39,7 @@ export function MeetingRoom({
   const [saved, setSaved] = useState(true);
   const [isPending, startTransition] = useTransition();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const meetingUrl = `https://8x8.vc/${roomName}`;
+  const meetingUrl = jwt ? `https://8x8.vc/${roomName}` : `https://meet.jit.si/${roomName}`;
   const scope = isAdmin ? "teacher" : "student";
 
   const doSave = useCallback(
