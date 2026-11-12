@@ -1041,6 +1041,7 @@ export async function gradeSubmission(id: number, formData: FormData) {
   );
 
   revalidatePath("/classroom");
+  revalidatePath("/portal");
 }
 
 export async function submitQuizAnswers(formData: FormData) {

@@ -85,7 +85,7 @@ export function MeetingRoom({
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
-      router.push(`/portal/student/${studentId}`);
+      router.push(`/portal/student/${studentId}/schedule`);
     }
   }
 
@@ -94,7 +94,7 @@ export function MeetingRoom({
     if (isAdmin) {
       router.push(`/classes/${classId}?report=true`);
     } else {
-      router.push(`/portal/student/${studentId}`);
+      router.push(`/portal/student/${studentId}/schedule`);
     }
   }
 

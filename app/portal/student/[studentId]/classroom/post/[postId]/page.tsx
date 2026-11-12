@@ -189,14 +189,17 @@ function SubmittedWork({
       )}
 
       {submission.file_url && (
-        <a
-          href={submission.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-        >
-          View attachment
-        </a>
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-muted-foreground">Link submitted</p>
+          <a
+            href={/^https?:\/\//i.test(submission.file_url) ? submission.file_url : `https://${submission.file_url}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline break-all"
+          >
+            {submission.file_url.length > 80 ? submission.file_url.slice(0, 80) + "…" : submission.file_url}
+          </a>
+        </div>
       )}
 
       {submission.grade != null && (

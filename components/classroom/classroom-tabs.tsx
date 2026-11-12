@@ -233,16 +233,28 @@ function TopicSection({
                       ? `Due ${fmtShortDate(post.due_at)}`
                       : `Posted ${fmtShortDate(post.created_at)}`}
                   </div>
-                  {(post.type === "assignment" || post.type === "quiz") && sub && (
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] shrink-0 ${
-                        sub.graded_at ? "border-emerald-300 text-emerald-700" : "border-blue-300 text-blue-700"
-                      }`}
-                    >
-                      {sub.graded_at ? "Graded" : "Submitted"}
-                    </Badge>
-                  )}
+                  {(post.type === "assignment" || post.type === "quiz") && (() => {
+                    let status: string;
+                    let statusClass: string;
+                    if (sub?.graded_at) {
+                      status = "Graded";
+                      statusClass = "border-emerald-300 text-emerald-700 bg-emerald-50";
+                    } else if (sub) {
+                      status = "Turned in";
+                      statusClass = "border-blue-300 text-blue-700 bg-blue-50";
+                    } else if (post.due_at && new Date(post.due_at) < new Date()) {
+                      status = "Missing";
+                      statusClass = "border-red-300 text-red-700 bg-red-50";
+                    } else {
+                      status = "Assigned";
+                      statusClass = "border-muted-foreground/30 text-muted-foreground";
+                    }
+                    return (
+                      <Badge variant="outline" className={`text-[10px] shrink-0 ${statusClass}`}>
+                        {status}
+                      </Badge>
+                    );
+                  })()}
                 </Link>
               );
             })
