@@ -26,16 +26,16 @@ export default async function ParentDashboard({ params }: { params: { token: str
   const [student, upcoming, stats, recentInvoices] = await Promise.all([
     queryOne<Student>("SELECT * FROM students WHERE id = ?", [studentId]),
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' ORDER BY scheduled_at LIMIT 5",
+      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= datetime('now') ORDER BY scheduled_at LIMIT 5",
       [studentId]
     ),
     queryOne<{ total: number; completed: number; present: number; late: number; absent: number }>(
       `SELECT
         COUNT(*) as total,
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN attendance = 'present' THEN 1 ELSE 0 END) as present,
-        SUM(CASE WHEN attendance = 'late' THEN 1 ELSE 0 END) as late,
-        SUM(CASE WHEN attendance = 'absent' THEN 1 ELSE 0 END) as absent
+        SUM(CASE WHEN status = 'completed' AND attendance = 'present' THEN 1 ELSE 0 END) as present,
+        SUM(CASE WHEN status = 'completed' AND attendance = 'late' THEN 1 ELSE 0 END) as late,
+        SUM(CASE WHEN status = 'completed' AND attendance = 'absent' THEN 1 ELSE 0 END) as absent
        FROM classes WHERE student_id = ?`,
       [studentId]
     ),

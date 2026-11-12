@@ -9,6 +9,8 @@ import { Field, TextAreaField, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewInvoicePage({
   searchParams,
 }: {

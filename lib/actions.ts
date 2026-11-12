@@ -129,6 +129,7 @@ export async function createStudent(formData: FormData) {
   );
 
   revalidatePath("/students");
+  revalidatePath("/");
   redirect(`/students/${result.lastInsertRowid}`);
 }
 
@@ -215,6 +216,7 @@ export async function deleteStudent(id: number) {
   await requireAdmin();
   await execute("UPDATE students SET active = 0 WHERE id = ?", [id]);
   revalidatePath("/students");
+  revalidatePath("/");
   redirect("/students");
 }
 
@@ -252,6 +254,7 @@ export async function createClass(formData: FormData) {
 
   revalidatePath("/schedule");
   revalidatePath(`/students/${student_id}`);
+  revalidatePath("/");
   redirect(`/classes/${result.lastInsertRowid}`);
 }
 
@@ -321,6 +324,8 @@ export async function markAttendance(id: number, attendance: Attendance) {
   revalidatePath("/schedule");
   if (row) revalidatePath(`/students/${row.student_id}`);
   revalidatePath("/");
+  revalidatePath("/share", "layout");
+
 }
 
 export async function deleteClass(id: number) {
@@ -332,6 +337,7 @@ export async function deleteClass(id: number) {
   await execute("DELETE FROM classes WHERE id = ?", [id]);
   revalidatePath("/schedule");
   if (row) revalidatePath(`/students/${row.student_id}`);
+  revalidatePath("/");
   redirect("/schedule");
 }
 
@@ -344,6 +350,7 @@ export async function deleteClassQuick(id: number) {
   await execute("DELETE FROM classes WHERE id = ?", [id]);
   revalidatePath("/schedule");
   if (row) revalidatePath(`/students/${row.student_id}`);
+  revalidatePath("/");
 }
 
 export async function cancelClassQuick(id: number) {
@@ -360,6 +367,7 @@ export async function cancelClassQuick(id: number) {
   revalidatePath("/schedule");
   if (row) revalidatePath(`/students/${row.student_id}`);
   revalidatePath("/");
+  revalidatePath("/share", "layout");
 }
 
 // ---------- Reports ----------
@@ -400,6 +408,8 @@ export async function saveReport(class_id: number, formData: FormData) {
   );
 
   revalidatePath(`/classes/${class_id}`);
+  revalidatePath("/");
+  revalidatePath("/share", "layout");
 }
 
 export async function saveReportQuick(class_id: number, formData: FormData) {
@@ -481,6 +491,8 @@ export async function rescheduleClassQuick(
 
   revalidatePath("/schedule");
   revalidatePath(`/students/${cls.student_id}`);
+  revalidatePath("/");
+  revalidatePath("/share", "layout");
 }
 
 // ---------- Invoices ----------
@@ -576,10 +588,10 @@ export async function generateInvoice(formData: FormData) {
     const hours = Number(c.duration_minutes) / 60;
     const amount = (isCanceled || isTrial) ? 0 : hours * Number(c.hourly_rate);
     const prefix = isCanceled ? "[CANCELLED] " : isTrial ? "[TRIAL] " : "";
-    const desc = `${prefix}${c.subject || "Lesson"} — ${new Date(c.scheduled_at).toLocaleDateString(
-      "en-GB",
-      { weekday: "short", day: "numeric", month: "short", year: "numeric" }
-    )} (${c.duration_minutes} min)`;
+    const d = new Date(c.scheduled_at);
+    const dateStr = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+    const timeStr = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const desc = `${prefix}${dateStr} ${timeStr} (${c.duration_minutes} min)`;
     await client.execute({
       sql: `INSERT INTO invoice_items(invoice_id, class_id, description, quantity, unit_amount, amount)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -589,6 +601,7 @@ export async function generateInvoice(formData: FormData) {
 
   revalidatePath("/invoices");
   revalidatePath(`/students/${student_id}`);
+  revalidatePath("/");
   redirect(`/invoices/${invoice_id}`);
 }
 
@@ -671,10 +684,10 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
     const hours = Number(c.duration_minutes) / 60;
     const amount = (isCanceled || isTrial) ? 0 : hours * Number(c.hourly_rate);
     const prefix = isCanceled ? "[CANCELLED] " : isTrial ? "[TRIAL] " : "";
-    const desc = `${prefix}${c.subject || "Lesson"} — ${new Date(c.scheduled_at).toLocaleDateString(
-      "en-GB",
-      { weekday: "short", day: "numeric", month: "short", year: "numeric" }
-    )} (${c.duration_minutes} min)`;
+    const d = new Date(c.scheduled_at);
+    const dateStr = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+    const timeStr = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const desc = `${prefix}${dateStr} ${timeStr} (${c.duration_minutes} min)`;
     await client.execute({
       sql: `INSERT INTO invoice_items(invoice_id, class_id, description, quantity, unit_amount, amount)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -684,6 +697,7 @@ export async function generateInvoiceQuick(formData: FormData): Promise<number> 
 
   revalidatePath("/invoices");
   revalidatePath(`/students/${student_id}`);
+  revalidatePath("/");
   return invoice_id;
 }
 
@@ -697,6 +711,8 @@ export async function setInvoiceStatus(id: number, status: InvoiceStatus) {
   ]);
   revalidatePath("/invoices");
   revalidatePath(`/invoices/${id}`);
+  revalidatePath("/");
+  revalidatePath("/share", "layout");
 }
 
 export async function deleteInvoice(id: number) {
@@ -962,7 +978,7 @@ export async function createPostAction(
   );
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
-  revalidatePath("/portal");
+  revalidatePath("/portal/student", "layout");
   return { success: true };
 }
 
@@ -974,7 +990,7 @@ export async function deletePostAction(
   await execute("DELETE FROM posts WHERE id = ?", [postId]);
   revalidatePath("/classroom");
   revalidatePath(`/classroom/${studentId}`);
-  revalidatePath("/portal");
+  revalidatePath("/portal/student", "layout");
   return { success: true };
 }
 
@@ -998,7 +1014,7 @@ export async function updatePost(formData: FormData) {
   revalidatePath("/classroom");
   if (post?.student_id) {
     revalidatePath(`/classroom/${post.student_id}`);
-    revalidatePath("/portal");
+    revalidatePath("/portal/student", "layout");
   }
 }
 
@@ -1008,7 +1024,7 @@ export async function deletePost(id: number, studentId?: number) {
   revalidatePath("/classroom");
   if (studentId) {
     revalidatePath(`/classroom/${studentId}`);
-    revalidatePath("/portal");
+    revalidatePath("/portal/student", "layout");
   }
 }
 
@@ -1026,8 +1042,8 @@ export async function submitAssignment(formData: FormData) {
     [post_id, student_id, content, file_url]
   );
 
-  revalidatePath("/classroom");
-  revalidatePath("/portal");
+  revalidatePath("/classroom", "layout");
+  revalidatePath("/portal/student", "layout");
 }
 
 export async function gradeSubmission(id: number, formData: FormData) {
@@ -1040,8 +1056,8 @@ export async function gradeSubmission(id: number, formData: FormData) {
     [grade, feedback, id]
   );
 
-  revalidatePath("/classroom");
-  revalidatePath("/portal");
+  revalidatePath("/classroom", "layout");
+  revalidatePath("/portal/student", "layout");
 }
 
 export async function submitQuizAnswers(formData: FormData) {
@@ -1071,7 +1087,8 @@ export async function submitQuizAnswers(formData: FormData) {
     );
   }
 
-  revalidatePath("/portal");
+  revalidatePath("/portal/student", "layout");
+  revalidatePath("/classroom", "layout");
 }
 
 // ---------- Topics ----------

@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import {
   User, BookOpen, GraduationCap, Mail, Phone, Shield,
-  KeyRound, Calendar, UserCircle,
+  KeyRound, Calendar, UserCircle, Link2,
 } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDate } from "@/lib/format";
+import { CopyLinkButton } from "@/components/copy-link-button";
 import type { Student } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -41,12 +42,18 @@ export default async function StudentProfilePage({
   params: { studentId: string };
 }) {
   const id = Number(params.studentId);
-  const student = await queryOne<Student>(
-    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-            guardian_contact, username, password, active, created_at
-     FROM students WHERE id = ? AND active = 1`,
-    [id]
-  );
+  const [student, shareTokenRow] = await Promise.all([
+    queryOne<Student>(
+      `SELECT id, name, subject, grade_level, phone, email, guardian_name,
+              guardian_contact, username, password, active, created_at
+       FROM students WHERE id = ? AND active = 1`,
+      [id]
+    ),
+    queryOne<{ token: string }>(
+      "SELECT token FROM share_tokens WHERE student_id = ? AND active = 1 ORDER BY id DESC LIMIT 1",
+      [id]
+    ),
+  ]);
   if (!student) notFound();
 
   return (
@@ -132,6 +139,21 @@ export default async function StudentProfilePage({
                 <Shield size={28} className="mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">No guardian information on file</p>
               </div>
+            )}
+            {shareTokenRow && (
+              <>
+                <Separator className="my-3" />
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-50 shrink-0">
+                    <Link2 size={16} className="text-indigo-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">Parent Portal Link</p>
+                    <p className="text-sm text-muted-foreground truncate">Share this with your guardian</p>
+                  </div>
+                  <CopyLinkButton url={`/share/${shareTokenRow.token}`} label="Copy link" relative />
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

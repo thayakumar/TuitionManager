@@ -9,6 +9,8 @@ import { Field, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
 import { format } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewClassPage({
   searchParams,
 }: {

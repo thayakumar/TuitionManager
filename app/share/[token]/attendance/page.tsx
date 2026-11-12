@@ -31,7 +31,7 @@ export default async function ParentAttendancePage({ params }: { params: { token
         SUM(CASE WHEN attendance = 'present' THEN 1 ELSE 0 END) as present,
         SUM(CASE WHEN attendance = 'late' THEN 1 ELSE 0 END) as late,
         SUM(CASE WHEN attendance = 'absent' THEN 1 ELSE 0 END) as absent
-       FROM classes WHERE student_id = ? AND status != 'scheduled'`,
+       FROM classes WHERE student_id = ? AND status = 'completed'`,
       [studentId]
     ),
   ]);

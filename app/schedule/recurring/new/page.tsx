@@ -11,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Student } from "@/lib/types";
 import { format } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default async function NewRecurringPage({

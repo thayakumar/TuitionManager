@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditStudentPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   const student = await queryOne<Student>("SELECT * FROM students WHERE id = ?", [id]);

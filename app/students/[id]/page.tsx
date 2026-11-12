@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareTokenButton } from "@/components/share-token-button";
+import { CopyLinkButton } from "@/components/copy-link-button";
+import { ReportRow } from "@/components/report-row";
 import { currency, fmtDateTime, fmtDate } from "@/lib/format";
 import { StickyNote } from "lucide-react";
 import type { Student, ClassRow, Invoice, StudentNote } from "@/lib/types";
@@ -65,7 +67,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
 
   const [upcoming, past, invoices, notes, classNotes, classReports, shareTokenRow, statsRow] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' ORDER BY scheduled_at LIMIT 10",
+      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= datetime('now') ORDER BY scheduled_at LIMIT 10",
       [id]
     ),
     queryAll<ClassRow>(
@@ -119,7 +121,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
         (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_classes,
         (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours,
         (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE student_id = ? AND status = 'paid') AS total_revenue,
-        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND attendance = 'present') AS present_count,
+        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed' AND attendance = 'present') AS present_count,
         (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed' AND attendance IS NOT NULL) AS completed_for_attendance`,
       [id, id, id, id, id, id]
     ),
@@ -269,7 +271,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                 <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
                   <KeyRound size={16} className="text-orange-500" />
                 </div>
-                <div className="flex gap-6">
+                <div className="flex items-center gap-6">
                   <div>
                     <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Username</div>
                     <div className="text-sm font-mono font-medium">{student.username || "—"}</div>
@@ -278,6 +280,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                     <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Password</div>
                     <div className="text-sm font-mono font-medium">{student.password || "—"}</div>
                   </div>
+                  <CopyLinkButton url="/portal/student" label="Copy login link" relative />
                 </div>
               </div>
             </>
@@ -541,7 +544,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
             <FileText size={18} className="text-indigo-500" />
             Class Reports
           </CardTitle>
-          <CardDescription>Post-class session reports</CardDescription>
+          <CardDescription>Post-class session reports ({classReports.length})</CardDescription>
         </CardHeader>
         <CardContent>
           {classReports.length === 0 ? (
@@ -555,39 +558,14 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Date</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subject</th>
                     <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Topics</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Homework</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Performance</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Strengths</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">To Improve</th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Next Focus</th>
                     <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rating</th>
+                    <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {classReports.map((r) => (
-                    <tr key={r.id} className="border-b border-border/50 hover:bg-indigo-50/30 transition-colors">
-                      <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
-                        <Link href={`/classes/${r.class_id}`} className="hover:text-indigo-600 hover:underline">
-                          {fmtDateTime(r.scheduled_at)}
-                        </Link>
-                      </td>
-                      <td className="py-2.5 px-3 text-foreground">{r.subject || student.subject || "Lesson"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.topics_covered || "—"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.homework || "—"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.performance || "—"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.strengths || "—"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.areas_to_improve || "—"}</td>
-                      <td className="py-2.5 px-3 text-foreground">{r.next_focus || "—"}</td>
-                      <td className="py-2.5 px-3 text-center">
-                        {r.rating != null ? (
-                          <span className="inline-flex items-center gap-0.5 text-amber-500 font-medium">
-                            {r.rating}/5
-                          </span>
-                        ) : "—"}
-                      </td>
-                    </tr>
+                    <ReportRow key={r.id} report={r} defaultSubject={student.subject || "Lesson"} />
                   ))}
                 </tbody>
               </table>
