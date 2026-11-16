@@ -28,7 +28,7 @@ Next.js15 App Router + React/TypeScript + Tailwind4 + libSQL. lib/db.ts owns ver
 
 Use requireAdminPage for admin reads, ownStudentContext/requireStudentPage for student reads, and requireParent for bearer reads. Validate action target ownership/type/state on the server; hidden controls and foreign keys do not establish authorization. Never select student passwords/private tutor notes into student/parent payloads.
 
-getSettings batches configuration reads. Migrations use PRAGMA user_version and a single in-flight promise, with serialized reviewed writes. Do not reintroduce DDL, seeding or cleanup on every request. withTransaction serializes local writers; validate a complete operation before committing related records/notifications. Do not cache one user's private data globally.
+getSettings batches configuration reads. Migrations use the settings.app_schema_version record (Turso rejects PRAGMA user_version writes) and a single in-flight promise, with serialized reviewed writes. Do not reintroduce DDL, seeding or cleanup on every request. withTransaction serializes local writers; validate a complete operation before committing related records/notifications. Do not cache one user's private data globally.
 
 Use explicit pending/error state, confirmed calendar time changes, scoped safe upload URLs and consistent4MB upload limits. Parent reports and historical submission attempts default collapsed. Mobile menus close on navigation and page controls must fit390px screens.
 

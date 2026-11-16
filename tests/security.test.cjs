@@ -5,7 +5,6 @@ const os = require("node:os");
 const path = require("node:path");
 const Module = require("node:module");
 const crypto = require("node:crypto");
-const { execFileSync } = require("node:child_process");
 const ts = require("typescript");
 const root = path.resolve(__dirname, "..");
 
@@ -59,7 +58,7 @@ test("fresh concurrent initialization applies one migration and creates actual c
     await Promise.all(Array.from({ length: 8 }, () => f.db.ensureMigrated()));
     assert.equal(transactions, 1);
     assert.equal(
-      (await f.db.queryOne("PRAGMA user_version")).user_version,
+      Number((await f.db.queryOne("SELECT value FROM settings WHERE key='app_schema_version'")).value),
       f.db.SCHEMA_VERSION,
     );
     assert.equal((await f.db.queryOne("PRAGMA foreign_keys")).foreign_keys, 1);
@@ -96,7 +95,7 @@ test("a cold process with a prepared schema uses one version read and zero DDL o
     const original = client.execute.bind(client);
     client.execute = async (statement) => {
       calls++;
-      assert.equal(statement, "PRAGMA user_version");
+      assert.equal(statement, "SELECT value FROM settings WHERE key='app_schema_version'");
       return original(statement);
     };
     const tx = client.transaction.bind(client);
@@ -116,10 +115,7 @@ test("a cold process with a prepared schema uses one version read and zero DDL o
 test("legacy schema preserves all duplicate work and grades as version history", async () => {
   const f = fixture();
   try {
-    const source = execFileSync("git", ["show", "HEAD:lib/db.ts"], {
-      cwd: root,
-      encoding: "utf8",
-    });
+    const source = fs.readFileSync(path.join(root, "tests/fixtures/legacy-db.ts.txt"), "utf8");
     const legacy = load("lib/db.ts", {}, source);
     await legacy.migrate();
     await legacy.execute(
@@ -476,7 +472,7 @@ test("legacy migration attributes MYT midnight invoice/recurrence bounds to the 
     await f.db.execute("INSERT INTO invoices(student_id,invoice_number,period_start,period_end,total_amount) VALUES(1,'LEGACY-MYT','2026-10-31T16:00:00Z','2026-11-30T15:59:59Z',80)");
     await f.db.execute("INSERT INTO recurrences(id,student_id,day_of_week,time,start_date) VALUES(1,1,4,'00:30','2026-12-01')");
     await f.db.execute("INSERT INTO classes(student_id,scheduled_at,recurrence_id) VALUES(1,'2026-12-30T16:30:00Z',1)");
-    await f.db.execute("PRAGMA user_version=1");
+    await f.db.execute("UPDATE settings SET value='1' WHERE key='app_schema_version'");
     cold = load("lib/db.ts");
     await cold.ensureMigrated();
     assert.equal((await cold.queryOne("SELECT billing_month FROM invoices WHERE invoice_number='LEGACY-MYT'")).billing_month, "2026-11");
@@ -485,4 +481,35 @@ test("legacy migration attributes MYT midnight invoice/recurrence bounds to the 
     cold?.getClient().close();
     f.close();
   }
+});
+
+test("Turso-style PRAGMA write restrictions allow fresh migration, login data reads, and cold reuse", async () => {
+  const f = fixture();
+  let cold;
+  const restrict = (client) => {
+    const wrap = (target) => {
+      for (const method of ["execute", "executeMultiple"]) {
+        const original = target[method].bind(target);
+        target[method] = async (...args) => {
+          const sql = typeof args[0] === "string" ? args[0] : args[0].sql;
+          if (/PRAGMA\s+user_version\s*=/i.test(sql)) throw Error("SQL_PARSE_ERROR: SQL not allowed statement: PRAGMA user_version");
+          return original(...args);
+        };
+      }
+    };
+    wrap(client);
+    const transaction = client.transaction.bind(client);
+    client.transaction = async (...args) => { const tx = await transaction(...args); wrap(tx); return tx; };
+  };
+  try {
+    restrict(f.db.getClient());
+    await f.db.ensureMigrated();
+    assert.equal((await f.db.queryOne("SELECT value FROM settings WHERE key='admin_username'")).value, "admin");
+    assert.equal((await f.db.queryOne("SELECT value FROM settings WHERE key='app_schema_version'")).value, String(f.db.SCHEMA_VERSION));
+    await f.db.execute("UPDATE settings SET value='custom-login' WHERE key='admin_username'");
+    cold = load("lib/db.ts");
+    restrict(cold.getClient());
+    await cold.ensureMigrated();
+    assert.equal((await cold.queryOne("SELECT value FROM settings WHERE key='admin_username'")).value, "custom-login");
+  } finally { cold?.getClient().close(); f.close(); }
 });

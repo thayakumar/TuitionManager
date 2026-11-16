@@ -411,23 +411,41 @@ async function applyMigration(tx: Transaction) {
     INSERT OR IGNORE INTO settings(key,value) VALUES ('admin_password','admin123');
     DELETE FROM settings WHERE key LIKE 'student_session_%';
   `);
-  await tx.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+  await tx.execute({
+    sql: "INSERT INTO settings(key,value) VALUES ('app_schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+    args: [String(SCHEMA_VERSION)],
+  });
+}
+
+// Turso permits schema introspection but rejects writes to PRAGMA user_version.
+// Store the reviewed version in ordinary transactional application data instead.
+async function readSchemaVersion(database: Pick<Client, "execute">): Promise<number> {
+  try {
+    const result = await database.execute("SELECT value FROM settings WHERE key='app_schema_version'");
+    const value = result.rows[0]?.value;
+    if (value === undefined) return 0;
+    const version = Number(value);
+    if (!Number.isSafeInteger(version) || version < 0)
+      throw new Error("Invalid application database schema version");
+    return version;
+  } catch (error) {
+    // A genuinely fresh database has no settings table. Network, authorization,
+    // and every other SQL failure must propagate rather than masquerade as new.
+    if (error instanceof Error && /no such table: (?:main\.)?settings\b/i.test(error.message)) return 0;
+    throw error;
+  }
 }
 
 async function initialize() {
   const database = getClient();
-  const current = Number(
-    (await database.execute("PRAGMA user_version")).rows[0]?.user_version ?? 0,
-  );
+  const current = await readSchemaVersion(database);
   if (current > SCHEMA_VERSION)
     throw new Error("Database schema is newer than this application release");
   if (current === SCHEMA_VERSION) return;
   const tx = await database.transaction("write");
   try {
     // Another deployment instance may have migrated while we waited for its lock.
-    const lockedVersion = Number(
-      (await tx.execute("PRAGMA user_version")).rows[0]?.user_version ?? 0,
-    );
+    const lockedVersion = await readSchemaVersion(tx);
     if (lockedVersion < SCHEMA_VERSION) await applyMigration(tx);
     else if (lockedVersion > SCHEMA_VERSION)
       throw new Error("Database schema is newer than this application release");
