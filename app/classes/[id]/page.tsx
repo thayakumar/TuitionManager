@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { requireAdminPage } from "@/lib/auth";
-import { markAttendance, saveReport, updateClass } from "@/lib/actions";
+import { markAttendance, saveReport } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -52,7 +52,12 @@ export const dynamic = "force-dynamic";
 
 function statusConfig(status: string, attendance: string | null) {
   const state = lessonStatus(status, attendance);
-  return { variant: "outline" as const, bg: state.iconClassName, iconColor: "", label: state.label };
+  return {
+    variant: "outline" as const,
+    bg: state.iconClassName,
+    iconColor: "",
+    label: state.label,
+  };
 }
 
 function attendanceConfig(attendance: string | null) {
@@ -114,7 +119,6 @@ export default async function ClassDetailPage({
 
   const attend = markAttendance.bind(null, id);
   const saveR = saveReport.bind(null, id);
-  const upd = updateClass.bind(null, id);
 
   const sc = statusConfig(cls.status, cls.attendance);
   const ac = attendanceConfig(cls.attendance);
@@ -213,7 +217,10 @@ export default async function ClassDetailPage({
                 TRIAL
               </Badge>
             )}
-            <LessonStatusBadge status={cls.status} attendance={cls.attendance} />
+            <LessonStatusBadge
+              status={cls.status}
+              attendance={cls.attendance}
+            />
           </div>
         </div>
       </div>
@@ -226,7 +233,10 @@ export default async function ClassDetailPage({
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <LessonStatusBadge status={cls.status} attendance={cls.attendance} />
+                  <LessonStatusBadge
+                    status={cls.status}
+                    attendance={cls.attendance}
+                  />
                 </div>
                 {cls.cancel_reason && (
                   <p className="text-xs text-muted-foreground mt-1.5">
@@ -470,70 +480,6 @@ export default async function ClassDetailPage({
               <Button type="submit">
                 <Star size={14} />
                 {report ? "Update report" : "Save report"}
-              </Button>
-            </div>
-          </LessonActionForm>
-        </CardContent>
-      </Card>
-
-      {/* Edit Class Details */}
-      <Card className="mb-6 border shadow-none">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Pencil size={18} className="text-amber-500" />
-            Edit Class Details
-          </CardTitle>
-          <CardDescription>
-            Modify the class schedule, status, or attendance
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LessonActionForm action={upd}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field
-                label="Date & time"
-                name="scheduled_at"
-                type="datetime-local"
-                defaultValue={fmtDateInput(cls.scheduled_at)}
-              />
-              <Field
-                label="Duration (minutes)"
-                name="duration_minutes"
-                type="number"
-                defaultValue={Number(cls.duration_minutes)}
-                min={5}
-                max={1440}
-              />
-              <input type="hidden" name="subject" value={cls.subject ?? ""} />
-              <input type="hidden" name="location" value={cls.location ?? ""} />
-              <SelectField
-                label="Status"
-                name="status"
-                defaultValue={cls.status}
-                options={[
-                  { value: "scheduled", label: "Scheduled" },
-                  { value: "completed", label: "Completed" },
-                  { value: "canceled", label: "Canceled" },
-                ]}
-              />
-              <SelectField
-                label="Attendance"
-                name="attendance"
-                defaultValue={
-                  String(cls.attendance) === "late"
-                    ? "present"
-                    : (cls.attendance ?? "")
-                }
-                options={[
-                  { value: "", label: "—" },
-                  { value: "present", label: "Present" },
-                  { value: "absent", label: "Absent" },
-                ]}
-              />
-            </div>
-            <div className="mt-6 flex justify-end">
-              <Button type="submit">
-                <Check size={14} /> Save changes
               </Button>
             </div>
           </LessonActionForm>

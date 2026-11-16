@@ -113,19 +113,19 @@ export default async function StudentDetailPage({
     statsRow,
   ] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at",
+      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at LIMIT 5",
       [id, new Date().toISOString()],
     ),
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND julianday(scheduled_at) <= julianday(?) ORDER BY julianday(scheduled_at) DESC",
+      "SELECT * FROM classes WHERE student_id = ? AND julianday(scheduled_at) <= julianday(?) ORDER BY julianday(scheduled_at) DESC LIMIT 5",
       [id, new Date().toISOString()],
     ),
     queryAll<Invoice>(
-      "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC",
+      "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC LIMIT 5",
       [id],
     ),
     queryAll<StudentNote>(
-      "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC",
+      "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC LIMIT 5",
       [id],
     ),
     queryAll<{
@@ -137,7 +137,7 @@ export default async function StudentDetailPage({
       `SELECT c.id, c.scheduled_at, c.subject, cn.content FROM classes c
        JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'
        WHERE c.student_id = ? AND cn.content != ''
-       ORDER BY c.scheduled_at DESC`,
+       ORDER BY c.scheduled_at DESC LIMIT 5`,
       [id],
     ),
     queryAll<{
@@ -159,7 +159,7 @@ export default async function StudentDetailPage({
        FROM reports r
        JOIN classes c ON c.id = r.class_id
        WHERE c.student_id = ?
-       ORDER BY c.scheduled_at DESC`,
+       ORDER BY c.scheduled_at DESC LIMIT 5`,
       [id],
     ),
     queryOne<{ token: string }>(
@@ -425,7 +425,9 @@ export default async function StudentDetailPage({
                   <Calendar size={18} className="text-orange-500" />
                   Upcoming Classes
                 </CardTitle>
-                <CardDescription>{upcoming.length} scheduled</CardDescription>
+                <CardDescription>
+                  Showing up to 5 scheduled lessons
+                </CardDescription>
               </div>
               {upcoming.length > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -483,6 +485,10 @@ export default async function StudentDetailPage({
               </div>
             )}
           </CardContent>
+          <PreviewLink
+            href={`/students/${id}/history?section=upcoming`}
+            label="View all upcoming lessons"
+          />
         </Card>
 
         <Card className="border shadow-none">
@@ -493,7 +499,7 @@ export default async function StudentDetailPage({
                   <CheckCircle2 size={18} className="text-emerald-500" />
                   Past Classes
                 </CardTitle>
-                <CardDescription>{past.length} recorded</CardDescription>
+                <CardDescription>Latest 5 past lessons</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -548,6 +554,10 @@ export default async function StudentDetailPage({
               </div>
             )}
           </CardContent>
+          <PreviewLink
+            href={`/students/${id}/history?section=classes`}
+            label="View all past lessons"
+          />
         </Card>
       </div>
 
@@ -560,7 +570,7 @@ export default async function StudentDetailPage({
                 <FileText size={18} className="text-amber-500" />
                 Invoices
               </CardTitle>
-              <CardDescription>{invoices.length} total</CardDescription>
+              <CardDescription>Latest 5 invoices</CardDescription>
             </div>
             <CardAction>
               <GenerateInvoiceDialog
@@ -632,6 +642,10 @@ export default async function StudentDetailPage({
             </div>
           )}
         </CardContent>
+        <PreviewLink
+          href={`/students/${id}/history?section=invoices`}
+          label="View all invoices"
+        />
       </Card>
 
       {/* Class Notes */}
@@ -694,6 +708,10 @@ export default async function StudentDetailPage({
             </div>
           )}
         </CardContent>
+        <PreviewLink
+          href={`/students/${id}/history?section=notes`}
+          label="View all class notes"
+        />
       </Card>
 
       {/* Class Reports */}
@@ -703,9 +721,7 @@ export default async function StudentDetailPage({
             <FileText size={18} className="text-orange-500" />
             Class Reports
           </CardTitle>
-          <CardDescription>
-            Post-class session reports ({classReports.length})
-          </CardDescription>
+          <CardDescription>Latest 5 class reports</CardDescription>
         </CardHeader>
         <CardContent>
           {classReports.length === 0 ? (
@@ -743,6 +759,10 @@ export default async function StudentDetailPage({
             </div>
           )}
         </CardContent>
+        <PreviewLink
+          href={`/students/${id}/history?section=reports`}
+          label="View all reports"
+        />
       </Card>
 
       {/* Running Notes */}
@@ -779,7 +799,24 @@ export default async function StudentDetailPage({
             deleteAction={deleteStudentNote}
           />
         </CardContent>
+        <PreviewLink
+          href={`/students/${id}/history?section=running-notes`}
+          label="View all running notes"
+        />
       </Card>
     </>
+  );
+}
+
+function PreviewLink({ href, label }: { href: string; label: string }) {
+  return (
+    <div className="border-t border-border px-6 py-4">
+      <Link
+        href={href}
+        className="inline-flex items-center gap-2 font-medium text-primary"
+      >
+        {label} <ArrowRight size={17} />
+      </Link>
+    </div>
   );
 }

@@ -46,7 +46,7 @@ export default async function ParentDashboard({
       [now, student.id, student.id],
     ),
     queryAll<Invoice>(
-      `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id=? ORDER BY issued_at DESC,id DESC LIMIT 3`,
+      `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id=? ORDER BY issued_at DESC,id DESC LIMIT 5`,
       [student.id],
     ),
     getSettings(["currency"]),

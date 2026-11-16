@@ -60,7 +60,7 @@ export default async function DashboardPage() {
       "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
     ),
     queryAll<ClassWithStudent>(
-      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.scheduled_at>=? AND c.scheduled_at<? ORDER BY c.scheduled_at",
+      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.scheduled_at>=? AND c.scheduled_at<? ORDER BY c.scheduled_at LIMIT 5",
       [dayStart, dayEnd],
     ),
     queryAll<ClassWithStudent>(
@@ -75,12 +75,13 @@ export default async function DashboardPage() {
       "SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ORDER BY i.issued_at DESC",
     ),
     queryOne<{
+      today_classes: number;
       month_classes: number;
       month_minutes: number;
       upcoming: number;
     }>(
-      "SELECT SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND scheduled_at>=? AND scheduled_at<? THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming FROM classes",
-      [start, end, start, end, iso],
+      "SELECT SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS today_classes,SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND scheduled_at>=? AND scheduled_at<? THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming FROM classes",
+      [dayStart, dayEnd, start, end, start, end, iso],
     ),
     queryOne<{ present: number; absent: number }>(
       "SELECT SUM(CASE WHEN attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN attendance='absent' THEN 1 ELSE 0 END) AS absent FROM classes WHERE status<>'canceled' AND scheduled_at>=? AND scheduled_at<=?",
@@ -101,9 +102,18 @@ export default async function DashboardPage() {
       <section className="dashboard-intro page-heading mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
         <div>
           <p className="eyebrow">Your teaching day</p>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">A little space to teach well.</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Here’s what’s happening today, and what needs your attention.</p>
-          <p className="mt-2 text-xs text-muted-foreground">{new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "full" }).format(now)}</p>
+          <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+            A little space to teach well.
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Here’s what’s happening today, and what needs your attention.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {new Intl.DateTimeFormat("en-MY", {
+              timeZone: "Asia/Kuala_Lumpur",
+              dateStyle: "full",
+            }).format(now)}
+          </p>
         </div>
         <DashboardQuickActions students={students} />
       </section>
@@ -154,7 +164,9 @@ export default async function DashboardPage() {
                   A clear view of your day · Malaysia time
                 </CardDescription>
               </div>
-              <Badge variant="secondary">{classes.length} lessons</Badge>
+              <Badge variant="secondary">
+                {Number(stats?.today_classes ?? classes.length)} lessons
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
@@ -173,7 +185,13 @@ export default async function DashboardPage() {
                       {c.duration_minutes} min
                     </p>
                   </div>
-                  <div aria-hidden="true" className="lesson-avatar">{c.student_name.split(" ").map((n) => n[0]).slice(0, 2).join("")}</div>
+                  <div aria-hidden="true" className="lesson-avatar">
+                    {c.student_name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
                       {c.student_name}
@@ -183,7 +201,10 @@ export default async function DashboardPage() {
                       {c.location ? ` · ${c.location}` : ""}
                     </p>
                   </div>
-                  <LessonStatusBadge status={c.status} attendance={c.attendance} />
+                  <LessonStatusBadge
+                    status={c.status}
+                    attendance={c.attendance}
+                  />
                 </Link>
               ))
             ) : (
@@ -192,6 +213,11 @@ export default async function DashboardPage() {
               </p>
             )}
           </CardContent>
+          <div className="border-t border-border px-6 py-4">
+            <Link href="/schedule" className="font-medium text-primary">
+              View full schedule →
+            </Link>
+          </div>
         </Card>
         <Card>
           <CardHeader>
@@ -266,7 +292,9 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Attendance</CardTitle>
-            <CardDescription>Last 30 days · marked lessons only</CardDescription>
+            <CardDescription>
+              Last 30 days · marked lessons only
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <AttendanceChart

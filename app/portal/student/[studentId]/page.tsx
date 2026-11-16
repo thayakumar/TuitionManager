@@ -69,7 +69,7 @@ export default async function StudentDashboardPage({
       `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
               status, attendance, recurrence_id, is_trial, cancel_reason,
               rescheduled_from, meeting_room, created_at
-       FROM classes WHERE student_id = ? AND status = 'completed' AND julianday(scheduled_at) < julianday(?) ORDER BY julianday(scheduled_at) DESC LIMIT 3`,
+       FROM classes WHERE student_id = ? AND status = 'completed' AND julianday(scheduled_at) < julianday(?) ORDER BY julianday(scheduled_at) DESC LIMIT 5`,
       [id, nowISO],
     ),
     queryOne<{
@@ -209,7 +209,13 @@ export default async function StudentDashboardPage({
       </div>
 
       {/* Upcoming Classes */}
-      <div className={upcoming.length > 1 ? "grid items-start gap-5 xl:grid-cols-2" : "grid gap-5"}>
+      <div
+        className={
+          upcoming.length > 1
+            ? "grid items-start gap-5 xl:grid-cols-2"
+            : "grid gap-5"
+        }
+      >
         {upcoming.length !== 1 && (
           <Card>
             <CardHeader className="pb-2">
@@ -293,6 +299,12 @@ export default async function StudentDashboardPage({
               <CheckCircle2 size={18} className="text-emerald-500" />
               Recently Completed
             </CardTitle>
+            <Link
+              href={`/portal/student/${id}/schedule`}
+              className="text-sm font-medium text-primary"
+            >
+              View all lessons →
+            </Link>
           </CardHeader>
           <CardContent>
             {recentCompleted.length === 0 ? (

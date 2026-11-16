@@ -692,3 +692,11 @@ test("classwork moves preserve work/history, enforce classroom boundaries and pe
     await assert.rejects(()=>f.actions.moveClassworkPost(1,1,1,null),/Unauthorized/);
   } finally { f.close(); }
 });
+
+test("saving a lesson report records unmarked attendance as Present without overriding absence/cancellation", async () => {
+ const f=fixture();try{await f.seed();const unmarked=await insertLesson(f,{status:'scheduled',attendance:null});const absent=await insertLesson(f,{at:'2026-10-11T02:00:00Z',attendance:'absent'});const canceled=await insertLesson(f,{at:'2026-10-12T02:00:00Z',status:'canceled',attendance:null});
+ for(const cid of [unmarked,absent,canceled])await f.actions.saveReportQuick(cid,form({topics_covered:'Lesson recap',rating:4}));
+ assert.equal((await f.db.queryOne('SELECT attendance FROM classes WHERE id=?',[unmarked])).attendance,'present');assert.equal((await f.db.queryOne('SELECT status FROM classes WHERE id=?',[unmarked])).status,'completed');assert.equal((await f.db.queryOne('SELECT attendance FROM classes WHERE id=?',[absent])).attendance,'absent');assert.equal((await f.db.queryOne('SELECT status FROM classes WHERE id=?',[canceled])).status,'canceled');assert.equal((await f.db.queryOne('SELECT attendance FROM classes WHERE id=?',[canceled])).attendance,null);
+ const invoice=await f.actions.generateInvoiceQuick(form({student_id:1,period_start:'2026-10-01',period_end:'2026-10-31'}));assert.equal((await f.db.queryOne('SELECT total_amount FROM invoices WHERE id=?',[invoice])).total_amount,80);assert.deepEqual((await f.db.queryAll('SELECT class_id FROM invoice_items WHERE invoice_id=?',[invoice])).map(r=>r.class_id),[unmarked]);
+ }finally{f.close()}
+});

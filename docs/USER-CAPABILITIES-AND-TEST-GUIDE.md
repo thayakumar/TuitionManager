@@ -188,9 +188,9 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 #### 1.6.4. As an Admin, I can save or update a class report → one report persists and its parent-visible topics/homework/feedback update.
 
-**Reflects in:** Class report; completion; pending-report count; parent expandable table.
+**Reflects in:** Class report; completion; attendance; pending-report count; parent expandable table.
 
-**Manual check:** Inline and quick edit prefill existing content. Edit one field; unchanged report fields survive.
+**Manual check:** Saving a report completes a non-cancelled lesson and marks an unmarked lesson Present. Explicit Absent/Present and Cancelled remain unchanged. Ending a meeting alone opens the report flow without marking attendance. Inline and quick edit prefill existing content; unchanged report fields survive.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -704,3 +704,21 @@ The latest [bright red/orange classroom revision](../.audit/runs/2026-11-16-brig
 The [composer and popup review](../.audit/runs/2026-11-16-composer-review/REPORT.md) records the rebuilt forms and actual pointer/date/time tests. New lesson and recurring planners omit Subject and Location and offer only 1 hour / 1.5 hours / 2 hours. Lesson colours are Scheduled blue, Absent red and Cancelled grey (Present remains green).
 
 The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/REPORT.md) documents oval ratings, report label/value hierarchy, shared classroom search, persistent post movement and the past-attendance/upcoming-schedule split.
+
+### 4. Overview previews and full records
+
+#### 4.1. As an Admin, I can glance at a student overview → each lesson, invoice, report and note preview shows at most five records.
+
+**Manual check:** With more than five records, Past Classes and Upcoming Classes each show five. Their own “View all” links open the matching full-history section. Totals still represent all records.
+
+#### 4.2. As an Admin, I can open full student records → lessons, invoices, reports and notes remain accessible in pages of twenty.
+
+**Manual check:** Open each section, follow Next/Previous, and open an older lesson. Another student's records must not appear. Anonymous visitors must be redirected to admin login.
+
+#### 4.3. As an Admin, I can plan a lesson → student, date, start time, duration and free-trial choice are available without extra explanatory sections.
+
+**Manual check:** Use the date picker and time selectors. Duration choices are 1 hour, 1.5 hours and 2 hours. Subject and location are absent. Mobile fields remain readable and fit the screen.
+
+#### 4.4. As a Student or Parent, I can glance at my dashboard → recent/upcoming lesson and invoice previews contain at most five entries.
+
+**Manual check:** Use the schedule/invoice links for full records. Upcoming and past records follow their respective date rules; summaries are not limited to the preview.

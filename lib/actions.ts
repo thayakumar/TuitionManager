@@ -57,6 +57,7 @@ function refresh(studentId?: number) {
     revalidatePath(p);
   if (studentId) {
     revalidatePath(`/students/${studentId}`);
+    revalidatePath(`/students/${studentId}/history`);
     revalidatePath(`/classroom/${studentId}`, "layout");
     revalidatePath(`/portal/student/${studentId}`, "layout");
   }
@@ -605,7 +606,7 @@ async function report(classId: number, f: FormData) {
       args: [c.id, ...values, rating],
     });
     await tx.execute({
-      sql: "UPDATE classes SET status='completed' WHERE id=? AND status<>'canceled'",
+      sql: "UPDATE classes SET status='completed',attendance=COALESCE(NULLIF(attendance,''),'present') WHERE id=? AND status<>'canceled'",
       args: [c.id],
     });
     await studentNotice(
@@ -613,7 +614,9 @@ async function report(classId: number, f: FormData) {
       c.student_id,
       "report_updated",
       "Lesson report available",
-      "Your tutor saved your lesson report.",
+      c.status !== "canceled" && !c.attendance
+        ? "Your tutor saved your lesson report. Attendance was marked Present."
+        : "Your tutor saved your lesson report.",
       randomUUID(),
       `/portal/student/${c.student_id}`,
     );
@@ -987,6 +990,7 @@ export async function deleteStudentNote(noteId: number, studentId: number) {
     id(studentId),
   ]);
   revalidatePath(`/students/${studentId}`);
+  revalidatePath(`/students/${studentId}/history`);
 }
 export async function generateShareToken(studentId: number) {
   await requireAdmin();

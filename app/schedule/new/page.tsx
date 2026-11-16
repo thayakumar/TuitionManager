@@ -35,7 +35,7 @@ export default async function NewClassPage({
   if (students.length === 0) {
     return (
       <>
-        <PageHeader title="Schedule a class" />
+        <PageHeader title="Plan a lesson" />
         <EmptyState
           title="Add a student first"
           description="You need at least one active student before scheduling a class."
@@ -55,21 +55,14 @@ export default async function NewClassPage({
 
   return (
     <>
-      <PageHeader title="Schedule a class" />
+      <PageHeader title="Plan a lesson" />
       <LessonActionForm
         action={createClassQuick}
         successPath="/classes/{id}"
         className="mx-auto max-w-3xl"
       >
         <Card>
-          <CardHeader>
-            <CardTitle>Lesson planner</CardTitle>
-            <CardDescription>
-              Choose a student and a time. We’ll check the timetable before
-              saving.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <ScheduleFields
               students={students}
               defaultStudentId={

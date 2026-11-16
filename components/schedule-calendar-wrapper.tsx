@@ -512,9 +512,7 @@ export function ScheduleCalendarWrapper({
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Plan a lesson</DialogTitle>
-            <DialogDescription>
-              A clear plan, from student to start time. All times are MYT.
-            </DialogDescription>
+            <DialogDescription className="sr-only">Choose a student, date, time and duration.</DialogDescription>
           </DialogHeader>
           {add && (
             <form

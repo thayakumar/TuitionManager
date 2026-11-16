@@ -409,15 +409,6 @@ export function ScheduleFields({
   return (
     <div className="schedule-composer">
       <section className="form-section">
-        <div className="form-section-heading">
-          <span className="form-step">1</span>
-          <div>
-            <h3 className="form-section-title">Who’s learning?</h3>
-            <p className="form-section-description">
-              Choose a student for this lesson.
-            </p>
-          </div>
-        </div>
         <label htmlFor={`${id}-student`} className="field-label">
           Student
         </label>
@@ -438,15 +429,6 @@ export function ScheduleFields({
         </select>
       </section>
       <section className="form-section">
-        <div className="form-section-heading">
-          <span className="form-step">2</span>
-          <div>
-            <h3 className="form-section-title">Make time for a lesson</h3>
-            <p className="form-section-description">
-              Pick a date, start time and lesson length. All times are MYT.
-            </p>
-          </div>
-        </div>
         <DateTimeField
           name="scheduled_at"
           label="Lesson date"
@@ -459,30 +441,17 @@ export function ScheduleFields({
           }
         />
       </section>
-      <label className="trial-option" data-selected={trial || undefined}>
-        <span className="form-icon">
-          <GraduationCap size={23} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <strong>Make it a trial lesson</strong>
-          <span className="block text-sm text-muted-foreground">
-            Free of charge. The lesson is recorded as RM 0.
-          </span>
-        </span>
+      <label className="compact-trial-option">
         <input
           type="checkbox"
           name="is_trial"
           checked={trial}
           onChange={(e) => setTrial(e.target.checked)}
         />
-      </label>
-      <div className="form-info-note">
-        <Clock3 size={19} />
         <span>
-          We check for timetable clashes before saving. Your student is notified
-          when the lesson is scheduled.
+          Trial lesson <span className="text-muted-foreground">(free)</span>
         </span>
-      </div>
+      </label>
     </div>
   );
 }

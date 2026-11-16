@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "Overview past and upcoming previews each contain five lessons and correct full-history links",
+      "status": "Pass"
+    },
+    {
+      "name": "Full past history paginates twenty records with older lessons accessible",
+      "status": "Pass"
+    },
+    {
+      "name": "Every full-record section opens",
+      "status": "Pass"
+    },
+    {
+      "name": "Planner has compact fields and duration choices without explanatory sections",
+      "status": "Pass"
+    },
+    {
+      "name": "Class details retains report and attendance controls but removes edit section",
+      "status": "Pass"
+    },
+    {
+      "name": "Saving an unmarked lesson report marks Present and completes the lesson",
+      "status": "Pass"
+    },
+    {
+      "name": "Anonymous full-history access denied",
+      "status": "Pass"
+    },
+    {
+      "name": "No browser runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

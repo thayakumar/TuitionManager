@@ -542,3 +542,9 @@ aside nav a { min-height: 50px; font-size: 1rem; }
 /* Drop targets keep their space so dragging does not shift nearby posts. */
 .classwork-drop-end, .classwork-drop-end:empty, .classwork-drop-end.is-dragging { min-height: 42px; padding: 10px 12px; }
 @media (max-width: 767px) { .student-metric-icon { display: none; } }
+/* Compact lesson planning: fields, choices and actions only. */
+.schedule-composer { gap: 16px; }
+.schedule-composer .form-section { padding: 20px; }
+.compact-trial-option { display: flex; align-items: center; gap: 12px; padding: 4px; font-size: 1rem; cursor: pointer; }
+.compact-trial-option input { width: 21px; height: 21px; accent-color: var(--primary); }
+.schedule-composer .duration-option span { display: none; }

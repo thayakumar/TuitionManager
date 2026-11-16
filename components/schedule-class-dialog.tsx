@@ -88,8 +88,8 @@ export function ScheduleClassDialog({
               <CalendarPlus size={18} className="text-primary" />
               Plan a lesson
             </DialogTitle>
-            <DialogDescription>
-              A clear plan, from student to start time.
+            <DialogDescription className="sr-only">
+              Choose a student, date, time and duration.
             </DialogDescription>
           </DialogHeader>
 
