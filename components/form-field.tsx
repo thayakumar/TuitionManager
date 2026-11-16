@@ -1,3 +1,11 @@
+"use client";
+import { useId } from "react";
+import {
+  DateField,
+  DateTimeField,
+  TimeField,
+  DurationField,
+} from "@/components/scheduling-fields";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,11 +31,41 @@ export function Field({
   min?: number | string;
   max?: number | string;
 }) {
+  const fieldId = useId();
+  if (type === "datetime-local")
+    return (
+      <DateTimeField
+        name={name}
+        label={label}
+        defaultValue={String(defaultValue ?? "")}
+        required={required}
+      />
+    );
+  if (type === "date")
+    return (
+      <DateField
+        name={name}
+        label={label}
+        defaultValue={String(defaultValue ?? "")}
+        required={required}
+      />
+    );
+  if (type === "time")
+    return (
+      <TimeField
+        name={name}
+        label={label}
+        defaultValue={String(defaultValue ?? "09:00")}
+        required={required}
+      />
+    );
+  if (name === "duration_minutes")
+    return <DurationField defaultValue={Number(defaultValue ?? 60)} />;
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>{label}</Label>
+    <div className="field-group">
+      <Label htmlFor={fieldId}>{label}</Label>
       <Input
-        id={name}
+        id={fieldId}
         name={name}
         type={type}
         defaultValue={defaultValue ?? ""}
@@ -54,11 +92,12 @@ export function TextAreaField({
   rows?: number;
   placeholder?: string;
 }) {
+  const fieldId = useId();
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>{label}</Label>
+    <div className="field-group">
+      <Label htmlFor={fieldId}>{label}</Label>
       <Textarea
-        id={name}
+        id={fieldId}
         name={name}
         defaultValue={defaultValue ?? ""}
         rows={rows}
@@ -79,11 +118,12 @@ export function SelectField({
   defaultValue?: string;
   options: Array<{ value: string; label: string }>;
 }) {
+  const fieldId = useId();
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={name}>{label}</Label>
+    <div className="field-group">
+      <Label htmlFor={fieldId}>{label}</Label>
       <select
-        id={name}
+        id={fieldId}
         name={name}
         defaultValue={defaultValue}
         className="flex min-h-11 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"

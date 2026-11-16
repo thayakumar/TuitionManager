@@ -1,17 +1,10 @@
 import { requireAdminPage } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, UserRound, UserRoundX } from "lucide-react";
 import { queryOne } from "@/lib/db";
 import { updateStudent, deleteStudent } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
@@ -30,42 +23,46 @@ export default async function EditStudentPage({
     [id],
   );
   if (!student) notFound();
-
   const update = updateStudent.bind(null, id);
   const del = deleteStudent.bind(null, id);
-
   return (
     <>
+      <Link
+        href={`/students/${id}`}
+        className="mb-5 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+      >
+        <ArrowLeft size={18} /> Student profile
+      </Link>
       <PageHeader
         title={`Edit ${student.name}`}
-        action={
-          <Link href={`/students/${id}`}>
-            <Button variant="secondary">Cancel</Button>
-          </Link>
-        }
+        subtitle="Keep learning information, family contacts and portal access in one place."
       />
-
-      <form action={update} className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Edit student</CardTitle>
-            <CardDescription>
-              Update student information and preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field
-                label="Full name *"
-                name="name"
-                required
-                defaultValue={student.name}
-              />
-              <Field
-                label="Subject"
-                name="subject"
-                defaultValue={student.subject ?? ""}
-              />
+      <form
+        action={update}
+        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]"
+      >
+        <div className="min-w-0 space-y-5">
+          <section className="form-section">
+            <div className="mb-6 flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-secondary text-primary">
+                <UserRound size={22} />
+              </span>
+              <div>
+                <h2 className="form-section-title">Learning profile</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Name, level and tuition rate
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Field
+                  label="Full name"
+                  name="name"
+                  required
+                  defaultValue={student.name}
+                />
+              </div>
               <Field
                 label="Grade / level"
                 name="grade_level"
@@ -76,15 +73,30 @@ export default async function EditStudentPage({
                 name="hourly_rate"
                 type="number"
                 step="0.01"
+                min="0"
+                max="1000000"
                 defaultValue={Number(student.hourly_rate)}
               />
+            </div>
+          </section>
+          <section className="form-section">
+            <div className="mb-5">
+              <h2 className="form-section-title">
+                Student & guardian contacts
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Update the details you use to stay in touch.
+              </p>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
               <Field
-                label="Phone"
+                label="Student phone"
                 name="phone"
+                type="tel"
                 defaultValue={student.phone ?? ""}
               />
               <Field
-                label="Email"
+                label="Student email"
                 name="email"
                 type="email"
                 defaultValue={student.email ?? ""}
@@ -100,36 +112,77 @@ export default async function EditStudentPage({
                 defaultValue={student.guardian_contact ?? ""}
               />
             </div>
-            <div className="mt-4">
+          </section>
+          <details className="form-section" open>
+            <summary className="cursor-pointer font-semibold">
+              Additional details
+            </summary>
+            <div className="mt-5 space-y-5">
+              <Field
+                label="Subject"
+                name="subject"
+                defaultValue={student.subject ?? ""}
+              />
               <TextAreaField
-                label="Notes"
+                label="Private teaching notes"
                 name="notes"
                 rows={4}
                 defaultValue={student.notes ?? ""}
               />
             </div>
-            <label className="flex items-center gap-2 mt-4 text-sm text-foreground cursor-pointer">
+          </details>
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
+            <Button type="button" asChild variant="outline">
+              <Link href={`/students/${id}`}>Cancel</Link>
+            </Button>
+            <Button type="submit">Save changes</Button>
+          </div>
+        </div>
+        <aside className="space-y-5 xl:sticky xl:top-6">
+          <section className="form-section">
+            <ShieldCheck size={26} className="mb-4 text-primary" />
+            <h2 className="form-section-title">Student access</h2>
+            <label
+              htmlFor="student-active"
+              className="mt-5 flex cursor-pointer items-start gap-3"
+            >
               <input
+                id="student-active"
                 type="checkbox"
                 name="active"
                 defaultChecked={!!student.active}
-                className="size-4 rounded border-input accent-primary"
+                className="mt-1 size-5 shrink-0 accent-primary"
               />
-              Active
+              <span>
+                <span className="block font-semibold">
+                  Portal access enabled
+                </span>
+                <span className="mt-2 block text-sm leading-relaxed text-muted-foreground">
+                  Switch off and save to revoke access immediately. Their
+                  lesson, invoice and work history is preserved.
+                </span>
+              </span>
             </label>
-            <div className="mt-6 flex justify-between">
-              <Button
-                type="submit"
-                formAction={del}
-                variant="destructive"
-                formNoValidate
-              >
-                <Trash2 size={16} /> Delete
-              </Button>
-              <Button type="submit">Save changes</Button>
-            </div>
-          </CardContent>
-        </Card>
+          </section>
+          <section className="rounded-2xl border border-destructive/20 bg-card p-6">
+            <UserRoundX size={24} className="mb-3 text-destructive" />
+            <h2 className="font-semibold">Leaving tuition?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Deactivate the student to end portal access while keeping their
+              history.
+            </p>
+            <Button
+              className="mt-5 w-full"
+              type="submit"
+              formAction={del}
+              variant="outline"
+              formNoValidate
+              disabled={!student.active}
+            >
+              Deactivate student
+            </Button>
+          </section>
+        </aside>
       </form>
     </>
   );

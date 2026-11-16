@@ -34,7 +34,7 @@ export function ReportRow({
         className="border-b border-border/50 hover:bg-primary/5 transition-colors cursor-pointer"
         onClick={() => setOpen(!open)}
       >
-        <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
+        <td className="py-4 px-5 text-muted-foreground whitespace-nowrap">
           <Link
             href={`/classes/${r.class_id}`}
             className="hover:text-primary hover:underline"
@@ -43,10 +43,10 @@ export function ReportRow({
             {fmtDateTime(r.scheduled_at)}
           </Link>
         </td>
-        <td className="py-2.5 px-3 text-foreground truncate max-w-[200px]">
+        <td className="py-4 px-5 text-foreground truncate max-w-[200px]">
           {r.topics_covered || "—"}
         </td>
-        <td className="py-2.5 px-3 text-center">
+        <td className="py-4 px-5 text-center">
           {r.rating != null ? (
             <span className="inline-flex items-center gap-0.5 text-amber-500 font-medium">
               {r.rating}/5
@@ -55,7 +55,7 @@ export function ReportRow({
             "—"
           )}
         </td>
-        <td className="py-2.5 px-3 text-center">
+        <td className="py-4 px-5 text-center">
           <button
             type="button"
             className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg hover:bg-primary/10"
@@ -67,17 +67,17 @@ export function ReportRow({
             }}
           >
             {open ? (
-              <ChevronDown size={14} className="text-muted-foreground" />
+              <ChevronDown size={20} className="text-muted-foreground" />
             ) : (
-              <ChevronRight size={14} className="text-muted-foreground" />
+              <ChevronRight size={20} className="text-muted-foreground" />
             )}
           </button>
         </td>
       </tr>
       {open && (
         <tr className="border-b border-border/50 bg-primary/5">
-          <td colSpan={4} className="px-3 py-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <td colSpan={4} className="px-5 py-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <DetailItem label="Subject" value={r.subject || defaultSubject} />
               <DetailItem label="Topics Covered" value={r.topics_covered} />
               <DetailItem label="Homework" value={r.homework} />
@@ -96,8 +96,8 @@ export function ReportRow({
 function DetailItem({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
   return (
-    <div>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
+    <div className="rounded-xl border border-border/60 bg-card p-4">
+      <p className="text-sm font-semibold text-muted-foreground tracking-wide mb-2">
         {label}
       </p>
       <p className="text-foreground whitespace-pre-line">{value}</p>

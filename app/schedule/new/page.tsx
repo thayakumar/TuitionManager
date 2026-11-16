@@ -1,3 +1,4 @@
+import { ScheduleFields } from "@/components/scheduling-fields";
 import { requireAdminPage } from "@/lib/auth";
 import { LessonActionForm } from "@/components/lesson-action-form";
 import { fmtDateInput, fmtISODate } from "@/lib/format";
@@ -58,62 +59,24 @@ export default async function NewClassPage({
       <LessonActionForm
         action={createClassQuick}
         successPath="/classes/{id}"
-        className="max-w-xl"
+        className="mx-auto max-w-3xl"
       >
         <Card>
           <CardHeader>
-            <CardTitle>New class</CardTitle>
+            <CardTitle>Lesson planner</CardTitle>
             <CardDescription>
-              Schedule a class session for a student
+              Choose a student and a time. We’ll check the timetable before
+              saving.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <SelectField
-                label="Student *"
-                name="student_id"
-                defaultValue={query.student || String(students[0].id)}
-                options={students.map((s) => ({
-                  value: String(s.id),
-                  label: s.name,
-                }))}
-              />
-              <Field
-                label="Date & time *"
-                name="scheduled_at"
-                type="datetime-local"
-                required
-                defaultValue={defaultTime}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <Field
-                  label="Duration (minutes)"
-                  name="duration_minutes"
-                  type="number"
-                  defaultValue={60}
-                  min={5}
-                  max={1440}
-                />
-                <Field
-                  label="Subject"
-                  name="subject"
-                  placeholder="e.g. Algebra"
-                />
-              </div>
-              <Field
-                label="Location"
-                name="location"
-                placeholder="e.g. Zoom / Home"
-              />
-              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_trial"
-                  className="size-4 rounded border-input accent-primary"
-                />
-                Trial class (invoiced at RM 0.00)
-              </label>
-            </div>
+            <ScheduleFields
+              students={students}
+              defaultStudentId={
+                query.student ? Number(query.student) : undefined
+              }
+              defaultDateTime={defaultTime}
+            />
             <div className="mt-6 flex justify-end gap-2">
               <Link href="/schedule">
                 <Button variant="secondary">Cancel</Button>

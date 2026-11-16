@@ -11,6 +11,7 @@ import {
   Trash2,
   Check,
   X,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -171,7 +172,7 @@ function PostDialog({
         if (!busy) onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <config.icon size={18} className="text-primary" />
@@ -191,49 +192,82 @@ function PostDialog({
               <input type="hidden" name="student_id" value={studentId} />
             </>
           )}
-          <fieldset disabled={busy} className="space-y-4 py-2">
-            <Field
-              label="Title"
-              name="title"
-              required
-              defaultValue={editPost?.title ?? ""}
-              placeholder="Give this classwork a clear title"
-            />
-            <TextAreaField
-              label="Content"
-              name="body"
-              rows={4}
-              defaultValue={editPost?.body ?? ""}
-              placeholder="Add details, instructions, or notes..."
-            />
-            <TopicSelector
-              topics={topics}
-              studentId={studentId}
-              defaultValue={String(editPost?.topic_id ?? "")}
-            />
-            {postType === "assignment" && (
-              <>
-                <Field
-                  label="Points"
-                  name="max_points"
-                  type="number"
-                  step="any"
-                  defaultValue={editPost?.max_points ?? ""}
-                  placeholder="e.g., 100"
+          <fieldset
+            disabled={busy}
+            className="grid min-w-0 gap-6 py-2 md:grid-cols-[minmax(0,1fr)_260px]"
+          >
+            <section className="form-section min-w-0 space-y-5">
+              <h3 className="form-section-title">
+                {postType === "assignment"
+                  ? "Assignment details"
+                  : "Your message"}
+              </h3>
+              <Field
+                label="Title"
+                name="title"
+                required
+                defaultValue={editPost?.title ?? ""}
+                placeholder="Give this classwork a clear title"
+              />
+              <TextAreaField
+                label={postType === "assignment" ? "Instructions" : "Content"}
+                name="body"
+                rows={8}
+                defaultValue={editPost?.body ?? ""}
+                placeholder={
+                  postType === "assignment"
+                    ? "Explain what to do, what to include and how the work will be assessed…"
+                    : "Add details, learning notes or an update…"
+                }
+              />
+            </section>
+            <div className="min-w-0 space-y-5">
+              <section className="form-section space-y-4">
+                <h3 className="form-section-title">Organise & share</h3>
+                <TopicSelector
+                  topics={topics}
+                  studentId={studentId}
+                  defaultValue={String(editPost?.topic_id ?? "")}
                 />
-                <Field
-                  label="Due date and time (Malaysia)"
-                  name="due_at"
-                  type="datetime-local"
-                  defaultValue={
-                    editPost?.due_at ? fmtDateInput(editPost.due_at) : ""
-                  }
-                />
-              </>
-            )}
+                {postType === "assignment" && (
+                  <>
+                    <Field
+                      label="Points"
+                      name="max_points"
+                      type="number"
+                      step="any"
+                      defaultValue={editPost?.max_points ?? ""}
+                      placeholder="e.g., 100"
+                    />
+                    <Field
+                      label="Due date and time (Malaysia)"
+                      name="due_at"
+                      type="datetime-local"
+                      defaultValue={
+                        editPost?.due_at ? fmtDateInput(editPost.due_at) : ""
+                      }
+                    />
+                  </>
+                )}
+              </section>
+              <div className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+                <p className="flex items-center gap-2 font-semibold">
+                  <Send size={18} className="text-primary" /> Ready for the
+                  classroom
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {editPost
+                    ? "Your student will receive a notification about this update. Existing submissions and feedback remain linked to this post."
+                    : "This post will appear in this student's classroom and they’ll receive a notification."}
+                </p>
+              </div>
+            </div>
           </fieldset>
           {error && (
-            <p role="alert" className="mt-3 text-sm text-destructive">
+            <p
+              role="alert"
+              className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-base text-destructive"
+            >
               {error}
             </p>
           )}
@@ -345,8 +379,20 @@ export function DeletePostButton({
               undone.
             </DialogDescription>
           </DialogHeader>
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+            <p className="flex items-center gap-2 font-semibold text-destructive">
+              <Trash2 size={20} /> This removes the full post history
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Keep this post if you still need its submissions or feedback.
+              Deleting it cannot be reversed.
+            </p>
+          </div>
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-base text-destructive"
+            >
               {error}
             </p>
           )}
@@ -438,7 +484,7 @@ function TopicSelector({
           name="topic_id"
           value={selected}
           onChange={(event) => setSelected(event.target.value)}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
+          className="min-h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-4 text-base"
         >
           <option value="">No topic</option>
           {allTopics.map((topic) => (
@@ -480,7 +526,7 @@ function TopicSelector({
                 setShowNew(false);
               }
             }}
-            className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
+            className="min-h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-4 text-base"
           />
           <Button
             type="button"

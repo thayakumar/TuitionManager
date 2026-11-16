@@ -1,31 +1,14 @@
-import { requireAdminPage } from "@/lib/auth";
-import { LessonActionForm } from "@/components/lesson-action-form";
-import { fmtDateInput, fmtISODate } from "@/lib/format";
 import Link from "next/link";
+import { CalendarRange, ShieldCheck } from "lucide-react";
+import { requireAdminPage } from "@/lib/auth";
 import { queryAll } from "@/lib/db";
 import { createRecurrenceQuick } from "@/lib/actions";
+import { LessonActionForm } from "@/components/lesson-action-form";
+import { RecurringScheduleFields } from "@/components/recurring-schedule-dialog";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Field, SelectField } from "@/components/form-field";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { Student } from "@/lib/types";
-import { format } from "date-fns";
-
 export const dynamic = "force-dynamic";
-
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
 export default async function NewRecurringPage({
   searchParams,
 }: {
@@ -33,133 +16,65 @@ export default async function NewRecurringPage({
 }) {
   await requireAdminPage();
   const query = await searchParams;
-  const students = await queryAll<Student>(
-    "SELECT id,name,subject FROM students WHERE active = 1 ORDER BY name",
+  const students = await queryAll<{ id: number; name: string }>(
+    "SELECT id,name FROM students WHERE active=1 ORDER BY name",
   );
-
-  if (students.length === 0) {
+  if (!students.length)
     return (
       <>
         <PageHeader title="Recurring schedule" />
-        <EmptyState title="Add a student first" />
+        <EmptyState
+          title="Add a student first"
+          description="Recurring lessons need an active student."
+          action={
+            <Button asChild>
+              <Link href="/students/new">Add a student</Link>
+            </Button>
+          }
+        />
       </>
     );
-  }
-
-  const defaultStart = fmtISODate(new Date().toISOString());
-
   return (
     <>
       <PageHeader
-        title="Set up recurring classes"
-        subtitle="Malaysia time · no end date generates through 31 December of the chosen start year"
+        title="Build a lesson rhythm"
+        subtitle="Choose a student and a repeat pattern. We’ll build the lesson series for you."
       />
-      <LessonActionForm
-        action={createRecurrenceQuick}
-        successPath="/schedule"
-        className="max-w-xl"
-      >
-        <Card>
-          <CardContent className="pt-5 space-y-4">
-            <SelectField
-              label="Student *"
-              name="student_id"
-              defaultValue={query.student || String(students[0].id)}
-              options={students.map((s) => ({
-                value: String(s.id),
-                label: s.name,
-              }))}
-            />
-
-            <div>
-              <Label className="text-sm">Days of week *</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {DAYS.map((day, i) => (
-                  <label key={i} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      name="day_of_week"
-                      value={String(i)}
-                    />
-                    {day}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <Field
-              label="Time *"
-              name="time"
-              type="time"
-              required
-              defaultValue="16:00"
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Duration (minutes)"
-                name="duration_minutes"
-                type="number"
-                defaultValue={60}
-                min={5}
-                max={1440}
-              />
-              <Field
-                label="Subject"
-                name="subject"
-                placeholder="e.g. Mathematics"
-              />
-            </div>
-
-            <Field
-              label="Location"
-              name="location"
-              placeholder="e.g. Zoom / Home"
-            />
-
-            <SelectField
-              label="Frequency"
-              name="frequency"
-              defaultValue="weekly"
-              options={[
-                { value: "weekly", label: "Every week" },
-                { value: "biweekly", label: "Every 2 weeks" },
-                { value: "custom", label: "Custom interval" },
-              ]}
-            />
-
-            <Field
-              label="Custom interval (days)"
-              name="custom_interval_days"
-              type="number"
-              placeholder="e.g. 10"
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Start date *"
-                name="start_date"
-                type="date"
-                required
-                defaultValue={defaultStart}
-              />
-              <Field
-                label="End date"
-                name="end_date"
-                type="date"
-                placeholder="Optional"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Link href="/schedule">
-                <Button variant="secondary">Cancel</Button>
-              </Link>
-              <Button type="submit">Create recurring schedule</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </LessonActionForm>
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <LessonActionForm
+          action={createRecurrenceQuick}
+          successPath="/schedule"
+          className="min-w-0"
+        >
+          <RecurringScheduleFields
+            students={students}
+            defaultStudentId={Number(query.student) || undefined}
+          />
+          <div className="flex flex-wrap justify-end gap-3 rounded-2xl border border-border bg-card p-5">
+            <Button asChild variant="outline">
+              <Link href="/schedule">Cancel</Link>
+            </Button>
+            <Button type="submit">Create lesson series</Button>
+          </div>
+        </LessonActionForm>
+        <aside className="space-y-5 rounded-2xl border border-border bg-card p-6">
+          <CalendarRange className="text-primary" size={30} />
+          <h2 className="text-xl font-semibold">
+            Plan once. Teach with clarity.
+          </h2>
+          <p className="text-base leading-relaxed text-muted-foreground">
+            No end date? The series runs through 31 December of the chosen start
+            year.
+          </p>
+          <div className="flex items-start gap-3 border-t border-border pt-5 text-sm text-muted-foreground">
+            <ShieldCheck size={24} className="shrink-0 text-primary" />
+            <p>
+              Overlap checks protect your calendar. You can stop future lessons
+              later while preserving the history.
+            </p>
+          </div>
+        </aside>
+      </div>
     </>
   );
 }

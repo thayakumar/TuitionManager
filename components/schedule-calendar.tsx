@@ -5,6 +5,8 @@ import Link from "next/link";
 import { format, isSameDay, parseISO, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,28 +22,6 @@ type ClassItem = {
   attendance: string | null;
   is_trial: number;
 };
-
-function statusVariant(status: string) {
-  switch (status) {
-    case "completed":
-      return "default" as const;
-    case "canceled":
-      return "destructive" as const;
-    default:
-      return "secondary" as const;
-  }
-}
-
-function statusColor(status: string) {
-  switch (status) {
-    case "completed":
-      return "bg-foreground";
-    case "canceled":
-      return "bg-destructive";
-    default:
-      return "bg-foreground/50";
-  }
-}
 
 export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -174,7 +154,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                         </div>
 
                         <div className="flex flex-col items-center self-stretch py-0.5">
-                          <div className={cn("size-2 rounded-full shrink-0", statusColor(c.status))} />
+                          <div className={cn("size-2 rounded-full shrink-0", lessonStatus(c.status, c.attendance).dotClassName)} />
                           <div className="w-px flex-1 bg-border mt-1" />
                         </div>
 
@@ -189,9 +169,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                                   TRIAL
                                 </Badge>
                               ) : null}
-                              <Badge variant={statusVariant(c.status)} className="text-xs">
-                                {c.status}
-                              </Badge>
+                              <LessonStatusBadge status={c.status} attendance={c.attendance} />
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
@@ -259,11 +237,8 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                               key={c.id}
                               className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs",
-                                c.status === "canceled"
-                                  ? "bg-destructive/10 text-destructive line-through"
-                                  : c.status === "completed"
-                                    ? "bg-foreground/10 text-foreground"
-                                    : "bg-secondary text-secondary-foreground"
+                                lessonStatus(c.status, c.attendance).className,
+                                c.status === "canceled" && "line-through"
                               )}
                             >
                               {format(parseISO(c.scheduled_at), "h:mm a")} · {c.student_name}

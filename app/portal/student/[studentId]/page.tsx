@@ -20,6 +20,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { fmtDateTime, fmtDate } from "@/lib/format";
 import type { Student, ClassRow } from "@/lib/types";
@@ -175,11 +177,11 @@ export default async function StudentDashboardPage({
 
       {/* Next Class Highlight */}
       {nextClass && (
-        <Card className="metric-card mb-6 border-l-4 border-l-orange-500">
+        <Card className="metric-card mb-6 border-l-4 border-l-blue-500">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-orange-500 mb-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-1">
                   Next Class
                 </p>
                 <p className="text-sm font-semibold text-foreground">
@@ -235,8 +237,8 @@ export default async function StudentDashboardPage({
                   key={c.id}
                   className="flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors"
                 >
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
-                    <Clock size={16} className="text-orange-500" />
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-blue-50">
+                    <Clock size={16} className="text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">
@@ -248,7 +250,8 @@ export default async function StudentDashboardPage({
                       {c.location ? ` · ${c.location}` : ""}
                     </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
                     {c.meeting_room && (
                       <Link href={`/meeting/${c.id}`}>
                         <Button variant="outline" size="sm">
@@ -290,8 +293,8 @@ export default async function StudentDashboardPage({
                   key={c.id}
                   className="flex items-center gap-3 rounded-lg border border-border/50 p-3"
                 >
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-50">
-                    <CheckCircle2 size={16} className="text-emerald-500" />
+                  <div className={`flex size-9 items-center justify-center rounded-lg ${lessonStatus(c.status, c.attendance).iconClassName}`}>
+                    <CheckCircle2 size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">
@@ -302,16 +305,7 @@ export default async function StudentDashboardPage({
                       {c.subject || student.subject || "Lesson"}
                     </div>
                   </div>
-                  <Badge
-                    variant="default"
-                    className="text-xs bg-emerald-500"
-                  >
-                    {normalizedAttendance(c.attendance) === "present"
-                      ? "Present"
-                      : normalizedAttendance(c.attendance) === "absent"
-                        ? "Absent"
-                        : "Completed"}
-                  </Badge>
+                  <LessonStatusBadge status={c.status} attendance={c.attendance} />
                 </div>
               ))}
             </div>

@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import { Copy, Check, Link2, X } from "lucide-react";
 import { generateShareToken, revokeShareToken } from "@/lib/actions";
 import { actionError } from "@/lib/action-errors";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 export function ShareTokenButton({
@@ -14,6 +22,7 @@ export function ShareTokenButton({
   existingToken: string | null;
 }) {
   const [token, setToken] = useState(existingToken);
+  const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,19 +30,13 @@ export function ShareTokenButton({
 
   async function updateAccess(revoke = false) {
     if (busy) return;
-    if (
-      revoke &&
-      !window.confirm(
-        "Revoke this parent link? Anyone with the old link will lose access.",
-      )
-    )
-      return;
     setBusy(true);
     setError(null);
     try {
       if (revoke) {
         await revokeShareToken(studentId);
         setToken(null);
+        setConfirming(false);
       } else setToken(await generateShareToken(studentId));
     } catch (error) {
       setError(actionError(error, "Could not update parent access."));
@@ -71,7 +74,10 @@ export function ShareTokenButton({
               disabled={busy}
               title="Revoke link"
               aria-label="Revoke parent link"
-              onClick={() => updateAccess(true)}
+              onClick={() => {
+                setError(null);
+                setConfirming(true);
+              }}
             >
               <X size={16} />
             </Button>
@@ -87,7 +93,56 @@ export function ShareTokenButton({
           </Button>
         )}
       </div>
-      {error && (
+      <Dialog
+        open={confirming}
+        onOpenChange={(value) => {
+          if (!busy) setConfirming(value);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Revoke parent access?</DialogTitle>
+            <DialogDescription>
+              The current shared link will stop working immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <section className="form-section">
+            <h3 className="form-section-title">What changes</h3>
+            <p className="mt-3 leading-relaxed text-muted-foreground">
+              Anyone using this link will lose access to this student’s parent
+              view. Lessons, reports and invoices are preserved. You can
+              generate a new link when needed.
+            </p>
+          </section>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl bg-destructive/10 p-4 text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setConfirming(false)}
+            >
+              Keep parent access
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              onClick={() => updateAccess(true)}
+            >
+              {busy ? "Revoking…" : "Revoke link"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {error && !confirming && (
         <p role="alert" className="mt-2 text-xs text-destructive">
           {error}
         </p>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreVertical, Pencil, Trash2, Check, X } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,12 +24,12 @@ import { actionError } from "@/lib/action-errors";
 
 export function CreateTopicButton({ studentId }: { studentId: number }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false),
-    [open, setOpen] = useState(false),
+  const [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false),
     [name, setName] = useState(""),
     [error, setError] = useState("");
-  const input = useRef<HTMLInputElement>(null);
-  async function create() {
+  async function create(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (busy || !name.trim()) return;
     setBusy(true);
     setError("");
@@ -47,67 +47,78 @@ export function CreateTopicButton({ studentId }: { studentId: number }) {
       setBusy(false);
     }
   }
-  if (!open)
-    return (
+  return (
+    <>
       <Button
         variant="outline"
         size="sm"
         onClick={() => {
+          setError("");
           setOpen(true);
-          setTimeout(() => input.current?.focus(), 0);
         }}
       >
-        <Plus size={14} />
+        <Plus size={18} />
         Create topic
       </Button>
-    );
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={input}
-          aria-label="Topic name"
-          value={name}
-          maxLength={200}
-          onChange={(event) => setName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              void create();
-            }
-            if (event.key === "Escape") setOpen(false);
-          }}
-          placeholder="Topic name"
-          disabled={busy}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
-        />
-        <Button
-          type="button"
-          aria-label="Create topic"
-          onClick={create}
-          disabled={busy || !name.trim()}
-        >
-          <Check size={16} />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          aria-label="Cancel new topic"
-          onClick={() => {
-            setOpen(false);
-            setName("");
-          }}
-          disabled={busy}
-        >
-          <X size={16} />
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
+      <Dialog
+        open={open}
+        onOpenChange={(value) => {
+          if (!busy) setOpen(value);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create a topic</DialogTitle>
+            <DialogDescription>
+              Give related classwork a clear home.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={create} className="space-y-6" aria-busy={busy}>
+            <section className="form-section">
+              <label className="field-group">
+                <span className="field-label">Topic name</span>
+                <input
+                  autoFocus
+                  required
+                  aria-label="Topic name"
+                  maxLength={200}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="For example, Fractions or Revision"
+                  disabled={busy}
+                  className="studio-input"
+                />
+              </label>
+              <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+                <BookOpen size={19} className="shrink-0" />
+                You can organise materials and assignments under this topic.
+              </p>
+            </section>
+            {error && (
+              <p
+                role="alert"
+                className="rounded-xl bg-destructive/10 p-4 text-destructive"
+              >
+                {error}
+              </p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={busy || !name.trim()}>
+                {busy ? "Creating…" : "Create topic"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -121,157 +132,138 @@ export function TopicActions({
   studentId: number;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false),
-    [renaming, setRenaming] = useState(false),
+  const [mode, setMode] = useState<"rename" | "delete" | null>(null),
+    [busy, setBusy] = useState(false),
     [name, setName] = useState(topicName),
-    [confirming, setConfirming] = useState(false),
     [error, setError] = useState("");
-  async function rename() {
-    if (busy || !name.trim()) return;
-    if (name.trim() === topicName) {
-      setRenaming(false);
-      return;
-    }
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !mode || (mode === "rename" && !name.trim())) return;
     setBusy(true);
     setError("");
     try {
-      await renameTopic(topicId, name.trim(), studentId);
-      toast.success("Topic renamed");
-      setRenaming(false);
+      if (mode === "rename") {
+        if (name.trim() !== topicName)
+          await renameTopic(topicId, name.trim(), studentId);
+        toast.success("Topic renamed");
+      } else {
+        await deleteTopic(topicId, studentId);
+        toast.success("Topic deleted; its posts are under No topic");
+      }
+      setMode(null);
       router.refresh();
     } catch (reason) {
-      setError(actionError(reason, "Could not rename this topic."));
+      setError(actionError(reason, "Could not update this topic."));
     } finally {
       setBusy(false);
     }
   }
-  async function remove() {
-    if (busy) return;
-    setBusy(true);
+  function start(next: "rename" | "delete") {
+    setName(topicName);
     setError("");
-    try {
-      await deleteTopic(topicId, studentId);
-      toast.success("Topic deleted; its posts are under No topic");
-      setConfirming(false);
-      router.refresh();
-    } catch (reason) {
-      setError(actionError(reason, "Could not delete this topic."));
-    } finally {
-      setBusy(false);
-    }
+    setMode(next);
   }
   return (
-    <div className="space-y-2">
-      {renaming ? (
-        <div className="flex flex-wrap gap-2">
-          <input
-            aria-label="Rename topic"
-            value={name}
-            maxLength={200}
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void rename();
-              }
-              if (event.key === "Escape") setRenaming(false);
-            }}
-            autoFocus
-            disabled={busy}
-            className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
-          />
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
-            type="button"
-            aria-label="Save topic name"
-            disabled={busy || !name.trim()}
-            onClick={rename}
+            variant="ghost"
+            size="icon"
+            aria-label={`Manage topic ${topicName}`}
           >
-            <Check size={14} />
+            <MoreVertical size={20} />
           </Button>
-          <Button
-            type="button"
-            aria-label="Cancel topic rename"
-            disabled={busy}
-            variant="outline"
-            onClick={() => setRenaming(false)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => start("rename")}>
+            <Pencil size={17} />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => start("delete")}
+            className="text-destructive"
           >
-            <X size={14} />
-          </Button>
-        </div>
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`Manage topic ${topicName}`}
-            >
-              <MoreVertical size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => {
-                setName(topicName);
-                setRenaming(true);
-              }}
-            >
-              <Pencil size={14} />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setConfirming(true)}
-              className="text-destructive"
-            >
-              <Trash2 size={14} />
-              Delete topic
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-      {error && !confirming && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+            <Trash2 size={17} />
+            Delete topic
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Dialog
-        open={confirming}
-        onOpenChange={(next) => {
-          if (!busy) setConfirming(next);
+        open={mode !== null}
+        onOpenChange={(value) => {
+          if (!value && !busy) setMode(null);
         }}
       >
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Delete topic?</DialogTitle>
+            <DialogTitle>
+              {mode === "delete" ? "Delete topic?" : "Rename topic"}
+            </DialogTitle>
             <DialogDescription>
-              Posts and submission history will be kept under No topic.
+              {mode === "delete"
+                ? "Remove the organisation, keep the learning history."
+                : "Update how this topic appears in classwork."}
             </DialogDescription>
           </DialogHeader>
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => setConfirming(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={busy}
-              onClick={remove}
-            >
-              {busy ? "Deleting..." : "Delete topic"}
-            </Button>
-          </DialogFooter>
+          <form onSubmit={save} className="space-y-6" aria-busy={busy}>
+            <section className="form-section">
+              {mode === "rename" ? (
+                <label className="field-group">
+                  <span className="field-label">Topic name</span>
+                  <input
+                    autoFocus
+                    required
+                    aria-label="Rename topic"
+                    value={name}
+                    maxLength={200}
+                    onChange={(event) => setName(event.target.value)}
+                    disabled={busy}
+                    className="studio-input"
+                  />
+                </label>
+              ) : (
+                <>
+                  <h3 className="form-section-title">{topicName}</h3>
+                  <p className="mt-3 leading-relaxed text-muted-foreground">
+                    Posts will move to <strong>No topic</strong>. Assignments,
+                    submitted work, grades and feedback are preserved.
+                  </p>
+                </>
+              )}
+            </section>
+            {error && (
+              <p
+                role="alert"
+                className="rounded-xl bg-destructive/10 p-4 text-destructive"
+              >
+                {error}
+              </p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setMode(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant={mode === "delete" ? "destructive" : "default"}
+                disabled={busy || (mode === "rename" && !name.trim())}
+              >
+                {busy
+                  ? "Saving…"
+                  : mode === "delete"
+                    ? "Delete topic"
+                    : "Save name"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

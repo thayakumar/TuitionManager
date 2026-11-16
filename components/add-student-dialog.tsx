@@ -15,10 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-
-const inputClass =
-  "flex min-h-11 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+import { Field, TextAreaField } from "@/components/form-field";
 
 export function AddStudentDialog({ trigger }: { trigger?: React.ReactNode }) {
   const router = useRouter();
@@ -59,114 +56,125 @@ export function AddStudentDialog({ trigger }: { trigger?: React.ReactNode }) {
           if (!isPending) setOpen(v);
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus size={18} className="text-primary" />
-              Add New Student
+              Add a student
             </DialogTitle>
             <DialogDescription>
-              Fill in the student details below. Username and password are
-              auto-generated from the first name.
+              Create their profile, set a lesson rate and keep useful contacts
+              together.
             </DialogDescription>
           </DialogHeader>
 
-          <form action={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="add-name">Full name *</Label>
-                <input
-                  id="add-name"
-                  name="name"
-                  required
-                  placeholder="Student's full name"
-                  className={inputClass}
-                />
+          <form
+            action={handleSubmit}
+            className="space-y-6"
+            aria-busy={isPending}
+          >
+            <fieldset
+              disabled={isPending}
+              className="min-w-0 space-y-6 border-0 p-0"
+            >
+              <section className="form-section">
+                <div className="mb-5">
+                  <p className="form-section-title">Learning profile</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    The essentials for lessons and monthly tuition.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Field
+                      label="Full name"
+                      name="name"
+                      required
+                      placeholder="Student’s full name"
+                    />
+                  </div>
+                  <Field
+                    label="Grade / level"
+                    name="grade_level"
+                    placeholder="e.g. Form 4"
+                  />
+                  <Field
+                    label="Hourly rate"
+                    name="hourly_rate"
+                    defaultValue={0}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1000000"
+                  />
+                </div>
+              </section>
+              <section className="form-section">
+                <div className="mb-5">
+                  <p className="form-section-title">
+                    Student & guardian contacts
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Optional details to keep the right people in touch.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Student phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="Phone number"
+                  />
+                  <Field
+                    label="Student email"
+                    name="email"
+                    type="email"
+                    placeholder="Email address"
+                  />
+                  <Field
+                    label="Guardian name"
+                    name="guardian_name"
+                    placeholder="Parent or guardian"
+                  />
+                  <Field
+                    label="Guardian contact"
+                    name="guardian_contact"
+                    placeholder="Phone or email"
+                  />
+                </div>
+              </section>
+              <details className="form-section">
+                <summary className="cursor-pointer font-semibold">
+                  Additional details{" "}
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </summary>
+                <div className="mt-5 space-y-4">
+                  <Field
+                    label="Subject"
+                    name="subject"
+                    placeholder="e.g. Mathematics"
+                  />
+                  <TextAreaField
+                    label="Private teaching notes"
+                    name="notes"
+                    rows={3}
+                    placeholder="Learning goals, preferences or useful context"
+                  />
+                </div>
+              </details>
+              <div className="rounded-2xl border border-primary/15 bg-secondary px-5 py-4">
+                <p className="font-semibold">
+                  Their learning space is ready next
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Login details are generated from their first name. If that
+                  username is taken, a number is added. You can copy the exact
+                  credentials from the student profile after saving.
+                </p>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-subject">Subject</Label>
-                <input
-                  id="add-subject"
-                  name="subject"
-                  placeholder="e.g. Mathematics"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-grade">Grade / Level</Label>
-                <input
-                  id="add-grade"
-                  name="grade_level"
-                  placeholder="e.g. Form 4"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-rate">Hourly rate</Label>
-                <input
-                  id="add-rate"
-                  name="hourly_rate"
-                  min="0"
-                  max="1000000"
-                  type="number"
-                  step="0.01"
-                  defaultValue={0}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-phone">Phone</Label>
-                <input
-                  id="add-phone"
-                  name="phone"
-                  placeholder="Phone number"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-email">Email</Label>
-                <input
-                  id="add-email"
-                  name="email"
-                  type="email"
-                  placeholder="Email address"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="add-guardian">Guardian name</Label>
-                <input
-                  id="add-guardian"
-                  name="guardian_name"
-                  placeholder="Parent/guardian"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="add-guardian-contact">Guardian contact</Label>
-                <input
-                  id="add-guardian-contact"
-                  name="guardian_contact"
-                  placeholder="Guardian phone/email"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="add-notes">Notes</Label>
-                <textarea
-                  id="add-notes"
-                  name="notes"
-                  rows={2}
-                  placeholder="Learning goals, preferences..."
-                  className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-              Credentials auto-generated: username = <strong>firstname</strong>,
-              password = <strong>firstname123</strong>
-            </div>
+            </fieldset>
 
             {error && (
               <p
@@ -181,6 +189,7 @@ export function AddStudentDialog({ trigger }: { trigger?: React.ReactNode }) {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                disabled={isPending}
               >
                 Cancel
               </Button>

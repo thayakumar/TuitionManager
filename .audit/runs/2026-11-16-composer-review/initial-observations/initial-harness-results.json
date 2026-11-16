@@ -1,0 +1,188 @@
+{
+  "results": [
+    {
+      "id": "dashboard-planner-date-time-pointer-and-duration",
+      "result": "Pass",
+      "actual": {
+        "scheduledUTC": "2026-11-23T06:30:00.000Z",
+        "minutes": 90
+      }
+    },
+    {
+      "id": "calendar-planner-pointer-opens-exact-screenshot-flow",
+      "result": "Pass",
+      "actual": {
+        "scheduledUTC": "2026-11-24T08:45:00.000Z",
+        "minutes": 120
+      }
+    },
+    {
+      "id": "full-page-planner-one-hour-and-dependent-views",
+      "result": "Pass",
+      "actual": {
+        "lesson": 20,
+        "minutes": 60,
+        "studentAndParent": "visible"
+      }
+    },
+    {
+      "id": "clashing-time-shows-business-error-and-keeps-controls",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-student-create",
+      "result": "Fail",
+      "error": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "id": "dialog-student-edit",
+      "result": "Fail",
+      "error": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "id": "dialog-invoice-generate",
+      "result": "Fail",
+      "error": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "id": "dialog-recurring",
+      "result": "Fail",
+      "error": "Expected values to be strictly equal:\n\n1 !== 0\n"
+    },
+    {
+      "id": "dialog-lesson-cancel",
+      "result": "Fail",
+      "error": "locator.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog').getByLabel('Schedule a replacement now')\u001b[22m\n"
+    },
+    {
+      "id": "dialog-lesson-report-prefilled-and-sectioned",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-material",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-assignment",
+      "result": "Fail",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog').getByRole('button', { name: 'Due date', exact: true })\u001b[22m\n"
+    },
+    {
+      "id": "dialog-post-announcement",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-topic-create-rename-delete",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-parent-access-revoke-cancel-preserves-link",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-recurring-stop-extend-preview",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-reschedule-approval-and-rejection",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-invoice-cancel-preview",
+      "result": "Pass"
+    },
+    {
+      "id": "student-request-date-time-controls",
+      "result": "Pass"
+    },
+    {
+      "id": "student-submission-and-latest-grade-forms",
+      "result": "Pass"
+    },
+    {
+      "id": "lesson-status-scheduled",
+      "result": "Pass",
+      "actual": {
+        "status": "scheduled",
+        "color": "oklch(0.488 0.243 264.376)",
+        "background": "oklch(0.97 0.014 254.604)"
+      }
+    },
+    {
+      "id": "lesson-status-absent",
+      "result": "Pass",
+      "actual": {
+        "status": "absent",
+        "color": "oklch(0.505 0.213 27.518)",
+        "background": "oklch(0.971 0.013 17.38)"
+      }
+    },
+    {
+      "id": "lesson-status-cancelled",
+      "result": "Pass",
+      "actual": {
+        "status": "cancelled",
+        "color": "oklch(0.372 0.044 257.287)",
+        "background": "oklch(0.968 0.007 247.896)"
+      }
+    },
+    {
+      "id": "calendar-event-semantic-colors",
+      "result": "Pass",
+      "actual": [
+        "#059669",
+        "#64748b",
+        "#dc2626",
+        "#2563eb"
+      ]
+    },
+    {
+      "id": "page--students-new",
+      "result": "Pass"
+    },
+    {
+      "id": "page--students-1-edit",
+      "result": "Pass"
+    },
+    {
+      "id": "page--schedule-recurring-new",
+      "result": "Pass"
+    },
+    {
+      "id": "page--settings",
+      "result": "Pass"
+    },
+    {
+      "id": "page--notifications",
+      "result": "Pass"
+    },
+    {
+      "id": "page--invoices",
+      "result": "Pass"
+    },
+    {
+      "id": "page--classroom",
+      "result": "Pass"
+    },
+    {
+      "id": "page--financial-history",
+      "result": "Pass"
+    },
+    {
+      "id": "planner-mobile-calendar-and-footer-accessible",
+      "result": "Pass"
+    },
+    {
+      "id": "planner-small-desktop-calendar-and-footer-accessible",
+      "result": "Pass"
+    },
+    {
+      "id": "runtime-no-unhandled-errors",
+      "result": "Pass",
+      "actual": {
+        "pageErrors": 0
+      }
+    }
+  ],
+  "pageErrors": []
+}

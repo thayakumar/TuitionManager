@@ -8,6 +8,8 @@ import { Calendar, Clock, CheckCircle2, XCircle, MapPin } from "lucide-react";
 import { queryOne, queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDateTime } from "@/lib/format";
@@ -84,9 +86,7 @@ export default async function ParentSchedulePage({
                         TRIAL
                       </Badge>
                     ) : null}
-                    <Badge variant="secondary" className="text-xs">
-                      scheduled
-                    </Badge>
+                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
                   </div>
                 </div>
               ))}
@@ -117,13 +117,13 @@ export default async function ParentSchedulePage({
                 >
                   <div
                     className={`flex size-9 items-center justify-center rounded-lg ${
-                      c.status === "completed" ? "bg-emerald-50" : "bg-red-50"
+                      lessonStatus(c.status, c.attendance).iconClassName
                     }`}
                   >
                     {c.status === "completed" ? (
-                      <CheckCircle2 size={16} className="text-emerald-500" />
+                      <CheckCircle2 size={16} />
                     ) : (
-                      <XCircle size={16} className="text-red-500" />
+                      <XCircle size={16} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -138,29 +138,7 @@ export default async function ParentSchedulePage({
                     </div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
-                    {c.attendance && (
-                      <Badge
-                        className={`text-xs text-white capitalize ${
-                          c.attendance === "present"
-                            ? "bg-emerald-500"
-                            : normalizedAttendance(c.attendance) === "present"
-                              ? "bg-emerald-500"
-                              : "bg-red-500"
-                        }`}
-                      >
-                        {normalizedAttendance(c.attendance) === "present"
-                          ? "Present"
-                          : "Absent"}
-                      </Badge>
-                    )}
-                    <Badge
-                      variant={
-                        c.status === "completed" ? "default" : "destructive"
-                      }
-                      className="text-xs capitalize"
-                    >
-                      {c.status}
-                    </Badge>
+                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
                   </div>
                 </div>
               ))}

@@ -37,6 +37,8 @@ import {
   CardContent,
   CardAction,
 } from "@/components/ui/card";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -510,18 +512,15 @@ export default async function StudentDetailPage({
                     >
                       <div
                         className={`flex size-9 items-center justify-center rounded-lg ${
-                          c.status === "completed"
-                            ? "bg-emerald-50"
-                            : "bg-red-50"
+                          lessonStatus(c.status, c.attendance).iconClassName
                         }`}
                       >
                         {c.status === "completed" ? (
                           <CheckCircle2
                             size={16}
-                            className="text-emerald-500"
                           />
                         ) : (
-                          <XCircle size={16} className="text-red-500" />
+                          <XCircle size={16} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -540,12 +539,7 @@ export default async function StudentDetailPage({
                             TRIAL
                           </Badge>
                         ) : null}
-                        <Badge
-                          variant={statusVariant(c.status)}
-                          className="text-xs"
-                        >
-                          {c.status}
-                        </Badge>
+                        <LessonStatusBadge status={c.status} attendance={c.attendance} />
                       </div>
                     </div>
                   </Link>

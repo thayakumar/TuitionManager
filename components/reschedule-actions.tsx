@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, CalendarClock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   approveRescheduleRequest,
@@ -61,93 +70,141 @@ export function RescheduleActions({
   const handleApprove = () => resolve(true);
   const handleReject = () => resolve(false);
 
-  if (mode === "idle") {
-    return (
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          onClick={() => setMode("approve")}
-          disabled={isPending}
-        >
-          <Check size={14} /> Approve
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setMode("reject")}
-          disabled={isPending}
-        >
-          <X size={14} /> Reject
-        </Button>
-      </div>
-    );
-  }
+  const triggerButtons = (
+    <div className="flex gap-2">
+      <Button size="sm" onClick={() => setMode("approve")} disabled={isPending}>
+        <Check size={14} /> Approve
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => setMode("reject")}
+        disabled={isPending}
+      >
+        <X size={14} /> Reject
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="space-y-3 rounded-lg border border-border/50 p-3 bg-muted/20">
-      {mode === "approve" && (
-        <div>
-          <p className="text-sm font-medium mb-2">
-            Select a time to reschedule to:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {preferredTimes.map((t, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSelectedTime(t)}
-                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                  selectedTime === t
-                    ? "border-primary bg-primary/10 text-primary font-medium"
-                    : "border-border/50 hover:bg-muted/50"
-                }`}
+    <>
+      {triggerButtons}
+      <Dialog
+        open={mode !== "idle"}
+        onOpenChange={(value) => {
+          if (!value && !isPending) {
+            setMode("idle");
+            setError(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {mode === "approve"
+                ? "Choose the new lesson time"
+                : "Decline this reschedule request"}
+            </DialogTitle>
+            <DialogDescription>
+              {mode === "approve"
+                ? "Approve one suggestion. The original becomes cancelled and a replacement is booked."
+                : "The original lesson stays scheduled. You can include a short note to explain your decision."}
+            </DialogDescription>
+          </DialogHeader>
+          {mode === "approve" && (
+            <section className="form-section">
+              <p className="form-section-title mb-4">
+                Student’s suggestions · MYT
+              </p>
+              <div className="space-y-3">
+                {preferredTimes.map((time, index) => (
+                  <button
+                    key={time}
+                    type="button"
+                    aria-pressed={selectedTime === time}
+                    disabled={isPending}
+                    onClick={() => setSelectedTime(time)}
+                    className={`flex min-h-20 w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${selectedTime === time ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-secondary"}`}
+                  >
+                    <span
+                      className={`flex size-11 shrink-0 items-center justify-center rounded-full ${selectedTime === time ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                    >
+                      {selectedTime === time ? (
+                        <Check size={22} />
+                      ) : (
+                        <CalendarClock size={22} />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-muted-foreground">
+                        {index === 0 ? "First choice" : `Alternative ${index}`}
+                      </span>
+                      <span className="mt-1 block font-semibold">
+                        {fmtDateTime(time)}
+                      </span>
+                    </span>
+                    <ArrowRight size={20} className="shrink-0 text-primary" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+          <section className="form-section">
+            <Label htmlFor={`request-note-${requestId}`}>
+              {mode === "approve" ? "Note to student" : "Reason for declining"}{" "}
+              <span className="font-normal text-muted-foreground">
+                · optional
+              </span>
+            </Label>
+            <Textarea
+              id={`request-note-${requestId}`}
+              placeholder="What would you like the student to know?"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              disabled={isPending}
+              rows={3}
+              className="mt-3 resize-none"
+            />
+          </section>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMode("idle");
+                setError(null);
+              }}
+              disabled={isPending}
+            >
+              Back
+            </Button>
+            {mode === "approve" ? (
+              <Button
+                onClick={handleApprove}
+                disabled={isPending || !selectedTime}
               >
-                {fmtDateTime(t)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <Textarea
-        placeholder={
-          mode === "approve"
-            ? "Note to student (optional)"
-            : "Reason for rejection (optional)"
-        }
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        rows={2}
-        className="resize-none"
-      />
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <div className="flex gap-2">
-        {mode === "approve" ? (
-          <Button size="sm" onClick={handleApprove} disabled={isPending}>
-            {isPending ? "Approving..." : "Confirm Approval"}
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleReject}
-            disabled={isPending}
-          >
-            {isPending ? "Rejecting..." : "Confirm Rejection"}
-          </Button>
-        )}
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setMode("idle")}
-          disabled={isPending}
-        >
-          Cancel
-        </Button>
-      </div>
-    </div>
+                <Check size={18} />
+                {isPending ? "Approving…" : "Approve new time"}
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={handleReject}
+                disabled={isPending}
+              >
+                {isPending ? "Declining…" : "Decline request"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

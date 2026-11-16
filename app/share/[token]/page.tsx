@@ -15,6 +15,7 @@ import {
 } from "@/lib/portal-context";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { currency, fmtDateTime } from "@/lib/format";
@@ -122,7 +123,7 @@ export default async function ParentDashboard({
                         {c.location ? ` · ${c.location}` : ""}
                       </p>
                     </div>
-                    <Badge variant="secondary">Scheduled</Badge>
+                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
                   </div>
                 ))}
               </div>

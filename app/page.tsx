@@ -31,6 +31,7 @@ import {
 import { DashboardQuickActions } from "@/components/dashboard-actions";
 import { RevenueChart } from "@/components/revenue-chart";
 import { AttendanceChart } from "@/components/attendance-chart";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { currency, fmtDateTime, fmtTime } from "@/lib/format";
 import type { ClassWithStudent } from "@/lib/types";
@@ -182,12 +183,7 @@ export default async function DashboardPage() {
                       {c.location ? ` · ${c.location}` : ""}
                     </p>
                   </div>
-                  <Badge
-                    variant={c.status === "canceled" ? "outline" : "secondary"}
-                    className="capitalize"
-                  >
-                    {c.attendance === "absent" ? "Absent" : c.status}
-                  </Badge>
+                  <LessonStatusBadge status={c.status} attendance={c.attendance} />
                 </Link>
               ))
             ) : (

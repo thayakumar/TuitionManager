@@ -1,0 +1,277 @@
+{
+  "environment": "Local Next production build; isolated fake SQLite data; Chromium",
+  "checks": 56,
+  "passed": 56,
+  "results": [
+    {
+      "id": "dashboard-planner-date-time-pointer-and-duration",
+      "result": "Pass",
+      "actual": {
+        "scheduledUTC": "2026-11-23T06:30:00.000Z",
+        "minutes": 90
+      }
+    },
+    {
+      "id": "calendar-planner-pointer-opens-exact-screenshot-flow",
+      "result": "Pass",
+      "actual": {
+        "scheduledUTC": "2026-11-24T08:45:00.000Z",
+        "minutes": 120
+      }
+    },
+    {
+      "id": "full-page-planner-one-hour-and-dependent-views",
+      "result": "Pass",
+      "actual": {
+        "lesson": 20,
+        "minutes": 60,
+        "studentAndParent": "visible"
+      }
+    },
+    {
+      "id": "clashing-time-shows-business-error-and-keeps-controls",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-student-create",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-student-edit",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-invoice-generate",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-recurring",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-lesson-cancel",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-lesson-report-prefilled-and-sectioned",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-material",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-assignment",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-announcement",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-topic-create-rename-delete",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-parent-access-revoke-cancel-preserves-link",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-recurring-stop-extend-preview",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-reschedule-approval-and-rejection",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-invoice-cancel-preview",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-post-edit-and-delete-preview",
+      "result": "Pass"
+    },
+    {
+      "id": "student-clipboard-denial-manual-copy-dialog",
+      "result": "Pass"
+    },
+    {
+      "id": "student-request-submit-from-new-date-time-composer",
+      "result": "Pass",
+      "actual": {
+        "preferredUTC": "2026-11-28T01:45:00.000Z"
+      }
+    },
+    {
+      "id": "student-create-and-edit-submit",
+      "result": "Pass",
+      "actual": {
+        "student": 3,
+        "guardianSaved": true
+      }
+    },
+    {
+      "id": "report-editor-submit-parent-reflects-update",
+      "result": "Pass"
+    },
+    {
+      "id": "student-request-date-time-controls",
+      "result": "Pass"
+    },
+    {
+      "id": "student-submission-and-latest-grade-forms",
+      "result": "Pass"
+    },
+    {
+      "id": "lesson-status-scheduled",
+      "result": "Pass",
+      "actual": {
+        "status": "scheduled",
+        "color": "oklch(0.488 0.243 264.376)",
+        "background": "oklch(0.97 0.014 254.604)"
+      }
+    },
+    {
+      "id": "lesson-status-absent",
+      "result": "Pass",
+      "actual": {
+        "status": "absent",
+        "color": "oklch(0.505 0.213 27.518)",
+        "background": "oklch(0.971 0.013 17.38)"
+      }
+    },
+    {
+      "id": "lesson-status-cancelled",
+      "result": "Pass",
+      "actual": {
+        "status": "cancelled",
+        "color": "oklch(0.372 0.044 257.287)",
+        "background": "oklch(0.968 0.007 247.896)"
+      }
+    },
+    {
+      "id": "calendar-details-cancel-and-replacement-dialogs",
+      "result": "Pass"
+    },
+    {
+      "id": "calendar-drag-confirmation-cancel-keeps-original",
+      "result": "Pass"
+    },
+    {
+      "id": "topic-create-rename-delete-empty-topic-submit",
+      "result": "Pass",
+      "verification_note": "Retested successfully with WAL enabled in the isolated fixture and action completion awaited before database assertions. The initial external polling reader caused SQLITE_BUSY during rename; original result is retained in initial-observations/full-run-original.json."
+    },
+    {
+      "id": "calendar-event-semantic-colors",
+      "result": "Pass",
+      "actual": [
+        "#059669",
+        "#64748b",
+        "#dc2626",
+        "#2563eb"
+      ]
+    },
+    {
+      "id": "page--students-new",
+      "result": "Pass"
+    },
+    {
+      "id": "page--students-1-edit",
+      "result": "Pass"
+    },
+    {
+      "id": "page--schedule-recurring-new",
+      "result": "Pass"
+    },
+    {
+      "id": "page--settings",
+      "result": "Pass"
+    },
+    {
+      "id": "page--notifications",
+      "result": "Pass"
+    },
+    {
+      "id": "page--invoices",
+      "result": "Pass"
+    },
+    {
+      "id": "page--classroom",
+      "result": "Pass"
+    },
+    {
+      "id": "page--financial-history",
+      "result": "Pass"
+    },
+    {
+      "id": "planner-mobile-calendar-and-footer-accessible",
+      "result": "Pass"
+    },
+    {
+      "id": "planner-small-desktop-calendar-and-footer-accessible",
+      "result": "Pass"
+    },
+    {
+      "id": "mobile-editor-student",
+      "result": "Pass"
+    },
+    {
+      "id": "mobile-editor-invoice",
+      "result": "Pass"
+    },
+    {
+      "id": "mobile-editor-recurring",
+      "result": "Pass"
+    },
+    {
+      "id": "mobile-editor-cancellation",
+      "result": "Pass"
+    },
+    {
+      "id": "mobile-post-editor-and-report",
+      "result": "Pass"
+    },
+    {
+      "id": "dialog-label-focus-targets-own-editor",
+      "result": "Pass"
+    },
+    {
+      "id": "legacy-duration-retained-until-an-explicit-choice",
+      "result": "Pass"
+    },
+    {
+      "id": "runtime-no-unhandled-errors",
+      "result": "Pass",
+      "actual": {
+        "pageErrors": 0
+      }
+    },
+    {
+      "id": "date-calendar-escape-preserves-dialog",
+      "result": "Pass"
+    },
+    {
+      "id": "time-control-noon-and-midnight-conversion",
+      "result": "Pass"
+    },
+    {
+      "id": "planner-requires-student-before-submission",
+      "result": "Pass"
+    },
+    {
+      "id": "invoice-period-date-pickers-desktop-and-mobile",
+      "result": "Pass"
+    },
+    {
+      "id": "recurring-first-last-date-calendars-desktop-and-mobile",
+      "result": "Pass"
+    },
+    {
+      "id": "assignment-due-date-picker-desktop-and-mobile",
+      "result": "Pass"
+    }
+  ],
+  "pageErrors": []
+}

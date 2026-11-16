@@ -13,8 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { TextAreaField, SelectField } from "@/components/form-field";
 import { toast } from "sonner";
 import { saveReportQuick } from "@/lib/actions";
 import type { Report } from "@/lib/types";
@@ -33,11 +32,9 @@ export function PostClassReportDialog({
   const [open, setOpen] = useState(false);
   const [isPending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("report") === "true") {
-      setSaved(false);
       setError(null);
       setOpen(true);
     }
@@ -58,7 +55,6 @@ export function PostClassReportDialog({
     try {
       await saveReportQuick(classId, formData);
       toast.success("Report saved");
-      setSaved(true);
       setOpen(false);
       router.replace(window.location.pathname);
       router.refresh();
@@ -74,185 +70,163 @@ export function PostClassReportDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => {
-        if (!v) handleClose();
+      onOpenChange={(value) => {
+        if (!value) handleClose();
       }}
     >
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Star size={18} className="text-amber-500" />
-            Post-Class Report
+          <DialogTitle className="flex items-center gap-3">
+            <BookOpen size={24} className="text-primary" /> Lesson report
           </DialogTitle>
           <DialogDescription>
-            How was the session with {studentName}?
+            A useful recap for {studentName} and their parent: what clicked,
+            what to practise and what comes next.
           </DialogDescription>
         </DialogHeader>
-
-        {saved ? (
-          <div className="py-8 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 mb-3">
-              <Star size={24} className="text-emerald-600" />
+        <form action={handleSubmit} className="space-y-6" aria-busy={isPending}>
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-secondary px-5 py-4">
+            <span className="flex size-11 items-center justify-center rounded-full bg-card font-semibold text-primary">
+              {studentName
+                .trim()
+                .split(/\s+/)
+                .map((word) => word[0])
+                .slice(0, 2)
+                .join("")}
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold">{studentName}</p>
+              <p className="text-sm text-muted-foreground">
+                {initialReport
+                  ? "Update the existing class recap"
+                  : "Create a recap for this lesson"}{" "}
+                · Shown in parent reports
+              </p>
             </div>
-            <p className="font-semibold text-foreground">Report saved!</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Class marked as completed.
-            </p>
           </div>
-        ) : (
-          <form action={handleSubmit} className="space-y-4">
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <BookOpen size={13} className="text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Content
-                </span>
-              </div>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="topics_covered" className="text-xs">
-                    Topics covered
-                  </Label>
-                  <textarea
-                    id="topics_covered"
-                    name="topics_covered"
-                    defaultValue={initialReport?.topics_covered ?? ""}
-                    rows={2}
-                    placeholder="What was taught this class"
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                  />
+          <fieldset
+            disabled={isPending}
+            className="min-w-0 space-y-5 border-0 p-0"
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <section className="form-section space-y-4">
+                <div>
+                  <h2 className="form-section-title flex items-center gap-2">
+                    <BookOpen size={20} /> What we covered
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Give the family a clear lesson summary.
+                  </p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="homework" className="text-xs">
-                    Homework assigned
-                  </Label>
-                  <textarea
-                    id="homework"
-                    name="homework"
-                    defaultValue={initialReport?.homework ?? ""}
-                    rows={2}
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                  />
+                <TextAreaField
+                  label="Topics covered"
+                  name="topics_covered"
+                  defaultValue={initialReport?.topics_covered ?? ""}
+                  rows={3}
+                  placeholder="Key ideas, skills and activities from this lesson"
+                />
+                <TextAreaField
+                  label="Homework assigned"
+                  name="homework"
+                  defaultValue={initialReport?.homework ?? ""}
+                  rows={3}
+                  placeholder="Practice to complete before the next lesson"
+                />
+              </section>
+              <section className="form-section space-y-4">
+                <div>
+                  <h2 className="form-section-title flex items-center gap-2">
+                    <Brain size={20} /> How it went
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Celebrate progress and make support specific.
+                  </p>
                 </div>
-              </div>
+                <TextAreaField
+                  label="Strengths"
+                  name="strengths"
+                  defaultValue={initialReport?.strengths ?? ""}
+                  rows={3}
+                  placeholder="What did the student do well?"
+                />
+                <TextAreaField
+                  label="Areas to improve"
+                  name="areas_to_improve"
+                  defaultValue={initialReport?.areas_to_improve ?? ""}
+                  rows={3}
+                  placeholder="What needs more practice or confidence?"
+                />
+              </section>
             </div>
-
-            <Separator />
-
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Brain size={13} className="text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Performance
-                </span>
+            <section className="form-section space-y-4">
+              <div>
+                <h2 className="form-section-title flex items-center gap-2">
+                  <Target size={20} /> The next step
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Bring the lesson together with a clear direction.
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="strengths" className="text-xs">
-                    Strengths
-                  </Label>
-                  <textarea
-                    id="strengths"
-                    name="strengths"
-                    defaultValue={initialReport?.strengths ?? ""}
-                    rows={2}
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="areas_to_improve" className="text-xs">
-                    Areas to improve
-                  </Label>
-                  <textarea
-                    id="areas_to_improve"
-                    name="areas_to_improve"
-                    defaultValue={initialReport?.areas_to_improve ?? ""}
-                    rows={2}
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                  />
-                </div>
-              </div>
-              <div className="mt-3 space-y-1.5">
-                <Label htmlFor="performance" className="text-xs">
-                  Overall performance
-                </Label>
-                <textarea
-                  id="performance"
-                  name="performance"
-                  defaultValue={initialReport?.performance ?? ""}
+              <TextAreaField
+                label="Overall performance"
+                name="performance"
+                defaultValue={initialReport?.performance ?? ""}
+                rows={2}
+                placeholder="Your overall observation of this lesson"
+              />
+              <div className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <TextAreaField
+                  label="Focus for next class"
+                  name="next_focus"
+                  defaultValue={initialReport?.next_focus ?? ""}
                   rows={2}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                  placeholder="The most useful thing to work on next"
+                />
+                <SelectField
+                  label="Lesson rating"
+                  name="rating"
+                  defaultValue={
+                    initialReport?.rating ? String(initialReport.rating) : ""
+                  }
+                  options={[
+                    { value: "", label: "Not rated" },
+                    { value: "1", label: "1 · Struggled" },
+                    { value: "2", label: "2 · Below average" },
+                    { value: "3", label: "3 · Average" },
+                    { value: "4", label: "4 · Good" },
+                    { value: "5", label: "5 · Excellent" },
+                  ]}
                 />
               </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Target size={13} className="text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Next Steps
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="next_focus" className="text-xs">
-                    Focus for next class
-                  </Label>
-                  <textarea
-                    id="next_focus"
-                    name="next_focus"
-                    defaultValue={initialReport?.next_focus ?? ""}
-                    rows={2}
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="rating" className="text-xs">
-                    Rating
-                  </Label>
-                  <select
-                    id="rating"
-                    name="rating"
-                    defaultValue={initialReport?.rating ?? ""}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    <option value="">—</option>
-                    <option value="1">1 · Struggled</option>
-                    <option value="2">2 · Below average</option>
-                    <option value="3">3 · Average</option>
-                    <option value="4">4 · Good</option>
-                    <option value="5">5 · Excellent</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {error && (
-              <p
-                role="alert"
-                className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
-              >
-                {error}
-              </p>
-            )}
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleClose}
-                disabled={isPending}
-              >
-                Skip
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                <Star size={14} />
-                {isPending ? "Saving..." : "Save Report"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+            </section>
+          </fieldset>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
+            >
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              <Star size={18} />
+              {isPending
+                ? "Saving…"
+                : initialReport
+                  ? "Save changes"
+                  : "Save Report"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

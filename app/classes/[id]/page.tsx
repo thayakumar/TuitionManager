@@ -37,6 +37,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Field, TextAreaField, SelectField } from "@/components/form-field";
@@ -48,30 +50,9 @@ import type { ClassRow, Report, Student, Attendance } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-function statusConfig(status: string) {
-  switch (status) {
-    case "completed":
-      return {
-        variant: "default" as const,
-        bg: "bg-emerald-50",
-        iconColor: "text-emerald-500",
-        label: "Completed",
-      };
-    case "canceled":
-      return {
-        variant: "destructive" as const,
-        bg: "bg-red-50",
-        iconColor: "text-red-500",
-        label: "Canceled",
-      };
-    default:
-      return {
-        variant: "secondary" as const,
-        bg: "bg-blue-50",
-        iconColor: "text-blue-500",
-        label: "Scheduled",
-      };
-  }
+function statusConfig(status: string, attendance: string | null) {
+  const state = lessonStatus(status, attendance);
+  return { variant: "outline" as const, bg: state.iconClassName, iconColor: "", label: state.label };
 }
 
 function attendanceConfig(attendance: string | null) {
@@ -135,7 +116,7 @@ export default async function ClassDetailPage({
   const saveR = saveReport.bind(null, id);
   const upd = updateClass.bind(null, id);
 
-  const sc = statusConfig(cls.status);
+  const sc = statusConfig(cls.status, cls.attendance);
   const ac = attendanceConfig(cls.attendance);
   const backHref = query.from === "dashboard" ? "/" : "/schedule";
 
@@ -232,9 +213,7 @@ export default async function ClassDetailPage({
                 TRIAL
               </Badge>
             )}
-            <Badge className="bg-white/20 text-white border-white/30 capitalize">
-              {cls.status}
-            </Badge>
+            <LessonStatusBadge status={cls.status} attendance={cls.attendance} />
           </div>
         </div>
       </div>
@@ -247,9 +226,7 @@ export default async function ClassDetailPage({
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Badge variant={sc.variant} className="capitalize">
-                    {sc.label}
-                  </Badge>
+                  <LessonStatusBadge status={cls.status} attendance={cls.attendance} />
                 </div>
                 {cls.cancel_reason && (
                   <p className="text-xs text-muted-foreground mt-1.5">
@@ -527,16 +504,8 @@ export default async function ClassDetailPage({
                 min={5}
                 max={1440}
               />
-              <Field
-                label="Subject"
-                name="subject"
-                defaultValue={cls.subject ?? ""}
-              />
-              <Field
-                label="Location"
-                name="location"
-                defaultValue={cls.location ?? ""}
-              />
+              <input type="hidden" name="subject" value={cls.subject ?? ""} />
+              <input type="hidden" name="location" value={cls.location ?? ""} />
               <SelectField
                 label="Status"
                 name="status"

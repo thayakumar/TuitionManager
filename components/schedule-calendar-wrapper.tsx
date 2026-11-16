@@ -1,4 +1,5 @@
 "use client";
+import { ScheduleFields, DateTimeField } from "@/components/scheduling-fields";
 import { actionError } from "@/lib/action-errors";
 
 import { useMemo, useState } from "react";
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import {
   createClassQuick,
@@ -83,12 +86,7 @@ export function ScheduleCalendarWrapper({
         end: new Date(
           new Date(c.scheduled_at).getTime() + c.duration_minutes * 60000,
         ),
-        color:
-          c.status === "completed"
-            ? "#10b981"
-            : c.status === "canceled"
-              ? "#94a3b8"
-              : "#d93624",
+        color: lessonStatus(c.status, c.attendance).color,
         readOnly: c.status !== "scheduled",
         data: c,
       })),
@@ -143,6 +141,25 @@ export function ScheduleCalendarWrapper({
         Times are shown in Malaysia time (MYT). Drag a scheduled class to
         propose a change; you will confirm before it is saved.
       </p>
+      <div
+        className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
+        aria-label="Lesson status colours"
+      >
+        {[
+          { status: "scheduled", attendance: null },
+          { status: "completed", attendance: "present" },
+          { status: "completed", attendance: "absent" },
+          { status: "canceled", attendance: null },
+        ].map((item) => {
+          const state = lessonStatus(item.status, item.attendance);
+          return (
+            <span className="inline-flex items-center gap-2" key={state.key}>
+              <span className={`size-2.5 rounded-full ${state.dotClassName}`} />
+              {state.label}
+            </span>
+          );
+        })}
+      </div>
       <EventCalendar
         events={events}
         timeZone="Asia/Kuala_Lumpur"
@@ -188,7 +205,7 @@ export function ScheduleCalendarWrapper({
           if (!v && !pending) setSelectedId(null);
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selected?.student_name}
@@ -202,9 +219,10 @@ export function ScheduleCalendarWrapper({
           {selected && (
             <>
               <div className="flex gap-2">
-                <Badge variant="outline" className="capitalize">
-                  {selected.status}
-                </Badge>
+                <LessonStatusBadge
+                  status={selected.status}
+                  attendance={selected.attendance}
+                />
                 {!!selected.is_trial && (
                   <Badge variant="secondary">Trial · free</Badge>
                 )}
@@ -396,12 +414,9 @@ export function ScheduleCalendarWrapper({
             }}
             className="space-y-4"
           >
-            <Label htmlFor="replacement-date">New date and time (MYT)</Label>
-            <input
-              id="replacement-date"
-              className={inputClass}
-              type="datetime-local"
+            <DateTimeField
               name="reschedule_date"
+              label="Replacement date"
               required
               defaultValue={fmtDateInput(
                 new Date(Date.now() + 86400000).toISOString(),
@@ -494,11 +509,11 @@ export function ScheduleCalendarWrapper({
           if (!v && !pending) setAdd(null);
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Schedule a class</DialogTitle>
+            <DialogTitle>Plan a lesson</DialogTitle>
             <DialogDescription>
-              Dates and times use Malaysia time (MYT).
+              A clear plan, from student to start time. All times are MYT.
             </DialogDescription>
           </DialogHeader>
           {add && (
@@ -513,68 +528,13 @@ export function ScheduleCalendarWrapper({
               }
               className="space-y-4"
             >
-              <div>
-                <Label htmlFor="calendar-student">Student</Label>
-                <select
-                  id="calendar-student"
-                  name="student_id"
-                  required
-                  className={inputClass}
-                >
-                  <option value="">Select a student…</option>
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="calendar-time">Date and time</Label>
-                  <input
-                    id="calendar-time"
-                    name="scheduled_at"
-                    type="datetime-local"
-                    required
-                    defaultValue={add.date}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="calendar-duration">Minutes</Label>
-                  <input
-                    id="calendar-duration"
-                    name="duration_minutes"
-                    type="number"
-                    min={15}
-                    max={720}
-                    step={15}
-                    required
-                    defaultValue={add.duration}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="calendar-subject">Subject</Label>
-                <input
-                  id="calendar-subject"
-                  name="subject"
-                  className={inputClass}
+              <fieldset disabled={pending} className="min-w-0 border-0 p-0">
+                <ScheduleFields
+                  students={students}
+                  defaultDateTime={add.date}
+                  defaultDuration={add.duration}
                 />
-              </div>
-              <div>
-                <Label htmlFor="calendar-location">Location</Label>
-                <input
-                  id="calendar-location"
-                  name="location"
-                  className={inputClass}
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="is_trial" /> Trial class (free)
-              </label>
+              </fieldset>
               {feedback}
               <DialogFooter>
                 <Button

@@ -11,7 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { DateTimeField } from "@/components/scheduling-fields";
 import { createRescheduleRequest } from "@/lib/actions";
 import { actionError } from "@/lib/action-errors";
 import { toast } from "sonner";
@@ -71,7 +73,7 @@ export function RescheduleRequestDialog({
       <DialogTrigger render={<Button variant="outline" size="sm" />}>
         <CalendarClock size={14} /> Request Reschedule
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Request a new lesson time</DialogTitle>
           <DialogDescription>
@@ -79,26 +81,27 @@ export function RescheduleRequestDialog({
             stays in place until your tutor approves.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4" aria-busy={saving}>
+        <form onSubmit={handleSubmit} className="space-y-6" aria-busy={saving}>
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-base leading-relaxed text-blue-900">
+            Your current lesson remains booked. Your tutor will choose one of
+            the times you suggest and confirm the change.
+          </div>
           {[1, 2, 3].map((index) => (
-            <div key={index}>
-              <label
-                htmlFor={`${prefix}-${index}`}
-                className="text-sm font-medium"
-              >
-                Preferred time {index} {index === 1 ? "*" : "(optional)"}
-              </label>
-              <input
-                id={`${prefix}-${index}`}
-                type="datetime-local"
+            <section key={index} className="form-section">
+              <p className="form-section-title mb-4">
+                {index === 1
+                  ? "First choice"
+                  : `Alternative ${index - 1} · optional`}
+              </p>
+              <DateTimeField
                 name={`preferred_time_${index}`}
+                label={`Preferred time ${index}`}
                 required={index === 1}
                 disabled={saving}
-                className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
               />
-            </div>
+            </section>
           ))}
-          <div>
+          <section className="form-section">
             <label htmlFor={`${prefix}-reason`} className="text-sm font-medium">
               Reason (optional)
             </label>
@@ -108,9 +111,9 @@ export function RescheduleRequestDialog({
               placeholder="What would you like your tutor to know?"
               rows={2}
               disabled={saving}
-              className="mt-1 resize-none"
+              className="mt-3 resize-none"
             />
-          </div>
+          </section>
           {error && (
             <p
               role="alert"
@@ -119,7 +122,7 @@ export function RescheduleRequestDialog({
               {error}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button
               type="button"
               variant="ghost"
@@ -131,7 +134,7 @@ export function RescheduleRequestDialog({
             <Button type="submit" disabled={saving}>
               {saving ? "Sending request…" : "Send request"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

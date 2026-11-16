@@ -431,3 +431,86 @@ aside nav a { min-height: 50px; font-size: 1rem; }
 /* Keep navigation visible when larger type needs more vertical space. */
 @media (max-height: 1080px) { .sidebar-note { display: none; } }
 @media (max-width: 767px) { .sidebar-note { display: none; } }
+
+/* Composer surfaces: intentional form layouts, not a stack of default inputs. */
+.studio-dialog { max-height: calc(100dvh - 32px); border: 1px solid #f0dfd5; scrollbar-gutter: stable; }
+.studio-dialog::before { content: ''; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg,#e23d27,#ffab58); }
+.studio-dialog [data-slot=dialog-title] { padding-top: 5px; }
+.studio-dialog [data-slot=dialog-title] > svg { width: 25px; height: 25px; margin-right: 3px; }
+.studio-dialog [data-slot=dialog-description] { max-width: 55ch; line-height: 1.6; }
+.form-section { padding: 24px; border: 1px solid #eadfd8; border-radius: 18px; background: #fff; min-width: 0; }
+.form-section + .form-section { margin-top: 22px; }
+.form-section-title { font-size: 1.0625rem; line-height: 1.4; font-weight: 650; color: #302723; }
+.form-section-description { font-size: .94rem; color: var(--muted-foreground); margin-top: 5px; line-height: 1.55; }
+.form-section-heading { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 23px; }
+.form-step { display: grid; place-items: center; width: 31px; height: 31px; flex-shrink: 0; background: #fff0e5; color: #c13724; border-radius: 10px; font-size: .875rem; font-weight: 700; }
+.field-group { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.field-label { display: block; font-size: 1rem; line-height: 1.5; font-weight: 550; margin-bottom: 2px; }
+.studio-input { min-height: 51px; width: 100%; border: 1px solid var(--input); background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 1rem; }
+.schedule-composer { display: flex; flex-direction: column; gap: 22px; }
+.schedule-composer .form-section + .form-section { margin-top: 0; }
+.schedule-composer .date-time-field { margin-bottom: 25px; }
+.date-time-field { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: 18px; align-items: start; }
+.date-control { min-width: 0; }
+.date-control-trigger { display: flex; align-items: center; gap: 10px; min-height: 54px; width: 100%; text-align: left; padding: 12px; background: #fff; border: 1px solid var(--input); border-radius: 12px; font-size: 1rem; }
+.date-control-trigger > svg { flex-shrink: 0; color: #be4c2b; }
+.date-control-trigger > span { flex: 1; min-width: 0; }
+.date-control-trigger:hover, .date-control-trigger[aria-expanded=true] { border-color: var(--primary); background: #fffaf5; }
+.date-control-calendar { margin-top: 12px; padding: 14px; border: 1px solid #e9d4c5; border-radius: 16px; background: #fff; box-shadow: 0 8px 22px #9d3c170c; }
+.date-control-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; }
+.calendar-weekday { padding: 7px 0; font-size: .875rem; text-align: center; color: var(--muted-foreground); }
+.calendar-day-button { display: grid; place-items: center; min-width: 0; min-height: 35px; aspect-ratio: 1; border-radius: 10px; font-size: .94rem; }
+.calendar-day-button:hover { background: #fff0e5; }
+.calendar-day-button[data-outside] { color: #9e938a; }
+.calendar-day-button[data-today] { box-shadow: inset 0 0 0 1px #edb89c; }
+.calendar-day-button[aria-pressed=true] { background: var(--primary); color: #fff; font-weight: 650; }
+.calendar-nav-button { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #fff4ea; flex-shrink: 0; }
+.time-control { display: flex; align-items: center; gap: 5px; min-height: 54px; padding: 5px 8px; background: white; border: 1px solid var(--input); border-radius: 12px; }
+.time-control > svg { width: 18px; flex-shrink: 0; color: #be4c2b; }
+.time-control select { min-height: 40px; width: auto; min-width: 0; flex: 1; border: 0; background: transparent; font-size: 1rem; padding: 4px 1px; }
+.time-control select:last-child { flex: 1.4; }
+.duration-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.duration-option { position: relative; display: flex; flex-direction: column; gap: 5px; padding: 16px 12px; border: 1px solid #e6d9cf; background: #fff; border-radius: 14px; cursor: pointer; }
+.duration-option input { position: absolute; opacity: 0; }
+.duration-option:focus-within { outline: 2px solid var(--ring); outline-offset: 3px; }
+.duration-option strong { font-size: 1.0625rem; }
+.duration-option span { font-size: .875rem; color: var(--muted-foreground); }
+.duration-option[data-selected] { border-color: var(--primary); background: #fff2e8; box-shadow: inset 0 0 0 1px var(--primary); }
+.trial-option { display: flex; align-items: center; gap: 13px; padding: 20px; border: 1px solid #eadfd8; border-radius: 17px; background: #fff; cursor: pointer; }
+.trial-option[data-selected] { border-color: #e49d6f; background: #fff4e6; }
+.trial-option input { width: 23px; height: 23px; accent-color: var(--primary); }
+.form-icon { width: 45px; height: 45px; display: grid; place-items: center; flex-shrink: 0; border-radius: 13px; background: #fff0e5; color: #bc4a25; }
+.form-info-note { display: flex; align-items: flex-start; gap: 10px; color: var(--muted-foreground); font-size: .875rem; line-height: 1.6; }
+.form-info-note svg { flex-shrink: 0; margin-top: 4px; }
+.file-zone { border: 1.5px dashed #e4bda7; background: #fffaf6; }
+@media (max-width: 767px) {
+  .studio-dialog { max-height: calc(100dvh - 20px); padding: 20px; max-width: calc(100vw - 20px); border-radius: 22px; }
+  .form-section { padding: 18px; border-radius: 14px; }
+  .date-time-field { grid-template-columns: minmax(0,1fr); gap: 18px; }
+  .calendar-day-button { min-height: 35px; }
+  .duration-options { gap: 7px; }
+  .duration-option { padding: 14px 9px; }
+  .duration-option strong { font-size: 1rem; }
+  .duration-option span { font-size: .82rem; }
+  .time-control select { min-height: 44px; }
+  [data-slot=dialog-footer] .ui-button { min-height: 50px; width: 100%; }
+}
+.form-section { container-type: inline-size; }
+.date-time-field { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr); }
+@container (min-width: 560px) { .date-time-field { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); } }
+/* Keep the action bar in view while long editors scroll underneath it. */
+.studio-dialog:has(> form) { display: flex; flex-direction: column; overflow: hidden; }
+.studio-dialog > [data-slot=dialog-header] { flex-shrink: 0; }
+.studio-dialog > form { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 3px; margin: -3px; }
+.studio-dialog form > [data-slot=dialog-footer] { position: sticky; bottom: -3px; z-index: 10; background: #fffaf6; box-shadow: 0 -10px 22px #fffaf6e8; }
+.schedule-composer > .form-section:first-child { padding-top: 20px; padding-bottom: 20px; }
+.schedule-composer > .form-section:first-child .form-section-heading { margin-bottom: 15px; }
+.form-section + .form-section { margin-top: 0; }
+@media (max-width: 480px) {
+  .duration-options { grid-template-columns: minmax(0,1fr); }
+  .duration-option { flex-direction: row; align-items: center; justify-content: space-between; padding: 14px 16px; gap: 10px; }
+  .duration-option strong, .duration-option span { white-space: nowrap; }
+}
+/* Date grids respond to the editor column, rather than the full viewport. */
+.form-section .grid:has(> .field-group > .date-control) { grid-template-columns: minmax(0,1fr); }
+@container (min-width: 560px) { .form-section .grid:has(> .field-group > .date-control) { grid-template-columns: repeat(2,minmax(0,1fr)); } }

@@ -1,4 +1,5 @@
 "use client";
+import { ScheduleFields } from "@/components/scheduling-fields";
 import { actionError } from "@/lib/action-errors";
 
 import { useState } from "react";
@@ -81,85 +82,25 @@ export function ScheduleClassDialog({
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarPlus size={18} className="text-primary" />
-              Schedule Class
+              Plan a lesson
             </DialogTitle>
-            <DialogDescription>Schedule a new class session</DialogDescription>
+            <DialogDescription>
+              A clear plan, from student to start time.
+            </DialogDescription>
           </DialogHeader>
 
-          <form action={handleSubmit} className="space-y-4">
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="sc-student">Student *</Label>
-                <select
-                  id="sc-student"
-                  name="student_id"
-                  required
-                  defaultValue={defaultStudentId || students[0]?.id}
-                  className={selectClass}
-                >
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sc-datetime">Date & time *</Label>
-                <input
-                  id="sc-datetime"
-                  name="scheduled_at"
-                  type="datetime-local"
-                  required
-                  defaultValue={defaultTime}
-                  className={inputClass}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="sc-duration">Duration (min)</Label>
-                  <input
-                    id="sc-duration"
-                    name="duration_minutes"
-                    type="number"
-                    defaultValue={60}
-                    min={5}
-                    max={1440}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="sc-subject">Subject</Label>
-                  <input
-                    id="sc-subject"
-                    name="subject"
-                    placeholder="e.g. Algebra"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sc-location">Location</Label>
-                <input
-                  id="sc-location"
-                  name="location"
-                  placeholder="e.g. Zoom / Home"
-                  className={inputClass}
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="is_trial"
-                  className="size-4 rounded border-input accent-primary"
-                />
-                Trial class (invoiced at RM 0.00)
-              </label>
-            </div>
+          <form action={handleSubmit} className="space-y-6">
+            <fieldset disabled={isPending} className="min-w-0 border-0 p-0">
+              <ScheduleFields
+                students={students}
+                defaultStudentId={defaultStudentId}
+                defaultDateTime={defaultTime}
+              />
+            </fieldset>
 
             {error && (
               <p

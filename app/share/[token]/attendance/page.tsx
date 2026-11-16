@@ -1,3 +1,4 @@
+import { lessonStatus } from "@/lib/lesson-status";
 import { queryAll, queryOne } from "@/lib/db";
 import {
   requireParent,
@@ -93,17 +94,7 @@ export default async function ParentAttendancePage({
                       {c.duration_minutes} min
                     </td>
                     <td className="px-4 py-4">
-                      <Badge
-                        variant={
-                          label === "Absent"
-                            ? "destructive"
-                            : label === "Present"
-                              ? "default"
-                              : "secondary"
-                        }
-                      >
-                        {label}
-                      </Badge>
+                      <Badge variant="outline" className={lessonStatus(c.status, c.attendance).className}>{label}</Badge>
                     </td>
                   </tr>
                 );

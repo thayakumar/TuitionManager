@@ -2,6 +2,14 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+  UploadCloud,
+  FileText,
+  Link2,
+  Send,
+  CheckCircle2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { submitAssignmentResult as submitAssignment } from "@/lib/actions";
@@ -126,91 +134,138 @@ export function SubmissionForm({
     }
   }
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {resubmission && (
-        <p className="text-sm text-muted-foreground">
-          This creates a new attempt awaiting a grade. Earlier work and feedback
-          stay in your history.
+    <form onSubmit={handleSubmit} className="space-y-5" aria-busy={busy}>
+      <div className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+        <p className="flex items-center gap-2 font-semibold">
+          <FileText size={21} className="text-primary" />
+          {resubmission ? "Start a new attempt" : "Ready to share your work?"}
         </p>
-      )}
-      <div className="space-y-1.5">
-        <label htmlFor={`work-${postId}`} className="text-sm font-medium">
-          Your work
-        </label>
-        <textarea
-          id={`work-${postId}`}
-          name="content"
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          rows={4}
-          maxLength={10000}
-          placeholder="Type your answer or paste your work here..."
-          disabled={busy}
-          className="w-full rounded-md border border-input bg-background p-3 text-sm"
-        />
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          {resubmission
+            ? "Your earlier work and feedback stay in history. This new attempt will wait for a new grade."
+            : "Write an answer, attach a file or share a link. You can submit a new attempt later."}
+        </p>
       </div>
-      <div className="space-y-1.5">
-        <label htmlFor={`file-${postId}`} className="text-sm font-medium">
-          Attachment (optional)
-        </label>
-        <input
-          ref={inputRef}
-          id={`file-${postId}`}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
-          onChange={selectFile}
-          disabled={busy}
-          className="block w-full text-sm"
-        />
-        <p className="text-xs text-muted-foreground">
-          Image or PDF, up to {MAX_UPLOAD_LABEL}.
-        </p>
-        {file && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              setFile(null);
-              if (inputRef.current) inputRef.current.value = "";
-            }}
+      <fieldset disabled={busy} className="min-w-0 space-y-5">
+        <section className="form-section space-y-3">
+          <label
+            htmlFor={`work-${postId}`}
+            className="form-section-title block"
           >
-            Remove attachment
-          </Button>
-        )}
-      </div>
-      <div className="space-y-1.5">
-        <label htmlFor={`link-${postId}`} className="text-sm font-medium">
-          HTTPS link (optional)
-        </label>
-        <input
-          id={`link-${postId}`}
-          type="url"
-          name="file_url"
-          placeholder="e.g., Google Drive link"
-          value={fileUrl}
-          onChange={(event) => setFileUrl(event.target.value)}
-          maxLength={2048}
-          disabled={busy}
-          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-        />
-      </div>
+            Your work
+          </label>
+          <textarea
+            id={`work-${postId}`}
+            name="content"
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            rows={6}
+            maxLength={10000}
+            placeholder="Type your answer or paste your work here…"
+            className="w-full rounded-xl border border-input bg-card p-4 text-base leading-relaxed"
+          />
+        </section>
+        <section className="form-section space-y-4">
+          <h3 className="form-section-title">Add supporting work</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Choose a file or a link for this attempt.
+          </p>
+          <label
+            htmlFor={`file-${postId}`}
+            className="flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/30 px-4 py-6 text-center transition-colors hover:border-primary hover:bg-orange-50 focus-within:ring-2 focus-within:ring-ring"
+          >
+            <UploadCloud size={28} className="mb-3 text-primary" />
+            <span className="font-medium">
+              {file ? file.name : "Choose an image or PDF"}
+            </span>
+            <span className="mt-1 text-sm text-muted-foreground">
+              Up to {MAX_UPLOAD_LABEL}
+            </span>
+            <input
+              ref={inputRef}
+              id={`file-${postId}`}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+              onChange={selectFile}
+              className="sr-only"
+            />
+          </label>
+          {file && (
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary p-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm">
+                <CheckCircle2 size={18} className="shrink-0 text-primary" />
+                <span className="break-all">{file.name}</span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFile(null);
+                  if (inputRef.current) inputRef.current.value = "";
+                }}
+              >
+                <X size={17} />
+                Remove attachment
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            or add a link
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <label
+            htmlFor={`link-${postId}`}
+            className="block text-sm font-medium"
+          >
+            HTTPS link (optional)
+          </label>
+          <div className="relative">
+            <Link2
+              size={19}
+              className="pointer-events-none absolute left-4 top-4 text-muted-foreground"
+            />
+            <input
+              id={`link-${postId}`}
+              type="url"
+              name="file_url"
+              placeholder="https://…"
+              value={fileUrl}
+              onChange={(event) => setFileUrl(event.target.value)}
+              maxLength={2048}
+              className="min-h-12 w-full rounded-xl border border-input bg-card py-3 pl-11 pr-4 text-base"
+            />
+          </div>
+        </section>
+      </fieldset>
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-base text-destructive"
+        >
           {error}
         </p>
       )}
-      <Button
-        type="submit"
-        disabled={busy || (!content.trim() && !fileUrl.trim() && !file)}
-      >
-        {busy
-          ? "Submitting..."
-          : resubmission
-            ? "Submit new attempt"
-            : "Turn in"}
-      </Button>
+      <div className="border-t border-border pt-5">
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={busy || (!content.trim() && !fileUrl.trim() && !file)}
+        >
+          <Send size={19} />
+          {busy
+            ? "Submitting..."
+            : resubmission
+              ? "Submit new attempt"
+              : "Turn in"}
+        </Button>
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          {busy
+            ? "Keep this page open while your work is saved."
+            : "Your tutor will be notified when you turn in."}
+        </p>
+      </div>
     </form>
   );
 }

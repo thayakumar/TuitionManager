@@ -13,6 +13,8 @@ import {
 import { queryAll, queryOne } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { lessonStatus } from "@/lib/lesson-status";
+import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDateTime } from "@/lib/format";
@@ -22,72 +24,9 @@ import type { Student, ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-function statusBadge(status: string) {
-  switch (status) {
-    case "completed":
-      return (
-        <Badge className="text-xs bg-emerald-500 text-white">
-          Completed
-        </Badge>
-      );
-    case "canceled":
-      return (
-        <Badge variant="destructive" className="text-xs">
-          Cancelled
-        </Badge>
-      );
-    default:
-      return (
-        <Badge variant="secondary" className="text-xs">
-          Scheduled
-        </Badge>
-      );
-  }
-}
-
-function attendanceBadge(attendance: string | null) {
-  switch (attendance) {
-    case "present":
-      return (
-        <Badge
-          variant="outline"
-          className="text-xs border-emerald-300 text-emerald-700"
-        >
-          Present
-        </Badge>
-      );
-    case "late":
-      return (
-        <Badge
-          variant="outline"
-          className="text-xs border-emerald-300 text-emerald-700"
-        >
-          Present
-        </Badge>
-      );
-    case "absent":
-      return (
-        <Badge
-          variant="outline"
-          className="text-xs border-red-300 text-red-700"
-        >
-          Absent
-        </Badge>
-      );
-    default:
-      return null;
-  }
-}
-
-function statusIcon(status: string) {
-  switch (status) {
-    case "completed":
-      return <CheckCircle2 size={16} className="text-emerald-500" />;
-    case "canceled":
-      return <XCircle size={16} className="text-red-500" />;
-    default:
-      return <Clock size={16} className="text-orange-500" />;
-  }
+function statusIcon(status: string, attendance: string | null) {
+  const state = lessonStatus(status, attendance);
+  return state.key === "scheduled" ? <Clock size={19} /> : state.key === "completed" ? <CheckCircle2 size={19} /> : <XCircle size={19} />;
 }
 
 export default async function StudentSchedulePage({
@@ -174,14 +113,10 @@ export default async function StudentSchedulePage({
                       <div className="flex flex-wrap items-center gap-3">
                         <div
                           className={`flex size-9 items-center justify-center rounded-lg shrink-0 ${
-                            c.status === "completed"
-                              ? "bg-emerald-50"
-                              : c.status === "canceled"
-                                ? "bg-red-50"
-                                : "bg-orange-50"
+                            lessonStatus(c.status, c.attendance).iconClassName
                           }`}
                         >
-                          {statusIcon(c.status)}
+                          {statusIcon(c.status, c.attendance)}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -198,8 +133,7 @@ export default async function StudentSchedulePage({
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                          {attendanceBadge(c.attendance)}
-                          {statusBadge(c.status)}
+                          <LessonStatusBadge status={c.status} attendance={c.attendance} />
                           {c.status === "scheduled" && (
                             <>
                               <RescheduleRequestDialog

@@ -136,7 +136,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Evidence:** Browser verified with isolated fake data.
 
-#### 1.5.3. As an Admin, I can click a day or select a time range → the lesson dialog uses that proposed date/time/duration.
+#### 1.5.3. As an Admin, I can click a day or select a time range → the lesson planner uses that proposed date/time and offers 1 hour, 1.5 hours or 2 hours.
 
 **Reflects in:** Create dialog; class write only on save.
 
@@ -674,3 +674,5 @@ The implementation report and final evidence are in [the repair report](../.audi
 The November 16 visual overhaul supersedes the earlier purple styling. See the [Studio redesign review and screenshots](../.audit/runs/2026-11-16-studio-redesign/REVIEW.md). Business policies and the use-case checklist remain applicable.
 
 The latest [bright red/orange classroom revision](../.audit/runs/2026-11-16-bright-classroom/REVIEW.md) supersedes the earlier Studio colours. Classrooms now open to Stream; Classwork contains topic filters and Create, and Grades/My grades shows current results. The history and latest-version grading rules are unchanged.
+
+The [composer and popup review](../.audit/runs/2026-11-16-composer-review/REPORT.md) records the rebuilt forms and actual pointer/date/time tests. New lesson and recurring planners omit Subject and Location and offer only 1 hour / 1.5 hours / 2 hours. Lesson colours are Scheduled blue, Absent red and Cancelled grey (Present remains green).

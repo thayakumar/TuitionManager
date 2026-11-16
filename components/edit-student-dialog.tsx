@@ -15,11 +15,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Field, TextAreaField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
-
-const inputClass =
-  "flex min-h-11 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 export function EditStudentDialog({
   student,
@@ -67,119 +64,140 @@ export function EditStudentDialog({
           if (!isPending) setOpen(v);
         }}
       >
-        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil size={18} className="text-primary" />
-              Edit Student
+              Edit student profile
             </DialogTitle>
             <DialogDescription>
               Update {student.name}&apos;s information
             </DialogDescription>
           </DialogHeader>
 
-          <form action={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-name">Full name *</Label>
-                <input
-                  id="edit-name"
-                  name="name"
-                  required
-                  defaultValue={student.name}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-subject">Subject</Label>
-                <input
-                  id="edit-subject"
-                  name="subject"
-                  defaultValue={student.subject ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-grade">Grade / Level</Label>
-                <input
-                  id="edit-grade"
-                  name="grade_level"
-                  defaultValue={student.grade_level ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-rate">Hourly rate</Label>
-                <input
-                  id="edit-rate"
-                  name="hourly_rate"
-                  min="0"
-                  max="1000000"
-                  type="number"
-                  step="0.01"
-                  defaultValue={Number(student.hourly_rate)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-phone">Phone</Label>
-                <input
-                  id="edit-phone"
-                  name="phone"
-                  defaultValue={student.phone ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-email">Email</Label>
-                <input
-                  id="edit-email"
-                  name="email"
-                  type="email"
-                  defaultValue={student.email ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-guardian">Guardian name</Label>
-                <input
-                  id="edit-guardian"
-                  name="guardian_name"
-                  defaultValue={student.guardian_name ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-guardian-contact">Guardian contact</Label>
-                <input
-                  id="edit-guardian-contact"
-                  name="guardian_contact"
-                  defaultValue={student.guardian_contact ?? ""}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="edit-notes">Notes</Label>
-                <textarea
-                  id="edit-notes"
-                  name="notes"
-                  rows={2}
-                  defaultValue={student.notes ?? ""}
-                  className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="active"
-                    defaultChecked={!!student.active}
-                    className="size-4 rounded border-input accent-primary"
+          <form
+            action={handleSubmit}
+            className="space-y-6"
+            aria-busy={isPending}
+          >
+            <fieldset
+              disabled={isPending}
+              className="min-w-0 space-y-6 border-0 p-0"
+            >
+              <section className="form-section">
+                <div className="mb-5">
+                  <p className="form-section-title">Learning profile</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    The essentials for lessons and monthly tuition.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Field
+                      label="Full name"
+                      name="name"
+                      defaultValue={student.name ?? ""}
+                      required
+                      placeholder="Student’s full name"
+                    />
+                  </div>
+                  <Field
+                    label="Grade / level"
+                    name="grade_level"
+                    defaultValue={student.grade_level ?? ""}
+                    placeholder="e.g. Form 4"
                   />
-                  Active
+                  <Field
+                    label="Hourly rate"
+                    name="hourly_rate"
+                    defaultValue={Number(student.hourly_rate)}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1000000"
+                  />
+                </div>
+              </section>
+              <section className="form-section">
+                <div className="mb-5">
+                  <p className="form-section-title">
+                    Student & guardian contacts
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Optional details to keep the right people in touch.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Student phone"
+                    name="phone"
+                    defaultValue={student.phone ?? ""}
+                    type="tel"
+                    placeholder="Phone number"
+                  />
+                  <Field
+                    label="Student email"
+                    name="email"
+                    defaultValue={student.email ?? ""}
+                    type="email"
+                    placeholder="Email address"
+                  />
+                  <Field
+                    label="Guardian name"
+                    name="guardian_name"
+                    defaultValue={student.guardian_name ?? ""}
+                    placeholder="Parent or guardian"
+                  />
+                  <Field
+                    label="Guardian contact"
+                    name="guardian_contact"
+                    defaultValue={student.guardian_contact ?? ""}
+                    placeholder="Phone or email"
+                  />
+                </div>
+              </section>
+              <details className="form-section" open>
+                <summary className="cursor-pointer font-semibold">
+                  Additional details{" "}
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </summary>
+                <div className="mt-5 space-y-4">
+                  <Field
+                    label="Subject"
+                    name="subject"
+                    defaultValue={student.subject ?? ""}
+                    placeholder="e.g. Mathematics"
+                  />
+                  <TextAreaField
+                    label="Private teaching notes"
+                    name="notes"
+                    rows={3}
+                    placeholder="Learning goals, preferences or useful context"
+                    defaultValue={student.notes ?? ""}
+                  />
+                </div>
+              </details>
+              <section className="form-section flex items-start gap-4">
+                <input
+                  id="edit-active"
+                  type="checkbox"
+                  name="active"
+                  defaultChecked={!!student.active}
+                  className="mt-1 size-5 shrink-0 accent-primary"
+                />
+                <label htmlFor="edit-active" className="cursor-pointer">
+                  <span className="block font-semibold">
+                    Student access enabled
+                  </span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
+                    Switch off to revoke portal access immediately. Lesson,
+                    invoice and submission history is kept.
+                  </span>
                 </label>
-              </div>
-            </div>
+              </section>
+            </fieldset>
 
             {error && (
               <p
@@ -194,6 +212,7 @@ export function EditStudentDialog({
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                disabled={isPending}
               >
                 Cancel
               </Button>
