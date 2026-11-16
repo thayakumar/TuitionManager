@@ -1,14 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { queryOne } from "@/lib/db";
 import { isAdminRequest, getStudentSession } from "@/lib/auth";
-import { generateJaasJwt, jaasRoomName } from "@/lib/jaas";
+import { generateJaasJwt, jaasRoomName, getJaasAppId } from "@/lib/jaas";
 import { MeetingRoom } from "@/components/meeting-room";
 import type { ClassRow, Student } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function MeetingPage({ params }: { params: { classId: string } }) {
-  const classId = Number(params.classId);
+export default async function MeetingPage({
+  params,
+}: {
+  params: Promise<{ classId: string }>;
+}) {
+  const route = await params;
+  const classId = Number(route.classId);
 
   const isAdmin = await isAdminRequest();
   const studentIdFromSession = isAdmin ? null : await getStudentSession();
@@ -24,9 +29,9 @@ export default async function MeetingPage({ params }: { params: { classId: strin
                 status, attendance, recurrence_id, is_trial, cancel_reason,
                 rescheduled_from, meeting_room, created_at
          FROM classes WHERE id = ?`,
-    [classId]
+    [classId],
   );
-  if (!cls || !cls.meeting_room) notFound();
+  if (!cls || !cls.meeting_room || cls.status === "canceled") notFound();
 
   if (!isAdmin && studentIdFromSession !== cls.student_id) {
     redirect("/portal/student");
@@ -38,22 +43,23 @@ export default async function MeetingPage({ params }: { params: { classId: strin
       : `SELECT id, name, subject, grade_level, phone, email, guardian_name,
                 guardian_contact, active, created_at, username
          FROM students WHERE id = ?`,
-    [cls.student_id]
+    [cls.student_id],
   );
-  if (!student) notFound();
+  if (!student || (!isAdmin && !student.active)) notFound();
 
   const scope = isAdmin ? "teacher" : "student";
   const notesRow = await queryOne<{ content: string }>(
     "SELECT content FROM class_notes WHERE class_id = ? AND scope = ?",
-    [classId, scope]
+    [classId, scope],
   );
 
   const displayName = isAdmin ? "Tutor" : student.name;
   const jwt = await generateJaasJwt({
+    room: cls.meeting_room,
     userName: displayName,
     isModerator: isAdmin,
     userId: isAdmin ? "admin" : `student-${cls.student_id}`,
-    email: isAdmin ? undefined : (student.email || undefined),
+    email: isAdmin ? undefined : student.email || undefined,
   });
 
   return (
@@ -67,6 +73,7 @@ export default async function MeetingPage({ params }: { params: { classId: strin
       initialNotes={notesRow?.content ?? ""}
       isAdmin={isAdmin}
       jwt={jwt}
+      jaasAppId={getJaasAppId()}
     />
   );
 }

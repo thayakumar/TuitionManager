@@ -1,174 +1,253 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ClipboardList, Megaphone, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import {
+  BookOpen,
+  ClipboardList,
+  Megaphone,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, TextAreaField } from "@/components/form-field";
 import { toast } from "sonner";
-import { createPostAction, updatePost, deletePostAction, createTopic } from "@/lib/actions";
+import {
+  createPostAction,
+  updatePost,
+  deletePostAction,
+  createTopic,
+} from "@/lib/actions";
+import { actionError, ActionValidationError } from "@/lib/action-errors";
+import { fmtDateInput } from "@/lib/format";
 import type { Post, PostType, Topic } from "@/lib/types";
 
 const POST_TYPES = [
-  { value: "material" as PostType, label: "Post Material", icon: BookOpen, color: "text-blue-600" },
-  { value: "assignment" as PostType, label: "Post Assignment", icon: ClipboardList, color: "text-amber-600" },
-  { value: "announcement" as PostType, label: "Post Announcement", icon: Megaphone, color: "text-emerald-600" },
+  { value: "material" as PostType, label: "Material", icon: BookOpen },
+  { value: "assignment" as PostType, label: "Assignment", icon: ClipboardList },
+  { value: "announcement" as PostType, label: "Announcement", icon: Megaphone },
 ];
+const errorMessage = (reason: unknown) =>
+  actionError(
+    reason,
+    "Could not save this change. Your entries are still here; please try again.",
+  );
 
-export function ClassroomActions({ studentId, topics = [] }: { studentId: number; topics?: Topic[] }) {
-  const [open, setOpen] = useState(false);
-  const [postType, setPostType] = useState<PostType>("material");
-
-  function openDialog(type: PostType) {
-    setPostType(type);
-    setOpen(true);
-  }
-
+export function ClassroomActions({
+  studentId,
+  topics = [],
+}: {
+  studentId: number;
+  topics?: Topic[];
+}) {
+  const [type, setType] = useState<PostType | null>(null);
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button size="sm" className="gap-1.5">
             <Plus size={14} />
-            New Post
+            Create
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {POST_TYPES.map((pt) => (
-            <DropdownMenuItem key={pt.value} onClick={() => openDialog(pt.value)} className="gap-2">
-              <pt.icon size={14} className={pt.color} />
-              {pt.label}
+          {POST_TYPES.map((item) => (
+            <DropdownMenuItem
+              key={item.value}
+              onClick={() => setType(item.value)}
+              className="gap-2"
+            >
+              <item.icon size={14} className="text-primary" />
+              Post {item.label}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <PostDialog
-        open={open}
-        onOpenChange={setOpen}
-        postType={postType}
-        studentId={studentId}
-        topics={topics}
-      />
+      {type && (
+        <PostDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setType(null);
+          }}
+          postType={type}
+          studentId={studentId}
+          topics={topics}
+        />
+      )}
     </>
   );
 }
 
 function PostDialog({
-  open, onOpenChange, postType, studentId, editPost, topics = [],
+  open,
+  onOpenChange,
+  postType,
+  studentId,
+  editPost,
+  topics = [],
 }: {
   open: boolean;
-  onOpenChange: (v: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   postType: PostType;
   studentId: number;
   editPost?: Post;
   topics?: Topic[];
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const config = POST_TYPES.find((p) => p.value === postType) || POST_TYPES[0];
-  const isEdit = !!editPost;
-
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      if (isEdit) {
-        await updatePost(formData);
-        toast.success("Post updated");
-      } else {
-        const title = String(formData.get("title") || "").trim();
-        const body = String(formData.get("body") || "").trim();
-        const dueAt = String(formData.get("due_at") || "") || null;
-        const topicId = formData.get("topic_id") ? Number(formData.get("topic_id")) : null;
-        const maxPoints = formData.get("max_points") ? Number(formData.get("max_points")) : null;
-        await createPostAction(studentId, postType, title, body, dueAt, topicId, maxPoints);
-        toast.success("Post created");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const submitting = useRef(false);
+  const config =
+    POST_TYPES.find((item) => item.value === postType) ?? POST_TYPES[0];
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current) return;
+    const form = new FormData(event.currentTarget);
+    const title = String(form.get("title") ?? "").trim();
+    if (!title) {
+      setError("Enter a title.");
+      return;
+    }
+    const points = String(form.get("max_points") ?? "").trim();
+    if (points && (!Number.isFinite(Number(points)) || Number(points) < 0)) {
+      setError("Points must be zero or a positive number.");
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (editPost) await updatePost(form);
+      else {
+        const result = await createPostAction(
+          studentId,
+          postType,
+          title,
+          String(form.get("body") ?? "").trim(),
+          String(form.get("due_at") ?? "") || null,
+          form.get("topic_id") ? Number(form.get("topic_id")) : null,
+          points ? Number(points) : null,
+        );
+        if (!result.success)
+          throw new ActionValidationError(
+            result.error || "Could not create this post.",
+          );
       }
+      toast.success(
+        editPost
+          ? "Post updated and student notified"
+          : "Post created and student notified",
+      );
       onOpenChange(false);
       router.refresh();
-    });
+    } catch (reason) {
+      setError(errorMessage(reason));
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
   }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!busy) onOpenChange(next);
+      }}
+    >
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <config.icon size={18} className={config.color} />
-            {isEdit ? `Edit ${config.label.replace("Post ", "")}` : config.label}
+            <config.icon size={18} className="text-primary" />
+            {editPost ? "Edit" : "Post"} {config.label}
           </DialogTitle>
           <DialogDescription>
-            {postType === "assignment"
-              ? "Create an assignment with an optional due date."
-              : postType === "announcement"
-                ? "Post an announcement to this student's classroom."
-                : "Share learning materials with this student."}
+            {editPost
+              ? "Changes will be visible to this student and an update notification will be sent."
+              : "Share learning content with this student's classroom."}
           </DialogDescription>
         </DialogHeader>
-
-        <form action={handleSubmit}>
-          {isEdit && <input type="hidden" name="id" value={editPost.id} />}
-          {isEdit && <input type="hidden" name="type" value={postType} />}
-          {isEdit && <input type="hidden" name="student_id" value={studentId} />}
-
-          <div className="space-y-4 py-2">
+        <form onSubmit={submit}>
+          {editPost && (
+            <>
+              <input type="hidden" name="id" value={editPost.id} />
+              <input type="hidden" name="type" value={postType} />
+              <input type="hidden" name="student_id" value={studentId} />
+            </>
+          )}
+          <fieldset disabled={busy} className="space-y-4 py-2">
             <Field
               label="Title"
               name="title"
-              placeholder={
-                postType === "assignment" ? "e.g., Algebra Worksheet Ch.5"
-                  : postType === "announcement" ? "e.g., Schedule Change Notice"
-                    : "e.g., Chapter 5 Notes"
-              }
               required
-              defaultValue={editPost?.title || ""}
+              defaultValue={editPost?.title ?? ""}
+              placeholder="Give this classwork a clear title"
             />
-
             <TextAreaField
               label="Content"
               name="body"
-              placeholder="Add details, instructions, or notes..."
               rows={4}
-              defaultValue={editPost?.body || ""}
+              defaultValue={editPost?.body ?? ""}
+              placeholder="Add details, instructions, or notes..."
             />
-
             <TopicSelector
               topics={topics}
               studentId={studentId}
-              defaultValue={editPost?.topic_id?.toString() || ""}
+              defaultValue={String(editPost?.topic_id ?? "")}
             />
-
             {postType === "assignment" && (
               <>
                 <Field
                   label="Points"
                   name="max_points"
                   type="number"
+                  step="any"
+                  defaultValue={editPost?.max_points ?? ""}
                   placeholder="e.g., 100"
-                  defaultValue={editPost?.max_points?.toString() || ""}
                 />
                 <Field
-                  label="Due Date"
+                  label="Due date and time (Malaysia)"
                   name="due_at"
                   type="datetime-local"
-                  defaultValue={editPost?.due_at?.slice(0, 16) || ""}
+                  defaultValue={
+                    editPost?.due_at ? fmtDateInput(editPost.due_at) : ""
+                  }
                 />
               </>
             )}
-          </div>
-
+          </fieldset>
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Posting..." : isEdit ? "Save Changes" : "Post"}
+            <Button type="submit" disabled={busy}>
+              {busy ? "Saving..." : editPost ? "Save Changes" : "Post"}
             </Button>
           </DialogFooter>
         </form>
@@ -177,57 +256,116 @@ function PostDialog({
   );
 }
 
-export function EditPostButton({ post, studentId, topics = [] }: { post: Post; studentId: number; topics?: Topic[] }) {
+export function EditPostButton({
+  post,
+  studentId,
+  topics = [],
+}: {
+  post: Post;
+  studentId: number;
+  topics?: Topic[];
+}) {
   const [open, setOpen] = useState(false);
-
   return (
     <>
-      <Button variant="ghost" size="icon" className="size-8" onClick={() => setOpen(true)}>
-        <Pencil size={14} />
+      <Button
+        aria-label="Edit post"
+        title="Edit post"
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpen(true)}
+      >
+        <Pencil size={16} />
       </Button>
-      <PostDialog
-        open={open}
-        onOpenChange={setOpen}
-        postType={post.type}
-        studentId={studentId}
-        editPost={post}
-        topics={topics}
-      />
+      {open && (
+        <PostDialog
+          open
+          onOpenChange={setOpen}
+          postType={post.type}
+          studentId={studentId}
+          editPost={post}
+          topics={topics}
+        />
+      )}
     </>
   );
 }
 
-export function DeletePostButton({ postId, studentId }: { postId: number; studentId: number }) {
+export function DeletePostButton({
+  postId,
+  studentId,
+}: {
+  postId: number;
+  studentId: number;
+}) {
   const router = useRouter();
-  const [confirming, setConfirming] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  function handleDelete() {
-    startTransition(async () => {
+  const [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function remove() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
       await deletePostAction(postId, studentId);
       toast.success("Post deleted");
-      setConfirming(false);
+      setOpen(false);
+      router.push(`/classroom/${studentId}`);
       router.refresh();
-    });
+    } catch (reason) {
+      setError(errorMessage(reason));
+    } finally {
+      setBusy(false);
+    }
   }
-
   return (
     <>
-      <Button variant="ghost" size="icon" className="size-8 text-red-500 hover:text-red-600" onClick={() => setConfirming(true)}>
-        <Trash2 size={14} />
+      <Button
+        aria-label="Delete post"
+        title="Delete post"
+        variant="ghost"
+        size="icon"
+        className="text-destructive"
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 size={16} />
       </Button>
-      <Dialog open={confirming} onOpenChange={setConfirming}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!busy) setOpen(next);
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete Post</DialogTitle>
+            <DialogTitle>Delete post?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
+              This permanently removes the post, its attachments, submissions
+              and grading history. The student will be notified. This cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirming(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              {isPending ? "Deleting..." : "Delete"}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={busy}
+              onClick={remove}
+            >
+              {busy ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -246,77 +384,127 @@ function TopicSelector({
   defaultValue: string;
 }) {
   const router = useRouter();
-  const [showNew, setShowNew] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [selected, setSelected] = useState(defaultValue);
-  const [localTopics, setLocalTopics] = useState(topics);
-  const [isPending, startTransition] = useTransition();
+  const [showNew, setShowNew] = useState(false),
+    [newName, setNewName] = useState(""),
+    [selected, setSelected] = useState(defaultValue),
+    [added, setAdded] = useState<Topic[]>([]),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  function handleCreate() {
-    if (!newName.trim()) return;
-    startTransition(async () => {
-      await createTopic(studentId, newName.trim());
-      toast.success("Topic created");
+  const allTopics = [
+    ...new Map(
+      [...topics, ...added].map((topic) => [topic.id, topic]),
+    ).values(),
+  ];
+  async function create() {
+    if (!newName.trim() || busy) return;
+    const name = newName.trim();
+    setBusy(true);
+    setError("");
+    try {
+      const result = await createTopic(studentId, name);
+      if (!result.success || !result.id)
+        throw new ActionValidationError("Could not create this topic.");
+      const id = result.id;
+      setAdded((previous) => [
+        ...previous,
+        {
+          id,
+          student_id: studentId,
+          name,
+          sort_order: 0,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setSelected(String(id));
       setNewName("");
       setShowNew(false);
+      toast.success("Topic created and selected");
       router.refresh();
-    });
+    } catch (reason) {
+      setError(errorMessage(reason));
+    } finally {
+      setBusy(false);
+    }
   }
-
   return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-foreground">Topic</label>
-      <div className="flex items-center gap-2">
+    <div className="space-y-2">
+      <label htmlFor={`topic-${studentId}`} className="text-sm font-medium">
+        Topic
+      </label>
+      <div className="flex gap-2">
         <select
+          id={`topic-${studentId}`}
           name="topic_id"
           value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          onChange={(event) => setSelected(event.target.value)}
+          className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
         >
           <option value="">No topic</option>
-          {localTopics.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+          {allTopics.map((topic) => (
+            <option key={topic.id} value={topic.id}>
+              {topic.name}
+            </option>
           ))}
         </select>
         {!showNew && (
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="shrink-0 gap-1 text-xs h-9"
             onClick={() => {
               setShowNew(true);
-              setTimeout(() => inputRef.current?.focus(), 50);
+              setTimeout(() => inputRef.current?.focus(), 0);
             }}
           >
-            <Plus size={12} />
+            <Plus size={14} />
             New
           </Button>
         )}
       </div>
       {showNew && (
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex gap-2">
           <input
             ref={inputRef}
-            type="text"
+            aria-label="New topic name"
             value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); handleCreate(); }
-              if (e.key === "Escape") { setShowNew(false); setNewName(""); }
+            maxLength={200}
+            disabled={busy}
+            onChange={(event) => setNewName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void create();
+              }
+              if (event.key === "Escape") {
+                event.stopPropagation();
+                setShowNew(false);
+              }
             }}
-            placeholder="New topic name"
-            className="flex h-8 flex-1 rounded-md border border-input bg-transparent px-2.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            disabled={isPending}
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
           />
-          <Button type="button" size="icon" variant="ghost" className="size-7" onClick={handleCreate} disabled={isPending || !newName.trim()}>
-            <Check size={14} />
+          <Button
+            type="button"
+            aria-label="Create and select topic"
+            disabled={busy || !newName.trim()}
+            onClick={create}
+          >
+            <Check size={16} />
           </Button>
-          <Button type="button" size="icon" variant="ghost" className="size-7" onClick={() => { setShowNew(false); setNewName(""); }}>
-            <X size={14} />
+          <Button
+            type="button"
+            aria-label="Cancel new topic"
+            variant="outline"
+            disabled={busy}
+            onClick={() => setShowNew(false)}
+          >
+            <X size={16} />
           </Button>
         </div>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       )}
     </div>
   );

@@ -1,0 +1,839 @@
+[
+  {
+    "group": "root",
+    "id": "root.admin.login.empty",
+    "result": "Pass",
+    "actual": 2,
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.admin.login.wrong",
+    "result": "Pass",
+    "actual": "Inline error displayed",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.dashboard.open-close.Schedule class",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.dashboard.open-close.Add student",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.dashboard.open-close.Generate invoice",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.sidebar.collapse",
+    "result": "Pass",
+    "actual": "Collapse persisted after reload and expanded",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.export./students",
+    "result": "Pass",
+    "actual": {
+      "filename": "students.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.export./invoices",
+    "result": "Pass",
+    "actual": {
+      "filename": "invoices.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.export./schedule",
+    "result": "Pass",
+    "actual": {
+      "filename": "classes.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.admin.logout",
+    "result": "Pass",
+    "actual": "Logout redirects and private route rejects no cookie",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.mobile.render./",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.mobile.render./students",
+    "result": "Fail",
+    "actual": "Horizontal document overflow {\"viewport\":390,\"layoutViewport\":394,\"visualViewport\":390,\"body\":394}",
+    "evidence_level": "Executed",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "root",
+    "id": "root.mobile.render./schedule",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "root",
+    "id": "root.mobile.render./invoices",
+    "result": "Fail",
+    "actual": "Horizontal document overflow {\"viewport\":390,\"layoutViewport\":418,\"visualViewport\":390,\"body\":418}",
+    "evidence_level": "Executed",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "root",
+    "id": "root.mobile.render./settings",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A01",
+    "title": "Admin login",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A02",
+    "title": "Roster Add Student empty name prevents submission",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A03",
+    "title": "Create own student valid details sid3",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A04",
+    "title": "Edit own student and reload persistence",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A05",
+    "title": "Add long note, expand, search/no-match state",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A06",
+    "title": "Delete own note",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A07",
+    "title": "Copy student credentials clipboard",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A08",
+    "title": "Generate/copy parent link and render correct parent view",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A09",
+    "title": "Revoke link causes HTTP404",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A10",
+    "title": "Export CSV includes created student",
+    "status": "PASS",
+    "evidence": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A11",
+    "title": "Classroom empty and New Material modal",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A12",
+    "title": "Open material and edit content",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A13",
+    "title": "Delete material cancel then confirm",
+    "status": "BLOCKED",
+    "evidence": "Executed",
+    "detail": "Harness icon locator incorrect; deletion not executed. This is not an app failure.",
+    "outcome": "BLOCKED"
+  },
+  {
+    "group": "admin",
+    "id": "A14",
+    "title": "Create topic standalone",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A15",
+    "title": "Inline topic creation updates selector",
+    "status": "FAIL",
+    "evidence": "Executed",
+    "detail": "Error: new topic absent from open selector: No topic,UI Topic One,UI Topic One",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "admin",
+    "id": "A16",
+    "title": "Create assignment with valid title,points,due date",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "Assignment created correctly; initial immediate page.url read stale; correct owned post ID8 discovered from settled classroom href.",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A17",
+    "title": "Assignment Instructions/Student Work tabs empty",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A18",
+    "title": "Student submits work through real UI",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A19",
+    "title": "Grade rejects out-of-range999 of100",
+    "status": "FAIL",
+    "evidence": "Executed",
+    "detail": "Error: invalid grade999/100 persisted and displayed",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "admin",
+    "id": "A20",
+    "title": "Update grade valid85 and feedback persistence",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A21",
+    "title": "Classroom grade list matches detail",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A22",
+    "title": "Announcement creation",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "admin",
+    "id": "A23",
+    "title": "Mobile nav opens and link navigation works",
+    "status": "FAIL",
+    "evidence": "Executed",
+    "detail": "Navigation reached /students, but mobile drawer stayed visibly open; expected drawer closes after selecting destination.",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "admin",
+    "id": "A24",
+    "title": "Restore desktop and sign out",
+    "status": "PASS",
+    "evidence": "Executed",
+    "detail": "",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP01",
+    "description": "Empty login blocked by browser required validation",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP02",
+    "description": "Wrong password shows inline error, retains login screen",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP03",
+    "description": "Valid student login and dashboard render",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP04",
+    "description": "Student navigation My Schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP05",
+    "description": "Student navigation My Class",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP06",
+    "description": "Student navigation Student Notes",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP07",
+    "description": "Student navigation Notifications",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP08",
+    "description": "Student navigation My Profile",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP09",
+    "description": "Student navigation Dashboard",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP10",
+    "description": "Student profile Copy link writes correct parent portal URL",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "clipboard": "http://127.0.0.1:4310/share/UIAUDIT-revoke-token"
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP11",
+    "description": "Student classroom collapse and expand topic",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP12",
+    "description": "Own assignment empty and whitespace content cannot submit",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP13",
+    "description": "Oversized attachment rejected locally",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP14",
+    "description": "Attach small file then remove selection",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP15",
+    "description": "Valid assignment submission persists and reflects after reload",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP16",
+    "description": "Student can resubmit assignment per saved Q5 policy",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "No resubmit/edit/turn-in control after first submission",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP17",
+    "description": "Malformed link input should be rejected before submission",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "Malformed URL persisted javascript:alert(1)",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP18",
+    "description": "Upload failure leaves work unsent and shows inline error (stub)",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP19",
+    "description": "Successful attachment upload submits returned URL (stub)",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP20",
+    "description": "Foreign student dashboard denied",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP21",
+    "description": "Foreign student post denied on own student URL",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "Foreign Bob post is visible",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP22",
+    "description": "Reschedule modal cancel and empty request validation",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP23",
+    "description": "Valid reschedule request persists fake preferences/reason",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "storedPreferred": "2026-12-02T10:00:00.000Z",
+      "class_id": 4
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP24",
+    "description": "Repeated reschedule request shows duplicate rejection",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText(/already have a pending|already.*request/i) to be visible\u001b[22m\n",
+    "interpretation": "No duplicate-rejection message appeared; query confirmed multiple pending requests for same class4, including id3 reason UIAUDIT please reschedule and duplicate id4.",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP25",
+    "description": "Student notifications mark-all-read updates server and UI",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP26",
+    "description": "Parent dashboard renders without login",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP27",
+    "description": "Parent navigation Attendance",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP28",
+    "description": "Parent navigation Schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP29",
+    "description": "Parent navigation Class Reports",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP30",
+    "description": "Parent navigation Invoices",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP31",
+    "description": "Parent navigation Dashboard",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP32",
+    "description": "Parent invoice detail ownership and print control",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP33",
+    "description": "Parent invalid token shows not found",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP34",
+    "description": "Parent token invalidation blocks previously valid route after refresh",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP35",
+    "description": "Parent nonexistent invoice cannot render",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP36",
+    "description": "Mobile student navigation opens, click closes drawer",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "Navigation drawer remains open over destination screen",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP37",
+    "description": "Mobile parent navigation opens, click closes drawer",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "error": "Parent navigation drawer remains open over destination screen",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "student-parent",
+    "id": "SP38",
+    "description": "Student sign out removes session and blocks protected page",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP1",
+    "description": "Approval cancels own original and creates exactly one owner-preserving replacement",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "old": 4,
+      "status": "canceled",
+      "replacement": {
+        "id": 6,
+        "student_id": 1,
+        "scheduled_at": "2026-12-02T10:00:00.000Z",
+        "duration_minutes": 60,
+        "subject": "[RESCHEDULED] UIAUDIT future",
+        "location": null,
+        "status": "scheduled",
+        "attendance": null,
+        "created_at": "2026-11-13 01:58:28",
+        "recurrence_id": null,
+        "is_trial": 0,
+        "cancel_reason": null,
+        "rescheduled_from": 4,
+        "meeting_room": "tuitionhub-dyg-treb-xbb",
+        "meeting_notes": null
+      }
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP2",
+    "description": "Student schedule shows canceled original and approved replacement after reload",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "hasCanceled": true,
+      "hasReplacement": true
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP3",
+    "description": "Parent schedule agrees with student after approval",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "hasCanceled": true,
+      "hasReplacement": true
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP4",
+    "description": "Student receives approval and rejection messages with tutor note",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "rows": [
+        {
+          "id": 13,
+          "type": "reschedule_approved",
+          "message": "Your reschedule request has been approved.",
+          "read": 0
+        },
+        {
+          "id": 14,
+          "type": "reschedule_rejected",
+          "message": "Your reschedule request was declined: UIAUDIT alternate declined",
+          "read": 0
+        }
+      ]
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP5",
+    "description": "Rejected duplicate request adds no replacement class",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "requestStatus": "rejected",
+      "replacements": 1,
+      "scopeNote": "Rejected duplicate request refers to already-approved original; class count compared against approval baseline, independent untouched scheduled-class rejection not exercised here."
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP6",
+    "description": "Notification View opens own schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "href": "/portal/student/1/schedule"
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "lifecycle",
+    "id": "L-SP7",
+    "description": "Teacher grade and feedback appear to student after reload",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "details": {
+      "grade": "7",
+      "feedback": "UIAUDIT teacher feedback",
+      "graded_at": "2026-11-13 02:02:08"
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "business-followup",
+    "id": "B01-teacher-report-parent-ripple",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "stored": {
+        "topics_covered": "UIFLOW algebra lesson",
+        "homework": "UIFLOW practise exercises1-3"
+      },
+      "class": {
+        "status": "completed",
+        "attendance": null
+      },
+      "parentSawReport": true
+    },
+    "outcome": "PASS"
+  },
+  {
+    "group": "business-followup",
+    "id": "B02-report-quick-edit-preserves-existing-content",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": "Quick report opens with blank topics instead of existing report; submitting could overwrite saved fields",
+    "outcome": "FAIL"
+  },
+  {
+    "group": "business-followup",
+    "id": "B03-business-settings-shared-branding-ripple",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": "Business name persisted and parent uses it; restoring fixture setting after test",
+    "outcome": "PASS"
+  },
+  {
+    "group": "business-followup",
+    "id": "B04-holiday-generation-dependency",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "expectedDates": [
+        "2026-12-11"
+      ],
+      "actual": [
+        {
+          "scheduled_at": "2026-12-11T10:00:00.000Z",
+          "attendance": "present",
+          "meeting_room": null
+        }
+      ],
+      "warning": "Room/default attendance tracked as separate failed business requirement"
+    },
+    "outcome": "PASS"
+  }
+]

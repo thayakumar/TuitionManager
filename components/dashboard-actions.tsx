@@ -14,18 +14,18 @@ export function DashboardQuickActions({
   students: StudentOption[];
 }) {
   return (
-    <div className="mt-4 flex flex-wrap gap-3">
+    <div className="flex flex-wrap items-center gap-2.5">
       <ScheduleClassDialog
         students={students}
         trigger={
-          <Button className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm" variant="outline" size="sm">
-            <CalendarPlus size={14} /> Schedule Class
+          <Button size="sm">
+            <CalendarPlus size={14} /> Schedule a lesson
           </Button>
         }
       />
       <AddStudentDialog
         trigger={
-          <Button className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm" variant="outline" size="sm">
+          <Button variant="outline" size="sm">
             <Users size={14} /> Add Student
           </Button>
         }
@@ -33,7 +33,7 @@ export function DashboardQuickActions({
       <GenerateInvoiceDialog
         students={students}
         trigger={
-          <Button className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm" variant="outline" size="sm">
+          <Button variant="outline" size="sm">
             <Receipt size={14} /> Generate Invoice
           </Button>
         }

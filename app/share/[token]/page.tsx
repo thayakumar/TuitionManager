@@ -1,218 +1,191 @@
-import { notFound } from "next/navigation";
-import {
-  Calendar, CheckCircle2, Clock, XCircle,
-  TrendingUp, Receipt, BookOpen, Video,
-} from "lucide-react";
 import Link from "next/link";
-import { queryOne, queryAll, getSetting } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Receipt,
+  ArrowRight,
+} from "lucide-react";
+import { queryAll, queryOne, getSettings } from "@/lib/db";
+import {
+  requireParent,
+  PUBLIC_LESSON_COLUMNS,
+  PUBLIC_INVOICE_COLUMNS,
+  attendanceSummary,
+} from "@/lib/portal-context";
+import { PageHeader } from "@/components/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { currency, fmtDateTime } from "@/lib/format";
-import type { Student, ClassRow, Invoice } from "@/lib/types";
-
+import type { ClassRow, Invoice } from "@/lib/types";
 export const dynamic = "force-dynamic";
-
-export default async function ParentDashboard({ params }: { params: { token: string } }) {
-  const shareToken = await queryOne<{ student_id: number }>(
-    "SELECT student_id FROM share_tokens WHERE token = ? AND active = 1",
-    [params.token]
-  );
-  if (!shareToken) notFound();
-
-  const studentId = shareToken.student_id;
-  const currencySymbol = await getSetting("currency");
-
-  const [student, upcoming, stats, recentInvoices] = await Promise.all([
-    queryOne<Student>("SELECT * FROM students WHERE id = ?", [studentId]),
+export default async function ParentDashboard({
+  params: paramsPromise,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const params = await paramsPromise;
+  const student = await requireParent(params.token),
+    now = new Date().toISOString(),
+    base = `/share/${params.token}`;
+  const [upcoming, stats, invoices, settings] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= datetime('now') ORDER BY scheduled_at LIMIT 5",
-      [studentId]
+      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? AND status='scheduled' AND scheduled_at>=? ORDER BY scheduled_at LIMIT 5`,
+      [student.id, now],
     ),
-    queryOne<{ total: number; completed: number; present: number; late: number; absent: number }>(
-      `SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN status = 'completed' AND attendance = 'present' THEN 1 ELSE 0 END) as present,
-        SUM(CASE WHEN status = 'completed' AND attendance = 'late' THEN 1 ELSE 0 END) as late,
-        SUM(CASE WHEN status = 'completed' AND attendance = 'absent' THEN 1 ELSE 0 END) as absent
-       FROM classes WHERE student_id = ?`,
-      [studentId]
+    queryOne<{
+      total: number;
+      present: number;
+      absent: number;
+      upcoming: number;
+      outstanding: number;
+    }>(
+      `SELECT COUNT(*) AS total, SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') THEN 1 ELSE 0 END) AS present, SUM(CASE WHEN status<>'canceled' AND attendance='absent' THEN 1 ELSE 0 END) AS absent, SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming, (SELECT COALESCE(SUM(total_amount),0) FROM invoices WHERE student_id=? AND status NOT IN ('paid','canceled')) AS outstanding FROM classes WHERE student_id=?`,
+      [now, student.id, student.id],
     ),
     queryAll<Invoice>(
-      "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC LIMIT 3",
-      [studentId]
+      `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id=? ORDER BY issued_at DESC,id DESC LIMIT 3`,
+      [student.id],
     ),
+    getSettings(["currency"]),
   ]);
-
-  if (!student) notFound();
-
-  const attendanceRate = stats && stats.completed > 0
-    ? Math.round(((stats.present + stats.late) / stats.completed) * 100)
-    : 0;
-
+  const attendance = attendanceSummary(stats?.present ?? 0, stats?.absent ?? 0);
   return (
     <>
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg mb-6">
-        <div className="absolute -right-8 -top-8 size-36 rounded-full bg-white/10" />
-        <div className="absolute right-20 bottom-0 size-20 rounded-full bg-white/5" />
-        <div className="relative">
-          <h1 className="text-xl font-bold">
-            Welcome{student.guardian_name ? `, ${student.guardian_name.split(" ")[0]}` : ""}!
-          </h1>
-          <p className="text-sm text-white/80 mt-1">
-            Here's an overview of {student.name}'s progress
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {student.subject && (
-              <Badge className="bg-white/20 text-white border-white/30">{student.subject}</Badge>
-            )}
-            {student.grade_level && (
-              <Badge className="bg-white/20 text-white border-white/30">{student.grade_level}</Badge>
-            )}
-          </div>
-        </div>
+      <PageHeader
+        title={`${student.name}'s learning journey`}
+        subtitle="A clear view of lessons, progress and tuition"
+      />
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          {
+            label: "Lessons recorded",
+            value: stats?.total ?? 0,
+            detail: "Full class history",
+            icon: Calendar,
+          },
+          {
+            label: "Attendance",
+            value: `${attendance.rate}%`,
+            detail: `${attendance.present} present · ${attendance.absent} absent`,
+            icon: CheckCircle2,
+          },
+          {
+            label: "Upcoming lessons",
+            value: stats?.upcoming ?? 0,
+            detail: "All confirmed future lessons",
+            icon: Clock,
+          },
+          {
+            label: "Outstanding",
+            value: currency(Number(stats?.outstanding ?? 0), settings.currency),
+            detail: "Excludes canceled invoices",
+            icon: Receipt,
+          },
+        ].map((m) => (
+          <Card key={m.label}>
+            <CardContent className="p-4 sm:p-5">
+              <m.icon size={18} className="mb-3 text-primary" />
+              <p className="text-xs text-muted-foreground">{m.label}</p>
+              <p className="mt-2 break-words text-2xl font-bold">{m.value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{m.detail}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Classes</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">{stats?.total ?? 0}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {stats?.completed ?? 0} completed
-                </p>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-base">Next lessons</CardTitle>
+            <Link
+              href={`${base}/schedule`}
+              className="text-xs font-medium text-primary"
+            >
+              View all <ArrowRight size={12} className="inline" />
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {upcoming.length ? (
+              <div className="divide-y divide-border">
+                {upcoming.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {fmtDateTime(c.scheduled_at)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {c.duration_minutes} minutes
+                        {c.location ? ` · ${c.location}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">Scheduled</Badge>
+                  </div>
+                ))}
               </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50">
-                <BookOpen size={20} className="text-indigo-500" />
-              </div>
-            </div>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No upcoming lessons
+              </p>
+            )}
           </CardContent>
         </Card>
-
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Attendance Rate</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">{attendanceRate}%</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {stats?.present ?? 0} present · {stats?.late ?? 0} late
-                </p>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle className="text-base">Recent invoices</CardTitle>
+            <Link
+              href={`${base}/invoices`}
+              className="text-xs font-medium text-primary"
+            >
+              View all <ArrowRight size={12} className="inline" />
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {invoices.length ? (
+              <div className="divide-y divide-border">
+                {invoices.map((inv) => (
+                  <Link
+                    key={inv.id}
+                    href={`${base}/invoices/${inv.id}`}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">
+                        {inv.invoice_number}
+                      </p>
+                      <p className="mt-1 text-xs capitalize text-muted-foreground">
+                        {inv.status}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold">
+                      {currency(Number(inv.total_amount), settings.currency)}
+                    </p>
+                  </Link>
+                ))}
               </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
-                <TrendingUp size={20} className="text-emerald-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Upcoming</p>
-                <p className="text-2xl font-bold mt-1 text-foreground">{upcoming.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  classes scheduled
-                </p>
-              </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50">
-                <Calendar size={20} className="text-amber-500" />
-              </div>
-            </div>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                No invoices yet
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Upcoming Classes */}
-      <Card className="shadow-sm border-0 mb-6">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-500" />
-              Upcoming Classes
-            </CardTitle>
-            <Link href={`/share/${params.token}/schedule`}>
-              <Button variant="ghost" size="sm" className="text-xs">View all</Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {upcoming.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <Calendar size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No upcoming classes</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 rounded-lg border border-border/50 p-3">
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-50">
-                    <Clock size={16} className="text-indigo-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">{fmtDateTime(c.scheduled_at)}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {c.duration_minutes} min · {c.subject || student.subject || "Lesson"}
-                      {c.location ? ` · ${c.location}` : ""}
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px]">scheduled</Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Invoices */}
-      <Card className="shadow-sm border-0">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Receipt size={18} className="text-amber-500" />
-              Recent Invoices
-            </CardTitle>
-            <Link href={`/share/${params.token}/invoices`}>
-              <Button variant="ghost" size="sm" className="text-xs">View all</Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {recentInvoices.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <p className="text-sm">No invoices yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentInvoices.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3">
-                  <div>
-                    <div className="text-sm font-medium">{inv.invoice_number}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(inv.period_start).toLocaleDateString()} — {new Date(inv.period_end).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold">{currency(Number(inv.total_amount), currencySymbol)}</div>
-                    <Badge
-                      variant={inv.status === "paid" ? "default" : inv.status === "overdue" ? "destructive" : "secondary"}
-                      className="text-[10px]"
-                    >
-                      {inv.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Link href={`${base}/reports`}>
+          <Button variant="outline">Read class reports</Button>
+        </Link>
+        <Link href={`${base}/attendance`}>
+          <Button variant="outline">View attendance</Button>
+        </Link>
+      </div>
+      <p className="mt-5 text-xs text-muted-foreground">
+        Attendance includes marked Present and Absent lessons only.
+        Advance-notice cancellations and unmarked lessons are excluded.
+      </p>
     </>
   );
 }

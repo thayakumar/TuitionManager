@@ -119,19 +119,19 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                 <div className="text-2xl font-semibold text-foreground">
                   {classes.filter((c) => c.status === "scheduled").length}
                 </div>
-                <div className="text-[10px] text-muted-foreground">Upcoming</div>
+                <div className="text-xs text-muted-foreground">Upcoming</div>
               </div>
               <div>
                 <div className="text-2xl font-semibold text-foreground">
                   {classes.filter((c) => c.status === "completed").length}
                 </div>
-                <div className="text-[10px] text-muted-foreground">Completed</div>
+                <div className="text-xs text-muted-foreground">Completed</div>
               </div>
               <div>
                 <div className="text-2xl font-semibold text-foreground">
                   {classes.filter((c) => c.status === "canceled").length}
                 </div>
-                <div className="text-[10px] text-muted-foreground">Canceled</div>
+                <div className="text-xs text-muted-foreground">Canceled</div>
               </div>
             </div>
           </CardContent>
@@ -168,7 +168,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                           <span className="text-sm font-semibold text-foreground">
                             {format(parseISO(c.scheduled_at), "h:mm")}
                           </span>
-                          <span className="text-[10px] text-muted-foreground uppercase">
+                          <span className="text-xs text-muted-foreground uppercase">
                             {format(parseISO(c.scheduled_at), "a")}
                           </span>
                         </div>
@@ -185,11 +185,11 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                             </span>
                             <div className="flex gap-1.5 shrink-0">
                               {c.is_trial ? (
-                                <Badge variant="outline" className="text-[10px]">
+                                <Badge variant="outline" className="text-xs">
                                   TRIAL
                                 </Badge>
                               ) : null}
-                              <Badge variant={statusVariant(c.status)} className="text-[10px]">
+                              <Badge variant={statusVariant(c.status)} className="text-xs">
                                 {c.status}
                               </Badge>
                             </div>
@@ -271,7 +271,7 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                           ))}
                         </div>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                      <Badge variant="outline" className="shrink-0 text-xs">
                         {items.length}
                       </Badge>
                     </button>

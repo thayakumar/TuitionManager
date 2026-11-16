@@ -1,0 +1,104 @@
+{
+  "results": [
+    {
+      "id": "L-SP1",
+      "description": "Approval cancels own original and creates exactly one owner-preserving replacement",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "old": 4,
+        "status": "canceled",
+        "replacement": {
+          "id": 6,
+          "student_id": 1,
+          "scheduled_at": "2026-12-02T10:00:00.000Z",
+          "duration_minutes": 60,
+          "subject": "[RESCHEDULED] UIAUDIT future",
+          "location": null,
+          "status": "scheduled",
+          "attendance": null,
+          "created_at": "2026-11-13 01:58:28",
+          "recurrence_id": null,
+          "is_trial": 0,
+          "cancel_reason": null,
+          "rescheduled_from": 4,
+          "meeting_room": "tuitionhub-dyg-treb-xbb",
+          "meeting_notes": null
+        }
+      }
+    },
+    {
+      "id": "L-SP2",
+      "description": "Student schedule shows canceled original and approved replacement after reload",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "hasCanceled": true,
+        "hasReplacement": true
+      }
+    },
+    {
+      "id": "L-SP3",
+      "description": "Parent schedule agrees with student after approval",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "hasCanceled": true,
+        "hasReplacement": true
+      }
+    },
+    {
+      "id": "L-SP4",
+      "description": "Student receives approval and rejection messages with tutor note",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "rows": [
+          {
+            "id": 13,
+            "type": "reschedule_approved",
+            "message": "Your reschedule request has been approved.",
+            "read": 0
+          },
+          {
+            "id": 14,
+            "type": "reschedule_rejected",
+            "message": "Your reschedule request was declined: UIAUDIT alternate declined",
+            "read": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "L-SP5",
+      "description": "Rejected duplicate request adds no replacement class",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "requestStatus": "rejected",
+        "replacements": 1,
+        "scopeNote": "Rejected duplicate request refers to already-approved original; class count compared against approval baseline, independent untouched scheduled-class rejection not exercised here."
+      }
+    },
+    {
+      "id": "L-SP6",
+      "description": "Notification View opens own schedule",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "href": "/portal/student/1/schedule"
+      }
+    },
+    {
+      "id": "L-SP7",
+      "description": "Teacher grade and feedback appear to student after reload",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "grade": "7",
+        "feedback": "UIAUDIT teacher feedback",
+        "graded_at": "2026-11-13 02:02:08"
+      }
+    }
+  ]
+}

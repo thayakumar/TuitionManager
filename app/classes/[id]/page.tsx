@@ -1,17 +1,41 @@
+import { LessonActionForm } from "@/components/lesson-action-form";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
-  Check, X, Clock, Trash2, Pencil, BookOpen, Star,
-  GraduationCap, MapPin, Calendar, Timer, AlertTriangle,
-  ClipboardList, Target, Brain, Lightbulb, MessageSquare,
-  ArrowLeft, UserCircle, Wallet, Video,
+  Check,
+  X,
+  Clock,
+  Trash2,
+  Pencil,
+  BookOpen,
+  Star,
+  GraduationCap,
+  MapPin,
+  Calendar,
+  Timer,
+  AlertTriangle,
+  ClipboardList,
+  Target,
+  Brain,
+  Lightbulb,
+  MessageSquare,
+  ArrowLeft,
+  UserCircle,
+  Wallet,
+  Video,
 } from "lucide-react";
 import { queryOne } from "@/lib/db";
-import { isAdminRequest } from "@/lib/auth";
-import { markAttendance, saveReport, deleteClass, updateClass } from "@/lib/actions";
+import { requireAdminPage } from "@/lib/auth";
+import { markAttendance, saveReport, updateClass } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -27,38 +51,82 @@ export const dynamic = "force-dynamic";
 function statusConfig(status: string) {
   switch (status) {
     case "completed":
-      return { variant: "default" as const, bg: "bg-emerald-50", iconColor: "text-emerald-500", label: "Completed" };
+      return {
+        variant: "default" as const,
+        bg: "bg-emerald-50",
+        iconColor: "text-emerald-500",
+        label: "Completed",
+      };
     case "canceled":
-      return { variant: "destructive" as const, bg: "bg-red-50", iconColor: "text-red-500", label: "Canceled" };
+      return {
+        variant: "destructive" as const,
+        bg: "bg-red-50",
+        iconColor: "text-red-500",
+        label: "Canceled",
+      };
     default:
-      return { variant: "secondary" as const, bg: "bg-blue-50", iconColor: "text-blue-500", label: "Scheduled" };
+      return {
+        variant: "secondary" as const,
+        bg: "bg-blue-50",
+        iconColor: "text-blue-500",
+        label: "Scheduled",
+      };
   }
 }
 
 function attendanceConfig(attendance: string | null) {
   switch (attendance) {
     case "present":
-      return { bg: "bg-emerald-50", iconColor: "text-emerald-500", label: "Present" };
+      return {
+        bg: "bg-emerald-50",
+        iconColor: "text-emerald-500",
+        label: "Present",
+      };
     case "late":
-      return { bg: "bg-amber-50", iconColor: "text-amber-500", label: "Late" };
+      return {
+        bg: "bg-emerald-50",
+        iconColor: "text-emerald-500",
+        label: "Present",
+      };
     case "absent":
       return { bg: "bg-red-50", iconColor: "text-red-500", label: "Absent" };
     default:
-      return { bg: "bg-gray-50", iconColor: "text-gray-400", label: "Not marked" };
+      return {
+        bg: "bg-gray-50",
+        iconColor: "text-gray-400",
+        label: "Not marked",
+      };
   }
 }
 
-export default async function ClassDetailPage({ params, searchParams }: { params: { id: string }; searchParams: { from?: string; report?: string } }) {
-  const id = Number(params.id);
-  const cls = await queryOne<ClassRow>("SELECT id, student_id, scheduled_at, duration_minutes, subject, location, status, attendance, recurrence_id, is_trial, cancel_reason, rescheduled_from, meeting_room, created_at FROM classes WHERE id = ?", [id]);
+export default async function ClassDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string; report?: string }>;
+}) {
+  await requireAdminPage();
+  const [route, query] = await Promise.all([params, searchParams]);
+  const id = Number(route.id);
+  const cls = await queryOne<ClassRow>(
+    "SELECT id, student_id, scheduled_at, duration_minutes, subject, location, status, attendance, recurrence_id, is_trial, cancel_reason, rescheduled_from, meeting_room, created_at FROM classes WHERE id = ?",
+    [id],
+  );
   if (!cls) notFound();
 
   const [student, report, teacherNote] = await Promise.all([
-    queryOne<Student>("SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active, created_at FROM students WHERE id = ?", [cls.student_id]),
-    queryOne<Report>("SELECT id, class_id, topics_covered, homework, performance, strengths, areas_to_improve, next_focus, rating, created_at, updated_at FROM reports WHERE class_id = ?", [id]),
+    queryOne<Student>(
+      "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, hourly_rate, notes, username, password, active, created_at FROM students WHERE id = ?",
+      [cls.student_id],
+    ),
+    queryOne<Report>(
+      "SELECT id, class_id, topics_covered, homework, performance, strengths, areas_to_improve, next_focus, rating, created_at, updated_at FROM reports WHERE class_id = ?",
+      [id],
+    ),
     queryOne<{ content: string }>(
       "SELECT content FROM class_notes WHERE class_id = ? AND scope = 'teacher'",
-      [id]
+      [id],
     ),
   ]);
   if (!student) notFound();
@@ -66,21 +134,27 @@ export default async function ClassDetailPage({ params, searchParams }: { params
   const attend = markAttendance.bind(null, id);
   const saveR = saveReport.bind(null, id);
   const upd = updateClass.bind(null, id);
-  const del = deleteClass.bind(null, id);
 
   const sc = statusConfig(cls.status);
   const ac = attendanceConfig(cls.attendance);
-  const backHref = searchParams.from === "dashboard" ? "/" : "/schedule";
+  const backHref = query.from === "dashboard" ? "/" : "/schedule";
 
   return (
     <>
       <PageHeader
         title={
           <div className="flex items-center gap-3">
-            <Link href={backHref} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href={backHref}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               <ArrowLeft size={20} />
             </Link>
-            <span className={cls.status === "canceled" ? "line-through opacity-60" : ""}>
+            <span
+              className={
+                cls.status === "canceled" ? "line-through opacity-60" : ""
+              }
+            >
               Class Details
             </span>
           </div>
@@ -93,11 +167,17 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                 text={[
                   `Class Report: ${student.name}`,
                   `${fmtDateTime(cls.scheduled_at)}`,
-                  report.topics_covered ? `\nTopics: ${report.topics_covered}` : "",
+                  report.topics_covered
+                    ? `\nTopics: ${report.topics_covered}`
+                    : "",
                   report.homework ? `Homework: ${report.homework}` : "",
-                  report.performance ? `Performance: ${report.performance}` : "",
+                  report.performance
+                    ? `Performance: ${report.performance}`
+                    : "",
                   report.rating ? `Rating: ${report.rating}/5` : "",
-                ].filter(Boolean).join("\n")}
+                ]
+                  .filter(Boolean)
+                  .join("\n")}
               />
             )}
             {cls.status !== "canceled" && (
@@ -117,7 +197,7 @@ export default async function ClassDetailPage({ params, searchParams }: { params
       />
 
       {/* Hero Info Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg mb-6">
+      <div className="relative overflow-hidden rounded-2xl bg-[#b82f25] p-6 text-white shadow-none mb-6">
         <div className="absolute -right-8 -top-8 size-36 rounded-full bg-white/10" />
         <div className="absolute right-20 bottom-0 size-20 rounded-full bg-white/5" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -131,7 +211,8 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                 <Timer size={14} /> {cls.duration_minutes} min
               </span>
               <span className="flex items-center gap-1.5">
-                <BookOpen size={14} /> {cls.subject || student.subject || "Lesson"}
+                <BookOpen size={14} />{" "}
+                {cls.subject || student.subject || "Lesson"}
               </span>
               {cls.location && (
                 <span className="flex items-center gap-1.5">
@@ -140,57 +221,76 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               )}
             </div>
             {cls.rescheduled_from && (
-              <Badge className="mt-2 bg-white/20 text-white border-white/30">Rescheduled</Badge>
+              <Badge className="mt-2 bg-white/20 text-white border-white/30">
+                Rescheduled
+              </Badge>
             )}
           </div>
           <div className="flex gap-2">
             {cls.is_trial && (
-              <Badge className="bg-amber-400/90 text-white border-0">TRIAL</Badge>
+              <Badge className="bg-amber-400/90 text-white border-0">
+                TRIAL
+              </Badge>
             )}
-            <Badge className="bg-white/20 text-white border-white/30 capitalize">{cls.status}</Badge>
+            <Badge className="bg-white/20 text-white border-white/30 capitalize">
+              {cls.status}
+            </Badge>
           </div>
         </div>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Badge variant={sc.variant} className="capitalize">{sc.label}</Badge>
+                  <Badge variant={sc.variant} className="capitalize">
+                    {sc.label}
+                  </Badge>
                 </div>
                 {cls.cancel_reason && (
-                  <p className="text-xs text-muted-foreground mt-1.5">Reason: {cls.cancel_reason}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Reason: {cls.cancel_reason}
+                  </p>
                 )}
               </div>
-              <div className={`flex size-10 items-center justify-center rounded-xl ${sc.bg}`}>
+              <div
+                className={`flex size-10 items-center justify-center rounded-xl ${sc.bg}`}
+              >
                 <GraduationCap size={20} className={sc.iconColor} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Attendance</p>
-                <p className="text-lg font-bold mt-1 text-foreground">{ac.label}</p>
+                <p className="text-lg font-bold mt-1 text-foreground">
+                  {ac.label}
+                </p>
               </div>
-              <div className={`flex size-10 items-center justify-center rounded-xl ${ac.bg}`}>
-                {cls.attendance === "present" ? <Check size={20} className={ac.iconColor} /> :
-                 cls.attendance === "late" ? <Clock size={20} className={ac.iconColor} /> :
-                 cls.attendance === "absent" ? <X size={20} className={ac.iconColor} /> :
-                 <Check size={20} className={ac.iconColor} />}
+              <div
+                className={`flex size-10 items-center justify-center rounded-xl ${ac.bg}`}
+              >
+                {cls.attendance === "present" ? (
+                  <Check size={20} className={ac.iconColor} />
+                ) : cls.attendance === "absent" ? (
+                  <X size={20} className={ac.iconColor} />
+                ) : (
+                  <Check size={20} className={ac.iconColor} />
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -202,8 +302,8 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                   Duration: {(Number(cls.duration_minutes) / 60).toFixed(2)}h
                 </p>
               </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-violet-50">
-                <Wallet size={20} className="text-violet-500" />
+              <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50">
+                <Wallet size={20} className="text-orange-500" />
               </div>
             </div>
           </CardContent>
@@ -212,13 +312,15 @@ export default async function ClassDetailPage({ params, searchParams }: { params
 
       {/* Teacher Notes */}
       {teacherNote?.content && (
-        <Card className="mb-6 shadow-sm border-0">
+        <Card className="mb-6 border shadow-none">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <MessageSquare size={18} className="text-amber-500" />
               Teacher Notes
             </CardTitle>
-            <CardDescription>Private notes from the live class — never shown to students</CardDescription>
+            <CardDescription>
+              Private notes from the live class — never shown to students
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-foreground whitespace-pre-wrap">
@@ -229,19 +331,25 @@ export default async function ClassDetailPage({ params, searchParams }: { params
       )}
 
       {/* Mark Attendance */}
-      <Card className="mb-6 shadow-sm border-0">
+      <Card className="mb-6 border shadow-none">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <ClipboardList size={18} className="text-indigo-500" />
+            <ClipboardList size={18} className="text-orange-500" />
             Mark Attendance
           </CardTitle>
-          <CardDescription>Record student attendance for this session</CardDescription>
+          <CardDescription>
+            Present = attended. Absent = last-minute cancellation or no-show (no
+            charge). Advance-cancelled lessons are excluded.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <form action={attend.bind(null, "present" as Attendance)}>
+            <LessonActionForm
+              action={attend.bind(null, "present" as Attendance)}
+            >
               <Button
                 type="submit"
+                disabled={cls.status === "canceled"}
                 className={
                   cls.attendance === "present"
                     ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
@@ -251,23 +359,13 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               >
                 <Check size={16} /> Present
               </Button>
-            </form>
-            <form action={attend.bind(null, "late" as Attendance)}>
+            </LessonActionForm>
+            <LessonActionForm
+              action={attend.bind(null, "absent" as Attendance)}
+            >
               <Button
                 type="submit"
-                className={
-                  cls.attendance === "late"
-                    ? "bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
-                    : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-                }
-                variant={cls.attendance === "late" ? "default" : "outline"}
-              >
-                <Clock size={16} /> Late
-              </Button>
-            </form>
-            <form action={attend.bind(null, "absent" as Attendance)}>
-              <Button
-                type="submit"
+                disabled={cls.status === "canceled"}
                 className={
                   cls.attendance === "absent"
                     ? "bg-red-500 hover:bg-red-600 text-white shadow-sm"
@@ -277,7 +375,7 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               >
                 <X size={16} /> Absent
               </Button>
-            </form>
+            </LessonActionForm>
           </div>
           {cls.status === "scheduled" && (
             <>
@@ -289,21 +387,25 @@ export default async function ClassDetailPage({ params, searchParams }: { params
       </Card>
 
       {/* Post-Class Report */}
-      <Card className="mb-6 shadow-sm border-0">
+      <Card className="mb-6 border shadow-none">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <MessageSquare size={18} className="text-indigo-500" />
+            <MessageSquare size={18} className="text-orange-500" />
             Post-Class Report
           </CardTitle>
-          <CardDescription>Record what was covered and how the student performed</CardDescription>
+          <CardDescription>
+            Record what was covered and how the student performed
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={saveR}>
+          <LessonActionForm action={saveR}>
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen size={14} className="text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Content
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   <TextAreaField
@@ -327,7 +429,9 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Brain size={14} className="text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Performance</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Performance
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TextAreaField
@@ -358,7 +462,9 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Target size={14} className="text-muted-foreground" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Next Steps</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Next Steps
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TextAreaField
@@ -389,21 +495,23 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                 {report ? "Update report" : "Save report"}
               </Button>
             </div>
-          </form>
+          </LessonActionForm>
         </CardContent>
       </Card>
 
       {/* Edit Class Details */}
-      <Card className="mb-6 shadow-sm border-0">
+      <Card className="mb-6 border shadow-none">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Pencil size={18} className="text-amber-500" />
             Edit Class Details
           </CardTitle>
-          <CardDescription>Modify the class schedule, status, or attendance</CardDescription>
+          <CardDescription>
+            Modify the class schedule, status, or attendance
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={upd}>
+          <LessonActionForm action={upd}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field
                 label="Date & time"
@@ -416,9 +524,19 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                 name="duration_minutes"
                 type="number"
                 defaultValue={Number(cls.duration_minutes)}
+                min={5}
+                max={1440}
               />
-              <Field label="Subject" name="subject" defaultValue={cls.subject ?? ""} />
-              <Field label="Location" name="location" defaultValue={cls.location ?? ""} />
+              <Field
+                label="Subject"
+                name="subject"
+                defaultValue={cls.subject ?? ""}
+              />
+              <Field
+                label="Location"
+                name="location"
+                defaultValue={cls.location ?? ""}
+              />
               <SelectField
                 label="Status"
                 name="status"
@@ -432,11 +550,14 @@ export default async function ClassDetailPage({ params, searchParams }: { params
               <SelectField
                 label="Attendance"
                 name="attendance"
-                defaultValue={cls.attendance ?? ""}
+                defaultValue={
+                  String(cls.attendance) === "late"
+                    ? "present"
+                    : (cls.attendance ?? "")
+                }
                 options={[
                   { value: "", label: "—" },
                   { value: "present", label: "Present" },
-                  { value: "late", label: "Late" },
                   { value: "absent", label: "Absent" },
                 ]}
               />
@@ -446,36 +567,21 @@ export default async function ClassDetailPage({ params, searchParams }: { params
                 <Check size={14} /> Save changes
               </Button>
             </div>
-          </form>
+          </LessonActionForm>
         </CardContent>
       </Card>
 
-      {/* Danger Zone */}
-      <Card className="shadow-sm border border-red-200 bg-red-50/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle size={18} />
-            Danger Zone
-          </CardTitle>
-          <CardDescription>Irreversible actions for this class</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">Delete this class</p>
-              <p className="text-xs text-muted-foreground">Once deleted, this class and its data cannot be recovered.</p>
-            </div>
-            <form action={del}>
-              <Button type="submit" variant="destructive">
-                <Trash2 size={14} /> Delete class
-              </Button>
-            </form>
-          </div>
-        </CardContent>
-      </Card>
+      <p className="mb-6 text-sm text-muted-foreground">
+        Lesson history, reports and notes are retained when a lesson is
+        cancelled. Cancelled lessons do not appear on invoices.
+      </p>
 
       <Suspense>
-        <PostClassReportDialog classId={id} studentName={student.name} />
+        <PostClassReportDialog
+          classId={id}
+          studentName={student.name}
+          initialReport={report}
+        />
       </Suspense>
     </>
   );

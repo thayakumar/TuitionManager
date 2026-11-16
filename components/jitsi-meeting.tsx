@@ -10,8 +10,6 @@ declare global {
 }
 
 const JAAS_DOMAIN = "8x8.vc";
-const JAAS_APP_ID = "vpaas-magic-cookie-4f3905459ade48a9b9ccc2f876fbc944";
-const JAAS_SCRIPT = `https://${JAAS_DOMAIN}/${JAAS_APP_ID}/external_api.js`;
 const FREE_DOMAIN = "meet.jit.si";
 const FREE_SCRIPT = `https://${FREE_DOMAIN}/external_api.js`;
 
@@ -21,12 +19,14 @@ export function JitsiMeeting({
   onClose,
   onHangup,
   jwt,
+  jaasAppId,
 }: {
   roomName: string;
   displayName: string;
   onClose?: () => void;
   onHangup?: () => void;
   jwt?: string;
+  jaasAppId?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
@@ -40,7 +40,9 @@ export function JitsiMeeting({
 
   const useJaas = !!jwt;
   const domain = useJaas ? JAAS_DOMAIN : FREE_DOMAIN;
-  const scriptUrl = useJaas ? JAAS_SCRIPT : FREE_SCRIPT;
+  const scriptUrl = useJaas
+    ? `https://${JAAS_DOMAIN}/${encodeURIComponent(jaasAppId || roomName.split("/")[0])}/external_api.js`
+    : FREE_SCRIPT;
 
   useEffect(() => {
     let cancelled = false;
@@ -61,9 +63,15 @@ export function JitsiMeeting({
             startWithVideoMuted: false,
             disableDeepLinking: true,
             toolbarButtons: [
-              "microphone", "camera", "desktop", "chat",
-              "raisehand", "participants-pane", "tileview",
-              "select-background", "fullscreen",
+              "microphone",
+              "camera",
+              "desktop",
+              "chat",
+              "raisehand",
+              "participants-pane",
+              "tileview",
+              "select-background",
+              "fullscreen",
             ],
           },
           interfaceConfigOverwrite: {
@@ -93,7 +101,9 @@ export function JitsiMeeting({
             setLoading(false);
             const iframe = containerRef.current?.querySelector("iframe");
             if (!iframe) {
-              setError("Could not load the meeting. A browser extension may be blocking it. Try opening in incognito or disabling ad-blockers.");
+              setError(
+                "Could not load the meeting. A browser extension may be blocking it. Try opening in incognito or disabling ad-blockers.",
+              );
             }
           }
         }, 10000);
@@ -115,7 +125,9 @@ export function JitsiMeeting({
       script.onerror = () => {
         if (!cancelled) {
           setLoading(false);
-          setError("Could not load Jitsi. A browser extension may be blocking it. Try incognito mode.");
+          setError(
+            "Could not load Jitsi. A browser extension may be blocking it. Try incognito mode.",
+          );
         }
       };
       document.head.appendChild(script);
@@ -129,8 +141,8 @@ export function JitsiMeeting({
         apiRef.current = null;
       }
     };
-  // Only re-run when the meeting identity changes, not on callback changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only re-run when the meeting identity changes, not on callback changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomName, domain, scriptUrl]);
 
   return (
@@ -138,7 +150,7 @@ export function JitsiMeeting({
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
           <div className="flex flex-col items-center gap-3">
-            <Monitor size={32} className="text-indigo-400 animate-pulse" />
+            <Monitor size={32} className="text-orange-400 animate-pulse" />
             <span className="text-sm text-gray-400 animate-pulse">
               Connecting to meeting...
             </span>
@@ -154,17 +166,14 @@ export function JitsiMeeting({
               href={`https://${domain}/${roomName}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 text-sm text-indigo-400 underline hover:text-indigo-300"
+              className="mt-2 text-sm text-orange-400 underline hover:text-orange-300"
             >
               Open meeting in new tab instead
             </a>
           </div>
         </div>
       )}
-      <div
-        ref={containerRef}
-        className="h-full w-full overflow-hidden"
-      />
+      <div ref={containerRef} className="h-full w-full overflow-hidden" />
     </div>
   );
 }

@@ -1,6 +1,16 @@
-import Link from "next/link";
-import { Bell, CheckCheck, CalendarClock, BookOpen, FileText, Megaphone } from "lucide-react";
-import { queryAll, execute } from "@/lib/db";
+import { NotificationReadAction } from "@/components/notification-actions";
+import { NotificationReadLink } from "@/components/notification-read-link";
+import { requireAdminPage } from "@/lib/auth";
+
+import {
+  Bell,
+  CheckCheck,
+  CalendarClock,
+  BookOpen,
+  FileText,
+  Megaphone,
+} from "lucide-react";
+import { queryAll, queryOne, execute } from "@/lib/db";
 import { markAllNotificationsRead } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +26,7 @@ function iconForType(type: string) {
     case "reschedule_request":
     case "reschedule_approved":
     case "reschedule_rejected":
-      return <CalendarClock size={16} className="text-indigo-500" />;
+      return <CalendarClock size={16} className="text-orange-500" />;
     case "new_material":
     case "new_assignment":
       return <BookOpen size={16} className="text-emerald-500" />;
@@ -24,40 +34,48 @@ function iconForType(type: string) {
     case "class_cancelled":
       return <FileText size={16} className="text-amber-500" />;
     default:
-      return <Megaphone size={16} className="text-violet-500" />;
+      return <Megaphone size={16} className="text-orange-500" />;
   }
 }
 
 export default async function NotificationsPage() {
-  const notifications = await queryAll<AppNotification>(
-    `SELECT * FROM notifications WHERE recipient_type = 'admin' ORDER BY created_at DESC LIMIT 50`
-  );
+  await requireAdminPage();
+  const [notifications, summary] = await Promise.all([
+    queryAll<AppNotification>(
+      `SELECT * FROM notifications WHERE recipient_type = 'admin' ORDER BY created_at DESC,id DESC LIMIT 50`,
+    ),
+    queryOne<{ unread: number }>(
+      "SELECT COUNT(*) AS unread FROM notifications WHERE recipient_type='admin' AND read=0",
+    ),
+  ]);
 
   const markAllRead = markAllNotificationsRead.bind(null, "admin", null);
 
-  const unread = notifications.filter((n) => !n.read);
+  const unread = Number(summary?.unread ?? 0);
 
   return (
     <>
       <PageHeader
         title="Notifications"
-        subtitle={unread.length > 0 ? `${unread.length} unread` : "All caught up"}
+        subtitle={
+          unread > 0
+            ? `${unread} unread · showing the latest50 messages`
+            : "All caught up · showing the latest50 messages"
+        }
         action={
-          unread.length > 0 ? (
-            <form action={markAllRead}>
-              <Button variant="outline" size="sm">
-                <CheckCheck size={14} /> Mark all read
-              </Button>
-            </form>
+          unread > 0 ? (
+            <NotificationReadAction recipientType="admin" />
           ) : undefined
         }
       />
 
       {notifications.length === 0 ? (
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardContent className="py-12 text-center">
             <Bell size={40} className="mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No notifications yet</p>
+            <p className="text-sm text-muted-foreground">
+              No notifications yet
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -65,7 +83,7 @@ export default async function NotificationsPage() {
           {notifications.map((n) => (
             <Card
               key={n.id}
-              className={`shadow-sm border-0 transition-colors ${!n.read ? "bg-indigo-50/30 border-l-2 border-l-indigo-500" : ""}`}
+              className={`border shadow-none transition-colors ${!n.read ? "bg-orange-50/40 border-l-2 border-l-orange-500" : ""}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
@@ -74,19 +92,25 @@ export default async function NotificationsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                      {!n.read && <Badge variant="secondary" className="text-[10px]">New</Badge>}
+                      <p
+                        className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}
+                      >
+                        {n.title}
+                      </p>
+                      {!n.read && (
+                        <Badge variant="secondary" className="text-xs">
+                          New
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{fmtDateTime(n.created_at)}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {n.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {fmtDateTime(n.created_at)}
+                    </p>
                   </div>
-                  {n.link && (
-                    <Link href={n.link}>
-                      <Button variant="ghost" size="sm" className="shrink-0 text-xs">
-                        View
-                      </Button>
-                    </Link>
-                  )}
+                  {n.link && <NotificationReadLink id={n.id} href={n.link} />}
                 </div>
               </CardContent>
             </Card>

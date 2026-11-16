@@ -1,0 +1,56 @@
+[
+  {
+    "path": "/portal/admin",
+    "run": 1,
+    "status": 200,
+    "total_seconds": 0.35747,
+    "ttfb_seconds": 0.356813,
+    "proxy_connect_seconds": 0.000963,
+    "error": null
+  },
+  {
+    "path": "/portal/admin",
+    "run": 2,
+    "status": 200,
+    "total_seconds": 0.22771,
+    "ttfb_seconds": 0.227626,
+    "proxy_connect_seconds": 0.000749,
+    "error": null
+  },
+  {
+    "path": "/portal/student",
+    "run": 1,
+    "status": 200,
+    "total_seconds": 0.399175,
+    "ttfb_seconds": 0.399093,
+    "proxy_connect_seconds": 0.00238,
+    "error": null
+  },
+  {
+    "path": "/portal/student",
+    "run": 2,
+    "status": 200,
+    "total_seconds": 0.280078,
+    "ttfb_seconds": 0.279015,
+    "proxy_connect_seconds": 0.000669,
+    "error": null
+  },
+  {
+    "path": "/",
+    "run": 1,
+    "status": 307,
+    "total_seconds": 0.18958,
+    "ttfb_seconds": 0.189481,
+    "proxy_connect_seconds": 0.000699,
+    "error": null
+  },
+  {
+    "path": "/",
+    "run": 2,
+    "status": 307,
+    "total_seconds": 0.192908,
+    "ttfb_seconds": 0.192747,
+    "proxy_connect_seconds": 0.000926,
+    "error": null
+  }
+]

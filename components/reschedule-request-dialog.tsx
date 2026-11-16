@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState } from "react";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { createRescheduleRequest } from "@/lib/actions";
+import { actionError } from "@/lib/action-errors";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -23,83 +24,112 @@ export function RescheduleRequestDialog({
   classId: number;
   studentId: number;
 }) {
+  const prefix = useId();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    formData.set("class_id", String(classId));
-    formData.set("student_id", String(studentId));
-
-    startTransition(async () => {
-      const result = await createRescheduleRequest(formData);
-      if (result?.success) {
-        toast.success("Reschedule request sent to your tutor");
-        setOpen(false);
-        router.refresh();
-      } else {
-        toast.error(result?.error || "Failed to send request");
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving) return;
+    const data = new FormData(event.currentTarget);
+    data.set("class_id", String(classId));
+    data.set("student_id", String(studentId));
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await createRescheduleRequest(data);
+      if (!result?.success) {
+        setError(result?.error || "The request could not be sent.");
+        return;
       }
-    });
+      toast.success(
+        "Request sent. Your original lesson stays scheduled until your tutor approves a new time.",
+      );
+      setOpen(false);
+      router.refresh();
+    } catch (error) {
+      setError(
+        actionError(error, "The request could not be sent. Please try again."),
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button variant="outline" size="sm" asChild>
-          <span><CalendarClock size={14} /> Request Reschedule</span>
-        </Button>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!saving) {
+          setOpen(value);
+          setError(null);
+        }
+      }}
+    >
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        <CalendarClock size={14} /> Request Reschedule
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Request Reschedule</DialogTitle>
+          <DialogTitle>Request a new lesson time</DialogTitle>
           <DialogDescription>
-            Suggest up to 3 preferred times. Your tutor will review and approve.
+            Suggest up to three times in Malaysia time. Your current booking
+            stays in place until your tutor approves.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-busy={saving}>
+          {[1, 2, 3].map((index) => (
+            <div key={index}>
+              <label
+                htmlFor={`${prefix}-${index}`}
+                className="text-sm font-medium"
+              >
+                Preferred time {index} {index === 1 ? "*" : "(optional)"}
+              </label>
+              <input
+                id={`${prefix}-${index}`}
+                type="datetime-local"
+                name={`preferred_time_${index}`}
+                required={index === 1}
+                disabled={saving}
+                className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          ))}
           <div>
-            <label className="text-sm font-medium text-foreground">Preferred time 1 *</label>
-            <input
-              type="datetime-local"
-              name="preferred_time_1"
-              required
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">Preferred time 2 (optional)</label>
-            <input
-              type="datetime-local"
-              name="preferred_time_2"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">Preferred time 3 (optional)</label>
-            <input
-              type="datetime-local"
-              name="preferred_time_3"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground">Reason (optional)</label>
+            <label htmlFor={`${prefix}-reason`} className="text-sm font-medium">
+              Reason (optional)
+            </label>
             <Textarea
+              id={`${prefix}-reason`}
               name="reason"
-              placeholder="Why do you need to reschedule?"
+              placeholder="What would you like your tutor to know?"
               rows={2}
+              disabled={saving}
               className="mt-1 resize-none"
             />
           </div>
+          {error && (
+            <p
+              role="alert"
+              className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Sending..." : "Send Request"}
+            <Button type="submit" disabled={saving}>
+              {saving ? "Sending request…" : "Send request"}
             </Button>
           </div>
         </form>

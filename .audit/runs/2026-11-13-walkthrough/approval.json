@@ -1,0 +1,74 @@
+{
+  "approved_at": "2026-11-13",
+  "scope": "All proposed audit fixes, performance work and UI redesign approved; final business choices to be asked one at a time.",
+  "style": "Purple/violet rather than red; striking, educational, fun; journal layout reference retained.",
+  "deployment": "No push/deploy authorization inferred.",
+  "policy_questions": {
+    "attendance_late": {
+      "status": "resolved",
+      "answer": "No Late option. Present = attended; Absent = last-minute cancellation/no-show; Cancelled = advance notice, may reschedule later.",
+      "source": "User chat 2026-11-13"
+    },
+    "attendance_denominator": {
+      "status": "resolved",
+      "answer": "Present / (Present + Absent); Cancelled and unmarked excluded."
+    },
+    "inactive_student_access": {
+      "status": "resolved",
+      "answer": "Revoke student access immediately on deactivation; preserve history."
+    },
+    "assignment_resubmission_grading": {
+      "status": "resolved",
+      "answer": "Append-only versioned submission and grading history; newest graded version is current grade across all surfaces."
+    },
+    "latest_ungraded_submission_display": {
+      "status": "resolved",
+      "answer": "Only latest version gradable; previous versions read-only; latest awaits its own grade."
+    },
+    "revenue_chart_basis": {
+      "status": "resolved",
+      "answer": "Invoice billing month, not paid_at month. Add Financial History page, time series charts and all-history views."
+    },
+    "financial_revenue_breakdown": {
+      "status": "resolved",
+      "answer": "Revenue=Paid+Outstanding; canceled invoices excluded; group by billing month."
+    },
+    "calendar_gestures": {
+      "status": "resolved",
+      "answer": "Enable real persistence with confirmation before time/duration changes."
+    },
+    "schedule_overlap": {
+      "status": "resolved",
+      "answer": "Block overlaps across students for all scheduling write paths; ignore canceled bookings."
+    },
+    "browser_reminders": {
+      "status": "resolved",
+      "answer": "Remove reminder feature for now; in-app inbox remains."
+    },
+    "grade_limits": {
+      "status": "resolved",
+      "answer": "Numeric grades0..max inclusive; no extra credit."
+    },
+    "new_holiday_existing_lessons": {
+      "status": "resolved",
+      "answer": "Remove holiday feature and holiday recurrence logic entirely."
+    },
+    "student_notification_events": {
+      "status": "resolved",
+      "answer": "Every student-relevant change; numeric circular unread notification badge."
+    },
+    "rescheduled_trial_pricing": {
+      "status": "resolved",
+      "answer": "Preserve free trial flag and zero charge after rescheduling."
+    },
+    "open_ended_recurrence": {
+      "status": "resolved",
+      "answer": "Generate start date through December31 of that year by default, not8weeks."
+    }
+  },
+  "source_fix_gate": "Policy questions resolved; all fix batches approved; application implementation may begin. No push/deploy authorization.",
+  "additional_approved_scope": [
+    "Append-only submission/grade versions with only latest gradable",
+    "Financial History page with charts and billing-month revenue"
+  ]
+}

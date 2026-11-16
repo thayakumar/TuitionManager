@@ -1,0 +1,162 @@
+[
+  {
+    "path": "/",
+    "run": 1,
+    "totalMs": 183,
+    "navigation": {
+      "ttfbMs": 20,
+      "domContentLoadedMs": 101,
+      "transferBytes": 13250
+    }
+  },
+  {
+    "path": "/",
+    "run": 2,
+    "totalMs": 252,
+    "navigation": {
+      "ttfbMs": 78,
+      "domContentLoadedMs": 163,
+      "transferBytes": 13250
+    }
+  },
+  {
+    "path": "/students",
+    "run": 1,
+    "totalMs": 109,
+    "navigation": {
+      "ttfbMs": 19,
+      "domContentLoadedMs": 44,
+      "transferBytes": 10640
+    }
+  },
+  {
+    "path": "/students",
+    "run": 2,
+    "totalMs": 102,
+    "navigation": {
+      "ttfbMs": 14,
+      "domContentLoadedMs": 39,
+      "transferBytes": 10640
+    }
+  },
+  {
+    "path": "/schedule",
+    "run": 1,
+    "totalMs": 136,
+    "navigation": {
+      "ttfbMs": 29,
+      "domContentLoadedMs": 58,
+      "transferBytes": 9796
+    }
+  },
+  {
+    "path": "/schedule",
+    "run": 2,
+    "totalMs": 186,
+    "navigation": {
+      "ttfbMs": 29,
+      "domContentLoadedMs": 97,
+      "transferBytes": 9796
+    }
+  },
+  {
+    "path": "/invoices",
+    "run": 1,
+    "totalMs": 117,
+    "navigation": {
+      "ttfbMs": 18,
+      "domContentLoadedMs": 54,
+      "transferBytes": 10540
+    }
+  },
+  {
+    "path": "/invoices",
+    "run": 2,
+    "totalMs": 93,
+    "navigation": {
+      "ttfbMs": 18,
+      "domContentLoadedMs": 39,
+      "transferBytes": 10540
+    }
+  },
+  {
+    "path": "/classroom",
+    "run": 1,
+    "totalMs": 87,
+    "navigation": {
+      "ttfbMs": 13,
+      "domContentLoadedMs": 39,
+      "transferBytes": 7203
+    }
+  },
+  {
+    "path": "/classroom",
+    "run": 2,
+    "totalMs": 93,
+    "navigation": {
+      "ttfbMs": 13,
+      "domContentLoadedMs": 36,
+      "transferBytes": 7203
+    }
+  },
+  {
+    "path": "/requests",
+    "run": 1,
+    "totalMs": 161,
+    "navigation": {
+      "ttfbMs": 20,
+      "domContentLoadedMs": 85,
+      "transferBytes": 8102
+    }
+  },
+  {
+    "path": "/requests",
+    "run": 2,
+    "totalMs": 139,
+    "navigation": {
+      "ttfbMs": 39,
+      "domContentLoadedMs": 92,
+      "transferBytes": 8102
+    }
+  },
+  {
+    "path": "/notifications",
+    "run": 1,
+    "totalMs": 103,
+    "navigation": {
+      "ttfbMs": 13,
+      "domContentLoadedMs": 38,
+      "transferBytes": 8370
+    }
+  },
+  {
+    "path": "/notifications",
+    "run": 2,
+    "totalMs": 98,
+    "navigation": {
+      "ttfbMs": 13,
+      "domContentLoadedMs": 34,
+      "transferBytes": 8370
+    }
+  },
+  {
+    "path": "/settings",
+    "run": 1,
+    "totalMs": 118,
+    "navigation": {
+      "ttfbMs": 14,
+      "domContentLoadedMs": 38,
+      "transferBytes": 10741
+    }
+  },
+  {
+    "path": "/settings",
+    "run": 2,
+    "totalMs": 142,
+    "navigation": {
+      "ttfbMs": 17,
+      "domContentLoadedMs": 46,
+      "transferBytes": 10741
+    }
+  }
+]

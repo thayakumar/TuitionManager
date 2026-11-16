@@ -10,6 +10,8 @@ export function Field({
   required,
   step,
   placeholder,
+  min,
+  max,
 }: {
   label: string;
   name: string;
@@ -18,6 +20,8 @@ export function Field({
   required?: boolean;
   step?: string;
   placeholder?: string;
+  min?: number | string;
+  max?: number | string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -29,6 +33,8 @@ export function Field({
         defaultValue={defaultValue ?? ""}
         required={required}
         step={step}
+        min={min}
+        max={max}
         placeholder={placeholder}
       />
     </div>
@@ -80,7 +86,7 @@ export function SelectField({
         id={name}
         name={name}
         defaultValue={defaultValue}
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="flex min-h-11 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

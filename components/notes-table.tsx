@@ -68,7 +68,7 @@ export function NotesTable({
                 return (
                   <tr
                     key={n.id}
-                    className="border-b border-border/50 hover:bg-violet-50/30 transition-colors cursor-pointer group"
+                    className="border-b border-border/50 hover:bg-orange-50/30 transition-colors cursor-pointer group"
                     onClick={() => setExpandedId(isExpanded ? null : n.id)}
                   >
                     <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap align-top">
@@ -79,7 +79,7 @@ export function NotesTable({
                         {n.content}
                       </div>
                       {isLong && (
-                        <span className="inline-flex items-center gap-0.5 text-xs text-indigo-500 mt-1">
+                        <span className="inline-flex items-center gap-0.5 text-xs text-orange-500 mt-1">
                           {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                           {isExpanded ? "Show less" : "Show more"}
                         </span>

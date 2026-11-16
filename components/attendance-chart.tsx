@@ -1,96 +1,70 @@
 "use client";
-
 type AttendanceData = {
   present: number;
-  late: number;
+  late?: number;
   absent: number;
-  total: number;
+  total?: number;
 };
-
-const COLORS = [
-  { label: "Present", color: "#818CF8", class: "bg-indigo-400" },
-  { label: "Late", color: "#FBBF24", class: "bg-amber-400" },
-  { label: "Absent", color: "#F87171", class: "bg-red-400" },
-];
-
 export function AttendanceChart({ data }: { data: AttendanceData }) {
-  const { present, late, absent, total } = data;
-  if (total === 0) {
+  const present = Number(data.present) + Number(data.late ?? 0),
+    absent = Number(data.absent),
+    total = present + absent;
+  if (!total)
     return (
-      <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
-        No attendance data yet
+      <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+        No marked attendance yet
       </div>
     );
-  }
-
-  const pct = (v: number) => Math.round((v / total) * 100);
-  const presentPct = pct(present);
-  const segments = [
-    { value: present, color: COLORS[0].color },
-    { value: late, color: COLORS[1].color },
-    { value: absent, color: COLORS[2].color },
-  ];
-
-  const radius = 70;
-  const stroke = 22;
-  const center = 90;
-  const circumference = 2 * Math.PI * radius;
-  let offset = 0;
-
+  const percentage = Math.round((present / total) * 100),
+    circumference = 2 * Math.PI * 64;
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
-        <svg width="180" height="180" viewBox="0 0 180 180">
+        <svg
+          width="172"
+          height="172"
+          viewBox="0 0 172 172"
+          role="img"
+          aria-label={`${percentage}% attendance; ${present} present and ${absent} absent`}
+        >
           <circle
-            cx={center}
-            cy={center}
-            r={radius}
+            cx="86"
+            cy="86"
+            r="64"
             fill="none"
-            stroke="oklch(0.95 0.01 280)"
-            strokeWidth={stroke}
+            stroke="#f9e7de"
+            strokeWidth="20"
           />
-          {segments.map((seg, i) => {
-            if (seg.value === 0) return null;
-            const pctVal = seg.value / total;
-            const dashLen = pctVal * circumference;
-            const gapLen = circumference - dashLen;
-            const el = (
-              <circle
-                key={i}
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke={seg.color}
-                strokeWidth={stroke}
-                strokeDasharray={`${dashLen} ${gapLen}`}
-                strokeDashoffset={-offset}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${center} ${center})`}
-                className="transition-all duration-500"
-              />
-            );
-            offset += dashLen;
-            return el;
-          })}
+          <circle
+            cx="86"
+            cy="86"
+            r="64"
+            fill="none"
+            stroke="#d93624"
+            strokeWidth="20"
+            strokeDasharray={`${(present / total) * circumference} ${circumference}`}
+            strokeLinecap="round"
+            transform="rotate(-90 86 86)"
+          />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-foreground">{presentPct}%</span>
-          <span className="text-xs text-muted-foreground">Present</span>
+          <strong className="text-3xl">{percentage}%</strong>
+          <span className="text-xs text-muted-foreground">Attendance</span>
         </div>
       </div>
-      <div className="flex gap-4">
-        {COLORS.map((c, i) => {
-          const val = [present, late, absent][i];
-          return (
-            <div key={c.label} className="flex items-center gap-1.5 text-xs">
-              <span className={`size-2.5 rounded-full ${c.class}`} />
-              <span className="text-muted-foreground">{c.label}</span>
-              <span className="font-medium text-foreground">{val}</span>
-            </div>
-          );
-        })}
+      <div className="flex flex-wrap justify-center gap-4 text-xs">
+        <span>
+          <i className="mr-1.5 inline-block size-2 rounded-full bg-primary" />
+          Present {present}
+        </span>
+        <span>
+          <i className="mr-1.5 inline-block size-2 rounded-full bg-slate-300" />
+          Absent {absent}
+        </span>
       </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Cancelled and unmarked lessons are excluded.
+      </p>
     </div>
   );
 }

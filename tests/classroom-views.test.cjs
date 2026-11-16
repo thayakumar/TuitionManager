@@ -1,0 +1,231 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const Module = require("node:module");
+const ts = require("typescript");
+const React = require("react");
+const { renderToStaticMarkup } = require("react-dom/server");
+const root = path.resolve(__dirname, "..");
+
+// These tests execute real route functions and history rendering with fake query/auth
+// boundaries. Database/action integration and browser sessions are verified separately.
+function fixture({
+  authenticated = true,
+  postOwner = 1,
+  maxPoints = 100,
+} = {}) {
+  const queries = [];
+  const current = {
+    id: 10,
+    version: 3,
+    post_id: 5,
+    student_id: 1,
+    content: "LATEST_WORK",
+    file_url: null,
+    grade: null,
+    feedback: null,
+    submitted_at: "2026-11-13T10:00:00Z",
+    graded_at: null,
+  };
+  const attempts = [
+    current,
+    {
+      ...current,
+      version: 2,
+      content: "PREVIOUS_UNGRADED",
+      submitted_at: "2026-11-12T10:00:00Z",
+    },
+    {
+      ...current,
+      version: 1,
+      content: "ORIGINAL_WORK",
+      grade: "75",
+      max_points: 100,
+      feedback: "ORIGINAL_FEEDBACK",
+      graded_at: "2026-11-11T12:00:00Z",
+      submitted_at: "2026-11-11T10:00:00Z",
+    },
+  ];
+  const post = {
+    id: 5,
+    type: "assignment",
+    title: "A private assignment",
+    body: "Instructions",
+    student_id: postOwner,
+    due_at: null,
+    topic_id: null,
+    max_points: maxPoints,
+    created_at: "2026-11-11T10:00:00Z",
+    updated_at: null,
+  };
+  const auth = {
+    requireAdminPage: async () => {
+      if (!authenticated) throw Error("UNAUTHORIZED");
+    },
+    requireStudent: async (id) => {
+      if (!authenticated || id !== 1) throw Error("UNAUTHORIZED");
+    },
+  };
+  const db = {
+    queryOne: async (sql, args = []) => {
+      queries.push({ sql, args });
+      if (sql.includes("FROM students"))
+        return { id: 1, name: "Test Student", active: 1 };
+      if (sql.includes("FROM posts"))
+        return sql.includes("AND student_id = ?") && args[1] === postOwner
+          ? post
+          : undefined;
+      if (sql.includes("FROM submissions")) return current;
+      throw Error("Unexpected query: " + sql);
+    },
+    queryAll: async (sql, args = []) => {
+      queries.push({ sql, args });
+      if (sql.includes("submission_versions")) return attempts;
+      return [];
+    },
+  };
+  const cache = new Map();
+  const leaf = (props) => React.createElement("div", null, props.children);
+  function load(file) {
+    const full = path.join(root, file);
+    if (cache.has(full)) return cache.get(full).exports;
+    const mod = new Module(full, module);
+    mod.filename = full;
+    mod.paths = Module._nodeModulePaths(root);
+    cache.set(full, mod);
+    const original = mod.require.bind(mod);
+    mod.require = (name) => {
+      if (name === "@/lib/db") return db;
+      if (name === "@/lib/auth") return auth;
+      if (name === "next/navigation")
+        return {
+          notFound() {
+            throw Error("NOT_FOUND");
+          },
+        };
+      if (name === "next/link") return { default: leaf };
+      if (name === "lucide-react") return new Proxy({}, { get: () => leaf });
+      if (name === "@/lib/format")
+        return {
+          fmtDateTime: (value) => value,
+          fmtShortDate: (value) => value,
+        };
+      if (name === "@/lib/domain/validation")
+        return load("lib/domain/validation.ts");
+      if (name === "@/lib/action-errors" || name === "../action-errors")
+        return load("lib/action-errors.ts");
+      if (name === "@/components/classroom/submission-history")
+        return load("components/classroom/submission-history.tsx");
+      if (name === "@/components/classroom/grade-submission")
+        return {
+          SubmissionCard: (props) =>
+            React.createElement(
+              "div",
+              { "data-latest-work": props.submission.version },
+              props.submission.content,
+            ),
+          GradeSubmissionForm: (props) =>
+            React.createElement("form", {
+              "data-gradable-version": props.submission.version,
+            }),
+        };
+      if (name === "@/components/classroom/submission-form")
+        return {
+          SubmissionForm: () =>
+            React.createElement("form", { "data-new-attempt": true }),
+        };
+      if (name === "@/components/classroom-post-dialog")
+        return { EditPostButton: leaf, DeletePostButton: leaf };
+      if (name.startsWith("@/components/ui/"))
+        return new Proxy({}, { get: () => leaf });
+      return original(name);
+    };
+    mod._compile(
+      ts.transpileModule(fs.readFileSync(full, "utf8"), {
+        compilerOptions: {
+          module: ts.ModuleKind.CommonJS,
+          target: ts.ScriptTarget.ES2022,
+          jsx: ts.JsxEmit.ReactJSX,
+        },
+      }).outputText,
+      full,
+    );
+    return mod.exports;
+  }
+  return { queries, load };
+}
+const studentRoute =
+  "app/portal/student/[studentId]/classroom/post/[postId]/page.tsx";
+const adminRoute = "app/classroom/[studentId]/post/[postId]/page.tsx";
+const props = { params: Promise.resolve({ studentId: "1", postId: "5" }) };
+
+test("student route denies a foreign post before reading its files or submission history", async () => {
+  const f = fixture({ postOwner: 2 });
+  await assert.rejects(f.load(studentRoute).default(props), /NOT_FOUND/);
+  assert(
+    f.queries.some(
+      (q) =>
+        q.sql.includes("FROM posts") &&
+        q.sql.includes("AND student_id = ?") &&
+        q.args[1] === 1,
+    ),
+  );
+  assert(
+    !f.queries.some(
+      (q) =>
+        q.sql.includes("FROM post_attachments") ||
+        q.sql.includes("submission_versions"),
+    ),
+  );
+});
+
+test("student authentication occurs before database reads", async () => {
+  const f = fixture({ authenticated: false });
+  await assert.rejects(f.load(studentRoute).default(props), /UNAUTHORIZED/);
+  assert.equal(f.queries.length, 0);
+});
+
+test("admin authentication occurs before database reads", async () => {
+  const f = fixture({ authenticated: false });
+  await assert.rejects(f.load(adminRoute).default(props), /UNAUTHORIZED/);
+  assert.equal(f.queries.length, 0);
+});
+
+test("student sees latest pending work plus read-only original graded and superseded history", async () => {
+  const f = fixture();
+  const html = renderToStaticMarkup(await f.load(studentRoute).default(props));
+  for (const text of [
+    "LATEST_WORK",
+    "ORIGINAL_WORK",
+    "ORIGINAL_FEEDBACK",
+    "75/100",
+    "PREVIOUS_UNGRADED",
+    "Awaiting grading",
+    "Superseded before grading",
+    "Submit a new attempt",
+  ])
+    assert(html.includes(text), text);
+  assert(!html.includes("data-gradable-version"));
+  assert.equal(
+    f.queries.filter((q) => q.sql.includes("submission_versions")).length,
+    1,
+  );
+});
+
+test("admin grade control targets only latest version and old work remains visible as history", async () => {
+  const f = fixture();
+  const html = renderToStaticMarkup(await f.load(adminRoute).default(props));
+  assert(html.includes('data-gradable-version="3"'));
+  assert.equal((html.match(/data-gradable-version=/g) || []).length, 1);
+  assert(html.includes("ORIGINAL_WORK"));
+  assert(html.includes("ORIGINAL_FEEDBACK"));
+  assert(html.includes("Superseded before grading"));
+});
+
+test("historical score keeps the original rubric maximum when current points change", async () => {
+  const f = fixture({ maxPoints: 10 });
+  const html = renderToStaticMarkup(await f.load(studentRoute).default(props));
+  assert(html.includes("75/100"));
+  assert(!html.includes("75/10<"));
+});

@@ -1,23 +1,23 @@
 // @ts-nocheck
-"use client"
+"use client";
 
-import { useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react";
 import {
   useEventCalendarNavigation,
   useEventCalendarSelector,
   useEventCalendarSettings,
   useEventCalendarView,
   useEventCalendarViewConfig,
-} from "@/components/reui/event-calendar/event-calendar"
-import { toZoned } from "@/components/reui/event-calendar/event-calendar-lib"
-import type { CalendarView } from "@/components/reui/event-calendar/event-calendar-types"
-import { mergeProps } from "@base-ui/react/merge-props"
-import { useRender } from "@base-ui/react/use-render"
-import { addDays, format } from "date-fns"
+} from "@/components/reui/event-calendar/event-calendar";
+import { toZoned } from "@/components/reui/event-calendar/event-calendar-lib";
+import type { CalendarView } from "@/components/reui/event-calendar/event-calendar-types";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
+import { addDays, format } from "date-fns";
 
-import { cn } from "cn"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "cn";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,49 +25,54 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, CalendarIcon } from "lucide-react"
+} from "@/components/ui/tooltip";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  CalendarIcon,
+} from "lucide-react";
 
 /** Configured nav button variant/size (viewConfig.navButtonVariant/Size)
  *  plus the shared classNames.navButton hook, merged on every nav button. */
 function useNavButtonProps(): {
-  variant: "ghost" | "outline" | "secondary" | "default"
-  size: "sm" | "default"
-  iconSize: "icon-sm" | "icon"
-  className: string | undefined
+  variant: "ghost" | "outline" | "secondary" | "default";
+  size: "sm" | "default";
+  iconSize: "icon-sm" | "icon";
+  className: string | undefined;
 } {
-  const viewConfig = useEventCalendarViewConfig()
+  const viewConfig = useEventCalendarViewConfig();
   return {
     variant: viewConfig.navButtonVariant,
     size: viewConfig.navButtonSize,
     iconSize: viewConfig.navButtonSize === "sm" ? "icon-sm" : "icon",
     className: viewConfig.classNames?.navButton,
-  }
+  };
 }
 
 /** Resolved nav tooltip policy (viewConfig.navTooltips + classNames.navTooltip). */
 function useNavTooltipConfig(): {
-  disabled: boolean
-  side: "top" | "bottom" | "left" | "right"
-  delay: number
-  closeDelay: number
-  timeout: number
-  className: string | undefined
+  disabled: boolean;
+  side: "top" | "bottom" | "left" | "right";
+  delay: number;
+  closeDelay: number;
+  timeout: number;
+  className: string | undefined;
 } {
-  const viewConfig = useEventCalendarViewConfig()
+  const viewConfig = useEventCalendarViewConfig();
   const config =
-    viewConfig.navTooltips === false ? undefined : viewConfig.navTooltips
+    viewConfig.navTooltips === false ? undefined : viewConfig.navTooltips;
   return {
     disabled: viewConfig.navTooltips === false,
     // the nav sits at the top of the calendar, so tooltips open upward by
@@ -78,11 +83,11 @@ function useNavTooltipConfig(): {
     closeDelay: config?.closeDelay ?? 0,
     timeout: config?.timeout ?? 300,
     className: viewConfig.classNames?.navTooltip,
-  }
+  };
 }
 
 type NavButtonProps = Omit<useRender.ComponentProps<"button">, "children"> & {
-  children?: ReactNode
+  children?: ReactNode;
   /**
    * Tooltip policy (the part that usually goes wrong on clickable elements):
    * tooltips appear ONLY on hover or keyboard focus-visible - a pointer click
@@ -94,8 +99,8 @@ type NavButtonProps = Omit<useRender.ComponentProps<"button">, "children"> & {
    * disable one, or any node to override; viewConfig.navTooltips=false turns
    * them all off (its object form tunes side/delay/closeDelay/timeout).
    */
-  tooltip?: ReactNode | null
-}
+  tooltip?: ReactNode | null;
+};
 
 /** Hover/focus-visible tooltip wrapper; renders the bare button when disabled
  *  (per-button content=null or viewConfig.navTooltips=false). */
@@ -103,12 +108,12 @@ function NavTooltip({
   content,
   children,
 }: {
-  content: ReactNode | null
-  children: React.ReactElement
+  content: ReactNode | null;
+  children: React.ReactElement;
 }) {
-  const tooltips = useNavTooltipConfig()
+  const tooltips = useNavTooltipConfig();
   if (tooltips.disabled || content === null || content === undefined)
-    return children
+    return children;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
@@ -116,7 +121,7 @@ function NavTooltip({
         {content}
       </TooltipContent>
     </Tooltip>
-  )
+  );
 }
 
 function EventCalendarNavToday({
@@ -126,9 +131,9 @@ function EventCalendarNavToday({
   tooltip,
   ...props
 }: NavButtonProps) {
-  const { today, isToday } = useEventCalendarNavigation()
-  const settings = useEventCalendarSettings()
-  const nav = useNavButtonProps()
+  const { today, isToday } = useEventCalendarNavigation();
+  const settings = useEventCalendarSettings();
+  const nav = useNavButtonProps();
   // display-zone "today", like every other today derivation in the calendar
   // (a system-zone new Date() can name a different day than Today opens).
   // Read in a selector: React Compiler caches a render-time clock read.
@@ -136,9 +141,9 @@ function EventCalendarNavToday({
     format(
       toZoned(new Date(), settings.timeZone),
       settings.i18n.formats.dayTitle,
-      { locale: settings.locale }
-    )
-  )
+      { locale: settings.locale },
+    ),
+  );
   return (
     <NavTooltip content={tooltip === undefined ? defaultTooltip : tooltip}>
       <Button
@@ -154,7 +159,7 @@ function EventCalendarNavToday({
         {children ?? settings.i18n.labels.today}
       </Button>
     </NavTooltip>
-  )
+  );
 }
 
 function EventCalendarNavPrev({
@@ -164,9 +169,9 @@ function EventCalendarNavPrev({
   tooltip,
   ...props
 }: NavButtonProps) {
-  const { prev } = useEventCalendarNavigation()
-  const settings = useEventCalendarSettings()
-  const nav = useNavButtonProps()
+  const { prev } = useEventCalendarNavigation();
+  const settings = useEventCalendarSettings();
+  const nav = useNavButtonProps();
   return (
     <NavTooltip
       content={tooltip === undefined ? settings.i18n.labels.previous : tooltip}
@@ -181,12 +186,10 @@ function EventCalendarNavPrev({
         render={render}
         {...props}
       >
-        {children ?? (
-          <ChevronLeftIcon className="size-4" aria-hidden="true" />
-        )}
+        {children ?? <ChevronLeftIcon className="size-4" aria-hidden="true" />}
       </Button>
     </NavTooltip>
-  )
+  );
 }
 
 function EventCalendarNavNext({
@@ -196,9 +199,9 @@ function EventCalendarNavNext({
   tooltip,
   ...props
 }: NavButtonProps) {
-  const { next } = useEventCalendarNavigation()
-  const settings = useEventCalendarSettings()
-  const nav = useNavButtonProps()
+  const { next } = useEventCalendarNavigation();
+  const settings = useEventCalendarSettings();
+  const nav = useNavButtonProps();
   return (
     <NavTooltip
       content={tooltip === undefined ? settings.i18n.labels.next : tooltip}
@@ -213,16 +216,14 @@ function EventCalendarNavNext({
         render={render}
         {...props}
       >
-        {children ?? (
-          <ChevronRightIcon className="size-4" aria-hidden="true" />
-        )}
+        {children ?? <ChevronRightIcon className="size-4" aria-hidden="true" />}
       </Button>
     </NavTooltip>
-  )
+  );
 }
 
 interface EventCalendarTitleProps extends useRender.ComponentProps<"div"> {
-  format?: (ctx: { title: string }) => ReactNode
+  format?: (ctx: { title: string }) => ReactNode;
 }
 
 function EventCalendarTitle({
@@ -231,33 +232,31 @@ function EventCalendarTitle({
   format: formatTitle,
   ...props
 }: EventCalendarTitleProps) {
-  const { title } = useEventCalendarNavigation()
-  const viewConfig = useEventCalendarViewConfig()
+  const { title } = useEventCalendarNavigation();
+  const viewConfig = useEventCalendarViewConfig();
   const defaultProps = {
     "data-slot": "event-calendar-title",
     "aria-live": "polite" as const,
     className: cn(
       "min-w-0 truncate text-sm font-semibold",
       viewConfig.classNames?.title,
-      className
+      className,
     ),
     children: formatTitle?.({ title }) ?? title,
-  }
+  };
   return useRender({
     defaultTagName: "div",
     render,
     props: mergeProps<"div">(defaultProps, props),
-  })
+  });
 }
 
-interface EventCalendarViewSwitcherProps extends Omit<
-  useRender.ComponentProps<"button">,
-  "children"
-> {
-  children?: ReactNode
+interface EventCalendarViewSwitcherProps
+  extends Omit<useRender.ComponentProps<"button">, "children"> {
+  children?: ReactNode;
   /** Hover/focus-visible hint; defaults to the "Select view" label. Pass
    *  null to disable (overlay-opener policy). */
-  tooltip?: ReactNode | null
+  tooltip?: ReactNode | null;
 }
 
 function EventCalendarViewSwitcher({
@@ -267,35 +266,35 @@ function EventCalendarViewSwitcher({
   tooltip,
   ...props
 }: EventCalendarViewSwitcherProps) {
-  const { view, dayCount, availableViews, setView } = useEventCalendarView()
-  const settings = useEventCalendarSettings()
-  const viewConfig = useEventCalendarViewConfig()
-  const nav = useNavButtonProps()
-  const tooltips = useNavTooltipConfig()
-  const labels = settings.i18n.labels
+  const { view, dayCount, availableViews, setView } = useEventCalendarView();
+  const settings = useEventCalendarSettings();
+  const viewConfig = useEventCalendarViewConfig();
+  const nav = useNavButtonProps();
+  const tooltips = useNavTooltipConfig();
+  const labels = settings.i18n.labels;
   // Controlled open: selecting a view swaps the whole content subtree in the
   // same click, so closing must not depend on the menu's internal handler.
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   // Hover-only tooltip: when the menu closes, Base UI focuses the trigger
   // again and a focus-opened tooltip would flash - ignore focus opens.
-  const [tipOpen, setTipOpen] = useState(false)
+  const [tipOpen, setTipOpen] = useState(false);
 
   const selectView = (v: CalendarView, opts?: { dayCount?: number }) => {
-    setOpen(false)
-    setView(v, opts)
-  }
+    setOpen(false);
+    setView(v, opts);
+  };
 
   const viewLabel = (v: CalendarView) =>
     v === "days"
       ? settings.i18n.viewNames.days(dayCount)
-      : settings.i18n.viewNames[v]
+      : settings.i18n.viewNames[v];
 
   return (
     <DropdownMenu
       open={open}
       onOpenChange={(next: boolean) => {
-        setOpen(next)
-        if (next) setTipOpen(false)
+        setOpen(next);
+        if (next) setTipOpen(false);
       }}
     >
       {/* Tooltip on an overlay-opener: hover-only (focus opens ignored) and
@@ -305,33 +304,30 @@ function EventCalendarViewSwitcher({
       <Tooltip
         open={tipOpen && !open}
         onOpenChange={(next: boolean) => {
-          setTipOpen(next)
+          setTipOpen(next);
         }}
       >
-        <DropdownMenuTrigger
-          render={
-            <TooltipTrigger
-              render={
-                <Button
-                  variant={nav.variant}
-                  size={nav.size}
-                  data-slot="event-calendar-view-switcher"
-                  aria-label={labels.selectView}
-                  className={cn("gap-1", nav.className, className)}
-                  render={render}
-                />
-              }
-            />
-          }
-          {...props}
-        >
-          {children ?? (
-            <>
-              {viewLabel(view)}
-              <ChevronDownIcon className="size-4 opacity-60" aria-hidden="true" />
-            </>
-          )}
-        </DropdownMenuTrigger>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild {...props}>
+            <Button
+              variant={nav.variant}
+              size={nav.size}
+              data-slot="event-calendar-view-switcher"
+              aria-label={labels.selectView}
+              className={cn("gap-1", nav.className, className)}
+            >
+              {children ?? (
+                <>
+                  {viewLabel(view)}
+                  <ChevronDownIcon
+                    className="size-4 opacity-60"
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
         {tipOpen && !open && tooltip !== null && !tooltips.disabled && (
           <TooltipContent side={tooltips.side} className={tooltips.className}>
             {tooltip ?? labels.selectView}
@@ -347,7 +343,7 @@ function EventCalendarViewSwitcher({
           <DropdownMenuLabel
             className={cn(
               "text-muted-foreground font-normal",
-              viewConfig.classNames?.viewSwitcherLabel
+              viewConfig.classNames?.viewSwitcherLabel,
             )}
           >
             {settings.i18n.labels.selectView}
@@ -384,44 +380,42 @@ function EventCalendarViewSwitcher({
                   </EventCalendarViewShortcut>
                 )}
               </DropdownMenuItem>
-            )
+            ),
           )}
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 
 /** Outline key badge; theme-token only, so it adapts to every style. */
 function EventCalendarViewShortcut({ children }: { children: ReactNode }) {
-  const viewConfig = useEventCalendarViewConfig()
+  const viewConfig = useEventCalendarViewConfig();
   return (
     <kbd
       data-slot="event-calendar-view-shortcut"
       className={cn(
         "text-muted-foreground ms-auto inline-flex size-5 shrink-0 items-center justify-center rounded-sm border font-sans text-xs",
-        viewConfig.classNames?.viewShortcut
+        viewConfig.classNames?.viewShortcut,
       )}
     >
       {children}
     </kbd>
-  )
+  );
 }
 
-interface EventCalendarDatePickerProps extends Omit<
-  useRender.ComponentProps<"button">,
-  "children"
-> {
-  children?: ReactNode
+interface EventCalendarDatePickerProps
+  extends Omit<useRender.ComponentProps<"button">, "children"> {
+  children?: ReactNode;
   /** "auto" (default) resolves per view: range for week/N-days/agenda. */
-  mode?: "auto" | "single" | "range"
+  mode?: "auto" | "single" | "range";
   /** Hover/focus-visible hint; defaults to null - no tooltip, because the
    *  button opens an overlay (see the NavButtonProps tooltip policy). */
-  tooltip?: ReactNode | null
+  tooltip?: ReactNode | null;
 }
 
 /** Views whose period reads better as a highlighted range. */
-const RANGE_VIEWS: CalendarView[] = ["week", "days", "agenda"]
+const RANGE_VIEWS: CalendarView[] = ["week", "days", "agenda"];
 
 /**
  * Optional go-to-date picker (shadcn Calendar in a popover), view-aware:
@@ -439,48 +433,42 @@ function EventCalendarDatePicker({
   mode,
   ...props
 }: EventCalendarDatePickerProps) {
-  const { date, goTo, activeRange } = useEventCalendarNavigation()
-  const { view } = useEventCalendarView()
-  const settings = useEventCalendarSettings()
-  const viewConfig = useEventCalendarViewConfig()
-  const nav = useNavButtonProps()
-  const [open, setOpen] = useState(false)
-  const zoned = toZoned(date, settings.timeZone)
+  const { date, goTo, activeRange } = useEventCalendarNavigation();
+  const { view } = useEventCalendarView();
+  const settings = useEventCalendarSettings();
+  const viewConfig = useEventCalendarViewConfig();
+  const nav = useNavButtonProps();
+  const [open, setOpen] = useState(false);
+  const zoned = toZoned(date, settings.timeZone);
 
-  const configured = mode ?? "auto"
+  const configured = mode ?? "auto";
   const resolved =
     configured === "auto"
       ? RANGE_VIEWS.includes(view)
         ? "range"
         : "single"
-      : configured
+      : configured;
 
   const pick = (next: Date | undefined) => {
-    if (!next) return
-    goTo(next)
-    setOpen(false)
-  }
+    if (!next) return;
+    goTo(next);
+    setOpen(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <NavTooltip content={tooltip}>
-        <PopoverTrigger
-          render={
-            <Button
-              variant={nav.variant}
-              size={nav.iconSize}
-              data-slot="event-calendar-date-picker"
-              data-mode={resolved}
-              aria-label={settings.i18n.labels.goToDate}
-              className={cn(nav.className, className)}
-              render={render}
-            />
-          }
-          {...props}
-        >
-          {children ?? (
-            <CalendarIcon className="size-4" aria-hidden="true" />
-          )}
+        <PopoverTrigger asChild {...props}>
+          <Button
+            variant={nav.variant}
+            size={nav.iconSize}
+            data-slot="event-calendar-date-picker"
+            data-mode={resolved}
+            aria-label={settings.i18n.labels.goToDate}
+            className={cn(nav.className, className)}
+          >
+            {children ?? <CalendarIcon className="size-4" aria-hidden="true" />}
+          </Button>
         </PopoverTrigger>
       </NavTooltip>
       <PopoverContent
@@ -511,10 +499,10 @@ function EventCalendarDatePicker({
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
-type EventCalendarToolbarProps = useRender.ComponentProps<"div">
+type EventCalendarToolbarProps = useRender.ComponentProps<"div">;
 
 /** Free slot for consumer toolbar buttons; pure layout shell. */
 function EventCalendarToolbar({
@@ -522,21 +510,21 @@ function EventCalendarToolbar({
   render,
   ...props
 }: EventCalendarToolbarProps) {
-  const viewConfig = useEventCalendarViewConfig()
+  const viewConfig = useEventCalendarViewConfig();
   const defaultProps = {
     "data-slot": "event-calendar-toolbar",
     className: cn(
       "flex items-center gap-2",
       viewConfig.classNames?.toolbar,
-      className
+      className,
     ),
     children: props.children,
-  }
+  };
   return useRender({
     defaultTagName: "div",
     render,
     props: mergeProps<"div">(defaultProps, props),
-  })
+  });
 }
 
 interface EventCalendarNavProps extends useRender.ComponentProps<"div"> {
@@ -546,7 +534,7 @@ interface EventCalendarNavProps extends useRender.ComponentProps<"div"> {
    * should not be able to change it.
    * @default true
    */
-  showViewSwitcher?: boolean
+  showViewSwitcher?: boolean;
 }
 
 /**
@@ -560,21 +548,19 @@ function EventCalendarNav({
   showViewSwitcher = true,
   ...props
 }: EventCalendarNavProps) {
-  const viewConfig = useEventCalendarViewConfig()
-  const tooltips = useNavTooltipConfig()
+  const viewConfig = useEventCalendarViewConfig();
+  const tooltips = useNavTooltipConfig();
   const defaultProps = {
     "data-slot": "event-calendar-nav",
     className: cn(
       "flex min-w-0 flex-wrap items-center gap-1 px-2 py-2",
       viewConfig.stickyNav && "bg-background sticky top-0 z-30",
       viewConfig.classNames?.nav,
-      className
+      className,
     ),
     children: children ?? (
       // Shared provider: first tooltip waits, moving between buttons is instant
-      <TooltipProvider
-        delayDuration={tooltips.delay ?? 400}
-      >
+      <TooltipProvider delayDuration={tooltips.delay ?? 400}>
         <EventCalendarNavToday />
         {showViewSwitcher && <EventCalendarViewSwitcher />}
         <div className="flex items-center">
@@ -587,12 +573,12 @@ function EventCalendarNav({
         <div className="grow" />
       </TooltipProvider>
     ),
-  }
+  };
   return useRender({
     defaultTagName: "div",
     render,
     props: mergeProps<"div">(defaultProps, props),
-  })
+  });
 }
 
 export {
@@ -604,10 +590,10 @@ export {
   EventCalendarTitle,
   EventCalendarToolbar,
   EventCalendarViewSwitcher,
-}
+};
 export type {
   EventCalendarNavProps,
   EventCalendarTitleProps,
   EventCalendarToolbarProps,
   EventCalendarViewSwitcherProps,
-}
+};

@@ -1,3 +1,4 @@
+import { requireStudent } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { queryAll, queryOne } from "@/lib/db";
 import { ClassroomBanner } from "@/components/classroom/classroom-banner";
@@ -9,30 +10,37 @@ export const dynamic = "force-dynamic";
 export default async function StudentClassroomPage({
   params,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
-  const studentId = Number(params.studentId);
+  const resolvedParams = await params;
+  const studentId = Number(resolvedParams.studentId);
+  await requireStudent(studentId);
   const student = await queryOne<Student>(
     `SELECT id, name, subject, grade_level, phone, email, guardian_name,
             guardian_contact, username, active, created_at
      FROM students WHERE id = ? AND active = 1`,
-    [studentId]
+    [studentId],
   );
   if (!student) notFound();
 
   const [posts, topics, submissions] = await Promise.all([
     queryAll<Post>(
-      "SELECT * FROM posts WHERE student_id = ? ORDER BY created_at DESC",
-      [studentId]
+      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE student_id = ? ORDER BY created_at DESC",
+      [studentId],
     ),
     queryAll<Topic>(
-      "SELECT * FROM topics WHERE student_id = ? ORDER BY sort_order, name",
-      [studentId]
+      "SELECT id, student_id, name, sort_order FROM topics WHERE student_id = ? ORDER BY sort_order, name",
+      [studentId],
     ),
-    queryAll<{ post_id: number; grade: string | null; graded_at: string | null; submitted_at: string }>(
+    queryAll<{
+      post_id: number;
+      grade: string | null;
+      graded_at: string | null;
+      submitted_at: string;
+    }>(
       `SELECT post_id, grade, graded_at, submitted_at
        FROM submissions WHERE student_id = ? ORDER BY submitted_at DESC`,
-      [studentId]
+      [studentId],
     ),
   ]);
 

@@ -1,0 +1,118 @@
+{
+  "inherited": "../2026-11-12/decisions.json",
+  "decisions": [
+    {
+      "id": "P01",
+      "topic": "Attendance states",
+      "answer": "Use Present, Absent (last-minute cancellation/no-show), Cancelled (advance notice; reschedule later). Remove Late from available actions.",
+      "status": "resolved",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P02",
+      "topic": "Attendance percentage",
+      "answer": "Present / (Present + Absent); exclude advance-notice Cancelled and unmarked/future lessons. Example 3 present,1 absent,1 cancelled =75%.",
+      "status": "resolved",
+      "source": "User confirmation 2026-11-13"
+    },
+    {
+      "id": "P03",
+      "topic": "Inactive student access",
+      "answer": "Deactivated students lose portal access immediately; preserve their historical records.",
+      "status": "resolved",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P04",
+      "topic": "Assignment resubmission lineage",
+      "answer": "Append every resubmission as a new version; preserve all previous work, grades and feedback in visible history. Grade each new submission independently. Newer graded versions take precedence as current/final grade everywhere; never overwrite previous attempts.",
+      "status": "resolved by subsequent confirmation",
+      "source": "User chat 2026-11-13",
+      "supersedes": "Earlier latest-replaces submission policy and proposed grade-reset/overwrite approach"
+    },
+    {
+      "id": "P05",
+      "topic": "Only latest submission is gradable",
+      "answer": "Only latest submission version may be graded. Older versions are read-only with existing work/grades/feedback retained; do not require grading superseded ungraded attempts. A new latest version awaits grading and must not inherit an old grade.",
+      "status": "resolved",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P06",
+      "topic": "Revenue attribution and financial history",
+      "answer": "Revenue belongs to the invoice lesson/billing month, not payment month. October invoice paid November remains October revenue. Add separate Financial History page with whole financial history, charts/graphics and revenue time-series/bar trends.",
+      "status": "resolved by subsequent confirmation",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P07",
+      "topic": "Monthly finance totals",
+      "answer": "Monthly revenue = paid + unpaid invoice amounts attributed to billing month, excluding canceled invoices. Show Paid and Outstanding separately.",
+      "status": "resolved",
+      "source": "User confirmation 2026-11-13"
+    },
+    {
+      "id": "P08",
+      "topic": "Calendar drag and resize",
+      "answer": "Enable persisted drag/reschedule and duration resize for scheduled lessons, with confirmation before saving.",
+      "status": "resolved",
+      "source": "User selected Enable it 2026-11-13"
+    },
+    {
+      "id": "P09",
+      "topic": "Schedule conflict prevention",
+      "answer": "Prevent overlapping lessons across all students on creation, edit/reschedule, drag and resize; canceled lessons do not block a slot.",
+      "status": "resolved",
+      "source": "User confirmation 2026-11-13"
+    },
+    {
+      "id": "P10",
+      "topic": "Browser class reminders",
+      "answer": "Remove browser class reminder feature for now (option3). Retain ordinary in-app notifications/inbox.",
+      "status": "resolved",
+      "source": "User selected3 2026-11-13"
+    },
+    {
+      "id": "P11",
+      "topic": "Numeric grade limits",
+      "answer": "Enforce0 through assignment maximum inclusive; no negative scores and no extra credit above maximum.",
+      "status": "resolved",
+      "source": "User confirmation 2026-11-13"
+    },
+    {
+      "id": "P12",
+      "topic": "Holiday feature",
+      "answer": "Holiday features and logic are not needed. Remove holiday management UI and holiday-skipping behavior from recurrence generation. Preserve existing historical data safely rather than destructive table deletion.",
+      "status": "resolved",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P13",
+      "topic": "Student notifications and unread badge",
+      "answer": "Inform students of every relevant change concerning them. Use deduplicated in-app events and a conventional small circular numeric unread badge on bell/navigation; show actual unread count and update as notifications arrive/read. Do not expose private teacher/admin information.",
+      "status": "resolved",
+      "source": "User chat 2026-11-13"
+    },
+    {
+      "id": "P14",
+      "topic": "Rescheduled trial pricing",
+      "answer": "Replacement of a free trial remains a free trial; preserve trial classification and zero charge through every reschedule path.",
+      "status": "resolved",
+      "source": "User confirmation 2026-11-13"
+    },
+    {
+      "id": "P15",
+      "topic": "Recurring generation horizon",
+      "answer": "Generate the rest of the entire calendar year: chosen start date through December31 of its year when end date omitted; respect an earlier explicitly chosen end date. Expose generated-through date and prevent duplicate generation.",
+      "status": "resolved",
+      "source": "User said entire year 2026-11-13; calendar-year interpretation stated explicitly"
+    },
+    {
+      "id": "P16",
+      "topic": "Final invoice and report presentation",
+      "answer": "Canceled lessons must not appear on invoices (latestexplicitconfirmation). Invoice lines show date/time/duration withoutsubject. Every relevantpostedit notifiesstudent. Parent reports are compactexpandabletable rather thanallreportsopen.",
+      "status": "resolved",
+      "source": "User latest chat2026-11-13"
+    }
+  ]
+}

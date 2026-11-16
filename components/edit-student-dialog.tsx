@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { actionError } from "@/lib/action-errors";
 import { updateStudentQuick } from "@/lib/actions";
 import {
   Dialog,
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import type { Student } from "@/lib/types";
 
 const inputClass =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+  "flex min-h-11 w-full rounded-xl border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 export function EditStudentDialog({
   student,
@@ -29,17 +30,25 @@ export function EditStudentDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const boundAction = updateStudentQuick.bind(null, student.id);
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
+  async function handleSubmit(formData: FormData) {
+    if (isPending) return;
+    setIsPending(true);
+    setError(null);
+    try {
       await boundAction(formData);
       toast.success("Student updated");
       setOpen(false);
       router.refresh();
-    });
+    } catch (e) {
+      setError(actionError(e, "Could not save this student."));
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -52,7 +61,12 @@ export function EditStudentDialog({
         )}
       </span>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!isPending) setOpen(v);
+        }}
+      >
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -99,6 +113,8 @@ export function EditStudentDialog({
                 <input
                   id="edit-rate"
                   name="hourly_rate"
+                  min="0"
+                  max="1000000"
                   type="number"
                   step="0.01"
                   defaultValue={Number(student.hourly_rate)}
@@ -165,8 +181,20 @@ export function EditStudentDialog({
               </div>
             </div>
 
+            {error && (
+              <p
+                role="alert"
+                className="rounded-xl bg-destructive/5 p-3 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

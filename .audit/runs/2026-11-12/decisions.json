@@ -1,0 +1,26 @@
+{
+  "inherited": "../../decisions.json",
+  "decisions": [
+    {
+      "id": "D2026-1",
+      "question": "Absence/canceled invoice treatment",
+      "answer": "Absences are not charged and canceled classes must not appear on invoices at all.",
+      "source": "User chat reply 2026-11-12",
+      "status": "resolved"
+    },
+    {
+      "id": "D2026-2",
+      "question": "Post-invoice corrections",
+      "answer": "User says this will not happen because invoices are always generated at end of month.",
+      "status": "operational assumption; no permission to invent adjustment behavior",
+      "source": "User chat reply 2026-11-12"
+    },
+    {
+      "id": "D2026-3",
+      "question": "Stop recurring schedule",
+      "answer": "Cancel future lessons; preserve history.",
+      "status": "resolved",
+      "source": "User chat reply 2026-11-12"
+    }
+  ]
+}

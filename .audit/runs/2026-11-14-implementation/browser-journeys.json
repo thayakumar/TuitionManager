@@ -1,0 +1,58 @@
+[
+  {
+    "id": "reschedule-request-keeps-original-booking",
+    "result": "Pass",
+    "actual": {
+      "request": 1,
+      "originalStatus": "scheduled"
+    }
+  },
+  {
+    "id": "approve-request-updates-both-role-schedules",
+    "result": "Pass",
+    "actual": {
+      "replacement": 12,
+      "time": "2026-12-18T02:00:00.000Z"
+    }
+  },
+  {
+    "id": "rescheduled-present-lesson-pulls-into-invoice-once",
+    "result": "Pass",
+    "actual": {
+      "id": 2,
+      "invoice_id": 2,
+      "class_id": 12,
+      "description": "18 Dec 2026, 10:00 (60 min)",
+      "quantity": 1,
+      "unit_amount": 80,
+      "amount": 80,
+      "total_amount": 80
+    }
+  },
+  {
+    "id": "recurring-lessons-generate-through-calendar-year",
+    "result": "Pass",
+    "actual": {
+      "through": "2027-12-31",
+      "classes": 5
+    }
+  },
+  {
+    "id": "stopping-series-preserves-rows-and-cancels-future",
+    "result": "Pass",
+    "actual": "five rows retained, all future canceled"
+  },
+  {
+    "id": "calendar-drag-confirmed-change-persists",
+    "result": "Pass",
+    "actual": {
+      "at": "2026-12-22T02:00:00.000Z",
+      "trial": 1
+    }
+  },
+  {
+    "id": "parent-mobile-menu-navigates-and-closes",
+    "result": "Pass",
+    "actual": "drawerclosedand390px"
+  }
+]

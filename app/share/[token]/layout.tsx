@@ -1,40 +1,30 @@
-import { notFound } from "next/navigation";
-import { queryOne, getSetting } from "@/lib/db";
+import { WorkspaceHeader } from "@/components/workspace-header";
+import { requireParent } from "@/lib/portal-context";
+import { getSettings } from "@/lib/db";
 import { ParentNav } from "@/components/parent-nav";
-import type { Student } from "@/lib/types";
-
 export const dynamic = "force-dynamic";
-
 export default async function ParentShareLayout({
-  params,
+  params: paramsPromise,
   children,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
   children: React.ReactNode;
 }) {
-  const shareToken = await queryOne<{ student_id: number }>(
-    "SELECT student_id FROM share_tokens WHERE token = ? AND active = 1",
-    [params.token]
-  );
-  if (!shareToken) notFound();
-
-  const student = await queryOne<Student>(
-    "SELECT * FROM students WHERE id = ?",
-    [shareToken.student_id]
-  );
-  if (!student) notFound();
-
-  const businessName = (await getSetting("business_name")) || "TuitionHub";
-
+  const params = await paramsPromise;
+  const [student, settings] = await Promise.all([
+    requireParent(params.token),
+    getSettings(["business_name"]),
+  ]);
   return (
     <>
       <ParentNav
         token={params.token}
         studentName={student.name}
-        businessName={businessName}
+        businessName={settings.business_name || "TuitionHub"}
       />
       <main className="min-h-screen bg-background md:ml-60">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <WorkspaceHeader role="Parent" name={student.name} />
+        <div className="workspace-page mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
         </div>
       </main>

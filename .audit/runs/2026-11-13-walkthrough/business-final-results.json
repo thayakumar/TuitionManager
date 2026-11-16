@@ -1,0 +1,48 @@
+[
+  {
+    "id": "B01-teacher-report-parent-ripple",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "stored": {
+        "topics_covered": "UIFLOW algebra lesson",
+        "homework": "UIFLOW practise exercises1-3"
+      },
+      "class": {
+        "status": "completed",
+        "attendance": null
+      },
+      "parentSawReport": true
+    }
+  },
+  {
+    "id": "B02-report-quick-edit-preserves-existing-content",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": "Quick report opens with blank topics instead of existing report; submitting could overwrite saved fields"
+  },
+  {
+    "id": "B03-business-settings-shared-branding-ripple",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": "Business name persisted and parent uses it; restoring fixture setting after test"
+  },
+  {
+    "id": "B04-holiday-generation-dependency",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "expectedDates": [
+        "2026-12-11"
+      ],
+      "actual": [
+        {
+          "scheduled_at": "2026-12-11T10:00:00.000Z",
+          "attendance": "present",
+          "meeting_room": null
+        }
+      ],
+      "warning": "Room/default attendance tracked as separate failed business requirement"
+    }
+  }
+]

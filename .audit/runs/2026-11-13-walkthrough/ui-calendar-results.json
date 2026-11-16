@@ -1,0 +1,243 @@
+[
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "calendar previous next today",
+    "result": "executed",
+    "data": {
+      "a": "November 2026",
+      "prev": "November 2026",
+      "next": "December 2026",
+      "today": "November 2026"
+    }
+  },
+  {
+    "name": "switch calendar Week",
+    "result": "executed",
+    "data": {
+      "view": "week",
+      "slotCount": 14,
+      "viewportSlots": 0
+    }
+  },
+  {
+    "name": "switch calendar Day",
+    "result": "executed",
+    "data": {
+      "view": "day",
+      "slotCount": 2,
+      "viewportSlots": 0
+    }
+  },
+  {
+    "name": "switch calendar 5 days",
+    "result": "executed",
+    "data": {
+      "view": "days",
+      "slotCount": 10,
+      "viewportSlots": 0
+    }
+  },
+  {
+    "name": "switch calendar Agenda",
+    "result": "executed",
+    "data": {
+      "view": "agenda",
+      "slotCount": 0,
+      "viewportSlots": 0
+    }
+  },
+  {
+    "name": "switch calendar Month",
+    "result": "executed",
+    "data": {
+      "view": "month",
+      "slotCount": 42,
+      "viewportSlots": 0
+    }
+  },
+  {
+    "name": "schedule empty slot cancel and required validation",
+    "result": "executed",
+    "data": {
+      "invalid": {
+        "valid": false,
+        "msg": "Please select an item in the list."
+      },
+      "closed": false
+    }
+  },
+  {
+    "name": "calendar event detail clipboard full-details and attendance",
+    "result": "executed",
+    "data": {
+      "text": "UICalendar · UI Math\n\nThursday, November 26 · 12:00 AM – 1:00 AM\n\nJoin Meeting\n\nmeet.jit.si/tuitionhub-wot-ikcn-ndq\n\nATTENDANCE\n\nPresent\nLate\nAbsent\nCancel\nView full details\nClose",
+      "detail": "http://127.0.0.1:4310/classes/3",
+      "presentButtonClass": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow h-8 rounded-md px-3 text-xs bg-emerald-500 hover:bg-emerald-600 text-white"
+    }
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "pageerror",
+    "error": "Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  },
+  {
+    "name": "calendar drag persists or reverts",
+    "result": "blocked-or-failed",
+    "error": "Cannot read properties of null (reading 'x')"
+  },
+  {
+    "name": "calendar cancel then reschedule through UI",
+    "result": "blocked-or-failed",
+    "error": "locator.click: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true })\u001b[22m\n"
+  },
+  {
+    "name": "trash button behavior and no-thanks",
+    "result": "blocked-or-failed",
+    "error": "locator.click: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /UICalendar · UI Math/ }).last()\u001b[22m\n"
+  },
+  {
+    "name": "schedule CSV export",
+    "result": "executed",
+    "data": {
+      "filename": "classes.csv"
+    }
+  },
+  {
+    "name": "invoice generate invalid reversed dates",
+    "result": "executed",
+    "data": {
+      "text": "Generate Invoice\n\nPulls all completed and cancelled classes in the selected period\n\nStudent *\nAudit Alice\nAudit Bob\nUIAdmin_1794534826638\nUICalendar\nPeriod start *\nPeriod end *\nNotes (optional)\nAn error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.\nCancel\nGenerate\nClose"
+    }
+  },
+  {
+    "name": "invoice generate valid period",
+    "result": "executed",
+    "data": {
+      "url": "http://127.0.0.1:4310/invoices/3",
+      "defaults": {
+        "start": "2026-10-31",
+        "end": "2026-11-29"
+      },
+      "text": "TuitionHub\nManagement System\nMENU\nDashboard\nMANAGEMENT\nStudents\nSchedule\nInvoices\nClassroom\nRequests\nOTHER\nNotifications\nSettings\nLogout\nv2.0 · TuitionHub\nCollapse\nINV-2026-0001\n\nUICalendar · Sun, 1 Nov 2026 — Tue, 1 Dec 2026\n\nWhatsApp\nPrint / PDF\nStudent\nInvoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice set Sent",
+    "result": "executed",
+    "data": {
+      "text": "sApp\nPrint / PDF\nStudent\nInvoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice set Paid",
+    "result": "executed",
+    "data": {
+      "text": "Invoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nPaid on Fri, 13 Nov 2026\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice set Overdue",
+    "result": "executed",
+    "data": {
+      "text": "sApp\nPrint / PDF\nStudent\nInvoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice set Canceled",
+    "result": "executed",
+    "data": {
+      "text": "sApp\nPrint / PDF\nStudent\nInvoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice set Draft",
+    "result": "executed",
+    "data": {
+      "text": "sApp\nPrint / PDF\nStudent\nInvoice Status\nUpdate the current status of this invoice\nDraft\nSent\nPaid\nOverdue\nCanceled\nTuition by Ananth\nINVOICE\nINV-2026-0001\nIssued Fri, 13 Nov 2026\nBILL TO\nUICalendar\nDescription\tHours\tRate\tAmount\nWed, 25 Nov 2026 04:00 pm (60 min)\t1.00\tRM 80.00\tRM 80.00\nTOTAL AMOUNT\nRM 80.00\nPAYMENT INSTRUCTIONS\nBank transfer within 7 days.\nDanger Zone\nIrreversible actions for this invoice\nDelete this invoice\nOnce deleted, this invoice cannot be recovered.\nDelete\nInvoice generated"
+    }
+  },
+  {
+    "name": "invoice print invokes browser print",
+    "result": "executed",
+    "data": {
+      "calls": 1
+    }
+  },
+  {
+    "name": "invoice student link",
+    "result": "executed",
+    "data": {
+      "url": "http://127.0.0.1:4310/students/4"
+    }
+  },
+  {
+    "name": "invoice filters and export",
+    "result": "blocked-or-failed",
+    "error": "locator.click: Timeout 7000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText(/^Draft \\(/)\u001b[22m\n"
+  },
+  {
+    "name": "invoice duplicate period error",
+    "result": "executed",
+    "data": {
+      "text": "Generate Invoice\n\nPulls all completed and cancelled classes in the selected period\n\nStudent *\nAudit Alice\nAudit Bob\nUIAdmin_1794534826638\nUICalendar\nPeriod start *\nPeriod end *\nNotes (optional)\nAn error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.\nCancel\nGenerate\nClose"
+    }
+  }
+]

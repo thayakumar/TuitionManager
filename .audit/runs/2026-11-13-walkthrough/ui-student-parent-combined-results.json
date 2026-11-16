@@ -1,0 +1,1431 @@
+{
+  "results": [
+    {
+      "id": "SP01",
+      "description": "Empty login blocked by browser required validation",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP02",
+      "description": "Wrong password shows inline error, retains login screen",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP03",
+      "description": "Valid student login and dashboard render",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP04",
+      "description": "Student navigation My Schedule",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP05",
+      "description": "Student navigation My Class",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP06",
+      "description": "Student navigation Student Notes",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP07",
+      "description": "Student navigation Notifications",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP08",
+      "description": "Student navigation My Profile",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP09",
+      "description": "Student navigation Dashboard",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP10",
+      "description": "Student profile Copy link writes correct parent portal URL",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "clipboard": "http://127.0.0.1:4310/share/UIAUDIT-revoke-token"
+      }
+    },
+    {
+      "id": "SP11",
+      "description": "Student classroom collapse and expand topic",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP12",
+      "description": "Own assignment empty and whitespace content cannot submit",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP13",
+      "description": "Oversized attachment rejected locally",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP14",
+      "description": "Attach small file then remove selection",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP15",
+      "description": "Valid assignment submission persists and reflects after reload",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP16",
+      "description": "Student can resubmit assignment per saved Q5 policy",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "No resubmit/edit/turn-in control after first submission"
+    },
+    {
+      "id": "SP17",
+      "description": "Malformed link input should be rejected before submission",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "Malformed URL persisted javascript:alert(1)"
+    },
+    {
+      "id": "SP18",
+      "description": "Upload failure leaves work unsent and shows inline error (stub)",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP19",
+      "description": "Successful attachment upload submits returned URL (stub)",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP20",
+      "description": "Foreign student dashboard denied",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP21",
+      "description": "Foreign student post denied on own student URL",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "Foreign Bob post is visible"
+    },
+    {
+      "id": "SP22",
+      "description": "Reschedule modal cancel and empty request validation",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP23",
+      "description": "Valid reschedule request persists fake preferences/reason",
+      "result": "Pass",
+      "evidence_level": "Executed",
+      "details": {
+        "storedPreferred": "2026-12-02T10:00:00.000Z",
+        "class_id": 4
+      }
+    },
+    {
+      "id": "SP24",
+      "description": "Repeated reschedule request shows duplicate rejection",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText(/already have a pending|already.*request/i) to be visible\u001b[22m\n",
+      "interpretation": "No duplicate-rejection message appeared; query confirmed multiple pending requests for same class4, including id3 reason UIAUDIT please reschedule and duplicate id4."
+    },
+    {
+      "id": "SP25",
+      "description": "Student notifications mark-all-read updates server and UI",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP26",
+      "description": "Parent dashboard renders without login",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP27",
+      "description": "Parent navigation Attendance",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP28",
+      "description": "Parent navigation Schedule",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP29",
+      "description": "Parent navigation Class Reports",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP30",
+      "description": "Parent navigation Invoices",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP31",
+      "description": "Parent navigation Dashboard",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP32",
+      "description": "Parent invoice detail ownership and print control",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP33",
+      "description": "Parent invalid token shows not found",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP34",
+      "description": "Parent token invalidation blocks previously valid route after refresh",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP35",
+      "description": "Parent nonexistent invoice cannot render",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    },
+    {
+      "id": "SP36",
+      "description": "Mobile student navigation opens, click closes drawer",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "Navigation drawer remains open over destination screen"
+    },
+    {
+      "id": "SP37",
+      "description": "Mobile parent navigation opens, click closes drawer",
+      "result": "Fail",
+      "evidence_level": "Executed",
+      "error": "Parent navigation drawer remains open over destination screen"
+    },
+    {
+      "id": "SP38",
+      "description": "Student sign out removes session and blocks protected page",
+      "result": "Pass",
+      "evidence_level": "Executed"
+    }
+  ],
+  "errors_initial": [],
+  "errors_corrected": [],
+  "coverage": [
+    {
+      "scope": "student login",
+      "url": "http://127.0.0.1:4310/portal/student",
+      "controls": [
+        {
+          "tag": "INPUT",
+          "text": "Your first name",
+          "href": null,
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "text": "Enter password",
+          "href": null,
+          "type": "password",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign In",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student dashboard",
+      "url": "http://127.0.0.1:4310/portal/student/1",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join Meeting",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join Meeting",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student My Schedule",
+      "url": "http://127.0.0.1:4310/portal/student/1/schedule",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Request Reschedule",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student My Class",
+      "url": "http://127.0.0.1:4310/portal/student/1/classroom",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "No topic\n(5)",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT url\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/3",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT upload\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/4",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT failupload\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/5",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT edge\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/6",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Alice Homework\n\nPosted Nov 12\nAssigned",
+          "href": "/portal/student/1/classroom/post/1",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Audit Topic\n(0)",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student Student Notes",
+      "url": "http://127.0.0.1:4310/portal/student/1/notes",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student Notifications",
+      "url": "http://127.0.0.1:4310/portal/student/1/notifications",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Mark all read",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "View",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student My Profile",
+      "url": "http://127.0.0.1:4310/portal/student/1/profile",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Copy link",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student Dashboard",
+      "url": "http://127.0.0.1:4310/portal/student/1",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join Meeting",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join Meeting",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student classroom",
+      "url": "http://127.0.0.1:4310/portal/student/1/classroom",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "No topic\n(5)",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT url\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/3",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT upload\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/4",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT failupload\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/5",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "UIAUDIT edge\n\nPosted Nov 13\nAssigned",
+          "href": "/portal/student/1/classroom/post/6",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Alice Homework\n\nPosted Nov 12\nAssigned",
+          "href": "/portal/student/1/classroom/post/1",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Audit Topic\n(0)",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "student assignment empty",
+      "url": "http://127.0.0.1:4310/portal/student/1/classroom/post/1",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "My Class",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "text": "Type your answer or paste your work here...",
+          "href": null,
+          "type": "textarea",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Attach file",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "text": "e.g., Google Drive link",
+          "href": null,
+          "type": "url",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Turn in",
+          "href": null,
+          "type": "submit",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "scope": "parent dashboard",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "parent Attendance",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice/attendance",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        }
+      ]
+    },
+    {
+      "scope": "parent Schedule",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice/schedule",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        }
+      ]
+    },
+    {
+      "scope": "parent Class Reports",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice/reports",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        }
+      ]
+    },
+    {
+      "scope": "parent Invoices",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice/invoices",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "AUDIT-1\nSent\n\nPeriod: Sun, 1 Nov 2026 \u2014 Tue, 1 Dec 2026\n\nIssued: Thu, 12 Nov 2026\n\nRM 80.00",
+          "href": "/share/audit-parent-alice/invoices/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "AUDIT-2\nCanceled\n\nPeriod: Sun, 1 Nov 2026 \u2014 Tue, 1 Dec 2026\n\nIssued: Thu, 12 Nov 2026\n\nRM 80.00",
+          "href": "/share/audit-parent-alice/invoices/2",
+          "type": ""
+        }
+      ]
+    },
+    {
+      "scope": "parent Dashboard",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "View all",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "View all",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "parent invoice detail",
+      "url": "http://127.0.0.1:4310/share/audit-parent-alice/invoices/1",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/share/audit-parent-alice",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Attendance",
+          "href": "/share/audit-parent-alice/attendance",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Schedule",
+          "href": "/share/audit-parent-alice/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Class Reports",
+          "href": "/share/audit-parent-alice/reports",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Invoices",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "",
+          "href": "/share/audit-parent-alice/invoices",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Print / PDF",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "scope": "reschedule dialog",
+      "url": "http://127.0.0.1:4310/portal/student/1/schedule",
+      "controls": [
+        {
+          "tag": "A",
+          "text": "Dashboard",
+          "href": "/portal/student/1",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Schedule",
+          "href": "/portal/student/1/schedule",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Class",
+          "href": "/portal/student/1/classroom",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Student Notes",
+          "href": "/portal/student/1/notes",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "Notifications",
+          "href": "/portal/student/1/notifications",
+          "type": ""
+        },
+        {
+          "tag": "A",
+          "text": "My Profile",
+          "href": "/portal/student/1/profile",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Sign out",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Request Reschedule",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        },
+        {
+          "tag": "A",
+          "text": "Join",
+          "href": "/meeting/4",
+          "type": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Join",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "text": "preferred_time_1",
+          "href": null,
+          "type": "datetime-local",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "text": "preferred_time_2",
+          "href": null,
+          "type": "datetime-local",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "text": "preferred_time_3",
+          "href": null,
+          "type": "datetime-local",
+          "disabled": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "text": "Why do you need to reschedule?",
+          "href": null,
+          "type": "textarea",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Cancel",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Send Request",
+          "href": null,
+          "type": "submit",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Close",
+          "href": null,
+          "type": "button",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Initial SP10 hardcoded-token assumption, SP22 animation timing, SP34 fixture token collision and SP38 session invalidation corrected and rerun.",
+    "SP17 malformed URL persistence executed on corrected run.",
+    "Initial server-hang attempt excluded and preserved separately."
+  ]
+}

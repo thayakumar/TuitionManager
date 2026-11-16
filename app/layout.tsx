@@ -25,19 +25,20 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#4F46E5",
+  themeColor: "#d93624",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased font-sans">
         <LayoutShell>
           <Nav />
-          <MainWrapper>
-            {children}
-          </MainWrapper>
+          <MainWrapper>{children}</MainWrapper>
         </LayoutShell>
         <Toaster richColors position="top-right" closeButton />
       </body>

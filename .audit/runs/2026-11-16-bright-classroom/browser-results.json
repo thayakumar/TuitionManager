@@ -1,0 +1,224 @@
+{
+  "environment": "Local production build, fake data, Chromium",
+  "results": [
+    {
+      "id": "admin-sign-in",
+      "status": "Pass",
+      "url": "/portal/admin"
+    },
+    {
+      "id": "admin-overview",
+      "status": "Pass",
+      "url": "/"
+    },
+    {
+      "id": "admin-students",
+      "status": "Pass",
+      "url": "/students"
+    },
+    {
+      "id": "admin-student-detail",
+      "status": "Pass",
+      "url": "/students/1"
+    },
+    {
+      "id": "admin-schedule",
+      "status": "Pass",
+      "url": "/schedule?month=2026-12"
+    },
+    {
+      "id": "admin-invoices",
+      "status": "Pass",
+      "url": "/invoices"
+    },
+    {
+      "id": "admin-invoice-detail",
+      "status": "Pass",
+      "url": "/invoices/1"
+    },
+    {
+      "id": "admin-financial-history",
+      "status": "Pass",
+      "url": "/financial-history"
+    },
+    {
+      "id": "admin-classrooms",
+      "status": "Pass",
+      "url": "/classroom"
+    },
+    {
+      "id": "admin-classroom",
+      "status": "Pass",
+      "url": "/classroom/1"
+    },
+    {
+      "id": "admin-assignment",
+      "status": "Pass",
+      "url": "/classroom/1/post/1"
+    },
+    {
+      "id": "admin-lesson-detail",
+      "status": "Pass",
+      "url": "/classes/1"
+    },
+    {
+      "id": "admin-requests",
+      "status": "Pass",
+      "url": "/requests"
+    },
+    {
+      "id": "admin-notifications",
+      "status": "Pass",
+      "url": "/notifications"
+    },
+    {
+      "id": "admin-settings",
+      "status": "Pass",
+      "url": "/settings"
+    },
+    {
+      "id": "dashboard-scheduling-dialog-open-close",
+      "status": "Pass"
+    },
+    {
+      "id": "sidebar-collapse",
+      "status": "Pass"
+    },
+    {
+      "id": "classroom-stream-posts-render",
+      "status": "Pass"
+    },
+    {
+      "id": "classroom-upcoming-view-classwork-navigation",
+      "status": "Pass"
+    },
+    {
+      "id": "classroom-topic-filter",
+      "status": "Pass"
+    },
+    {
+      "id": "classroom-create-material-dialog-opens-closes",
+      "status": "Pass"
+    },
+    {
+      "id": "classroom-grades-show-latest-score",
+      "status": "Pass"
+    },
+    {
+      "id": "student-sign-in",
+      "status": "Pass",
+      "url": "/portal/student"
+    },
+    {
+      "id": "student-overview",
+      "status": "Pass",
+      "url": "/portal/student/1"
+    },
+    {
+      "id": "student-schedule",
+      "status": "Pass",
+      "url": "/portal/student/1/schedule"
+    },
+    {
+      "id": "student-classroom",
+      "status": "Pass",
+      "url": "/portal/student/1/classroom"
+    },
+    {
+      "id": "student-assignment",
+      "status": "Pass",
+      "url": "/portal/student/1/classroom/post/1"
+    },
+    {
+      "id": "student-notes",
+      "status": "Pass",
+      "url": "/portal/student/1/notes"
+    },
+    {
+      "id": "student-profile",
+      "status": "Pass",
+      "url": "/portal/student/1/profile"
+    },
+    {
+      "id": "student-notifications",
+      "status": "Pass",
+      "url": "/portal/student/1/notifications"
+    },
+    {
+      "id": "parent-overview",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice"
+    },
+    {
+      "id": "parent-reports",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice/reports"
+    },
+    {
+      "id": "parent-attendance",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice/attendance"
+    },
+    {
+      "id": "parent-schedule",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice/schedule"
+    },
+    {
+      "id": "parent-invoices",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice/invoices"
+    },
+    {
+      "id": "parent-invoice-detail",
+      "status": "Pass",
+      "url": "/share/flow-parent-alice/invoices/1"
+    },
+    {
+      "id": "admin-mobile-classroom-stream-classwork-grades",
+      "status": "Pass"
+    },
+    {
+      "id": "student-mobile-classroom-stream-classwork-grades",
+      "status": "Pass"
+    },
+    {
+      "id": "admin-mobile-no-page-overflow",
+      "status": "Pass"
+    },
+    {
+      "id": "admin-mobile-menu-navigates-closes",
+      "status": "Pass"
+    },
+    {
+      "id": "student-mobile-no-page-overflow",
+      "status": "Pass"
+    },
+    {
+      "id": "student-mobile-menu-navigates-closes",
+      "status": "Pass"
+    },
+    {
+      "id": "parent-mobile-no-page-overflow",
+      "status": "Pass"
+    },
+    {
+      "id": "parent-mobile-menu-navigates-closes",
+      "status": "Pass"
+    },
+    {
+      "id": "larger-font-scale",
+      "status": "Pass",
+      "actual": {
+        "body": "17px",
+        "button": "18.0625px",
+        "small": "14.875px"
+      }
+    },
+    {
+      "id": "reduced-motion-disables-page-animation",
+      "status": "Pass"
+    }
+  ],
+  "pageErrors": []
+}

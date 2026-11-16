@@ -1,0 +1,659 @@
+{
+  "started": "2026-11-12T15:46:50.355Z",
+  "head": "d8a74b5b843705a2636716a2244ea49b34c292d4",
+  "phase": "Audit report complete; question/approval gate",
+  "prior_audit": ".audit/",
+  "output": "/workspace/scratch/audit-2026-11-12",
+  "coverage_plan": [
+    {
+      "group": "lib, middleware, upload",
+      "reader": "backend_audit",
+      "estimate": "10\u201320 minutes"
+    },
+    {
+      "group": "app pages, layouts, CSS",
+      "reader": "routes_audit",
+      "estimate": "10\u201320 minutes"
+    },
+    {
+      "group": "custom components",
+      "reader": "components_audit",
+      "estimate": "10\u201320 minutes"
+    },
+    {
+      "group": "UI and calendar",
+      "reader": "calendar_ui_audit",
+      "estimate": "10\u201320 minutes"
+    },
+    {
+      "group": "documentation, configs, dependencies, integrated runtime",
+      "reader": "root",
+      "estimate": "15\u201325 minutes"
+    }
+  ],
+  "files": [
+    {
+      "path": ".audit/decisions.json",
+      "status": "historical record preserved"
+    },
+    {
+      "path": ".audit/fix-log.json",
+      "status": "historical record preserved"
+    },
+    {
+      "path": ".audit/progress.json",
+      "status": "historical record preserved"
+    },
+    {
+      "path": ".audit/report.md",
+      "status": "historical record preserved"
+    },
+    {
+      "path": ".gitignore",
+      "status": "read"
+    },
+    {
+      "path": "CLAUDE.md",
+      "status": "read"
+    },
+    {
+      "path": "README.md",
+      "status": "read"
+    },
+    {
+      "path": "REGRESSION-TESTS.md",
+      "status": "read"
+    },
+    {
+      "path": "app/api/upload/route.ts",
+      "status": "read"
+    },
+    {
+      "path": "app/classes/[id]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/classroom/[studentId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/classroom/[studentId]/post/[postId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/classroom/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/error.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/globals.css",
+      "status": "read"
+    },
+    {
+      "path": "app/invoices/[id]/PrintButton.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/invoices/[id]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/invoices/new/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/invoices/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/layout.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/login/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/meeting/[classId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/notifications/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/[studentId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/admin/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/classroom/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/classroom/post/[postId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/layout.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/notes/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/notifications/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/profile/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/[studentId]/schedule/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/portal/student/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/requests/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/schedule/new/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/schedule/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/schedule/recurring/new/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/settings/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/attendance/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/invoices/[invoiceId]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/invoices/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/layout.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/reports/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/share/[token]/schedule/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/students/[id]/edit/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/students/[id]/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/students/new/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "app/students/page.tsx",
+      "status": "read"
+    },
+    {
+      "path": "appscript-upload.txt",
+      "status": "read"
+    },
+    {
+      "path": "components.json",
+      "status": "read"
+    },
+    {
+      "path": "components/Nav.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/add-student-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/attendance-chart.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/cancel-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom-post-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom/classroom-banner.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom/classroom-tabs.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom/grade-submission.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom/submission-form.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/classroom/topic-manager.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/copy-link-button.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/copy-login-button.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/dashboard-actions.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/edit-student-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/empty-state.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/examples/c-event-calendar-1.tsx.bak",
+      "status": "read"
+    },
+    {
+      "path": "components/export-button.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/form-field.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/generate-invoice-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/jitsi-meeting.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/layout-shell.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/main-wrapper.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/meeting-room.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/notes-table.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/notification-bell.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/notification-toggle.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/page-header.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/parent-nav.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/portal-nav.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/post-class-report-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/recurring-schedule-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/report-row.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reschedule-actions.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reschedule-request-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-agenda-view.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-content.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-dnd.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-event.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-i18n.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-lib.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-month-view.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-nav.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-recurrence.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-resource-view.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-time-grid.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar-types.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/event-calendar/event-calendar.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/reui/icon-stack.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/revenue-chart.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/schedule-calendar-wrapper.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/schedule-calendar.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/schedule-class-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/share-token-button.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/alert-dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/avatar.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/badge.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/button.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/calendar.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/card.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/checkbox.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/dialog.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/dropdown-menu.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/input.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/label.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/popover.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/progress.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/scroll-area.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/select.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/separator.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/sheet.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/skeleton.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/switch.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/table.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/tabs.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/textarea.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/ui/tooltip.tsx",
+      "status": "read"
+    },
+    {
+      "path": "components/whatsapp-share.tsx",
+      "status": "read"
+    },
+    {
+      "path": "lib/actions.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/auth.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/db.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/export.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/format.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/jaas.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/types.ts",
+      "status": "read"
+    },
+    {
+      "path": "lib/utils.ts",
+      "status": "read"
+    },
+    {
+      "path": "middleware.ts",
+      "status": "read"
+    },
+    {
+      "path": "next.config.mjs",
+      "status": "read"
+    },
+    {
+      "path": "package-lock.json",
+      "status": "dependency metadata machine inspected"
+    },
+    {
+      "path": "package.json",
+      "status": "read"
+    },
+    {
+      "path": "postcss.config.mjs",
+      "status": "read"
+    },
+    {
+      "path": "public/icon-192.svg",
+      "status": "read"
+    },
+    {
+      "path": "public/icon-512.svg",
+      "status": "read"
+    },
+    {
+      "path": "public/manifest.json",
+      "status": "read"
+    },
+    {
+      "path": "tsconfig.json",
+      "status": "read"
+    }
+  ],
+  "limitations": [
+    "Uploaded skill references audit-categories.md, report-template.md and question-batch-template.md were not supplied; main instructions and appendices supply core criteria."
+  ],
+  "source_edits_approved": false,
+  "all_implementation_files_read": 130,
+  "source_files_changed": 0,
+  "findings": 37,
+  "severity_counts": {
+    "Blocker": 5,
+    "Critical": 4,
+    "High": 20,
+    "Medium": 7,
+    "Low": 1
+  },
+  "scenario_counts": {
+    "Fail": 27,
+    "Pass": 42,
+    "Observed": 16,
+    "Policy-dependent": 5
+  },
+  "read_notes": [
+    "/workspace/TuitionManager/.audit/runs/2026-11-12/backend-notes.md",
+    "/workspace/TuitionManager/.audit/runs/2026-11-12/routes-notes.md",
+    "/workspace/TuitionManager/.audit/runs/2026-11-12/components-notes.md",
+    "/workspace/TuitionManager/.audit/runs/2026-11-12/calendar-notes.md"
+  ],
+  "pending": [
+    "Business questions in questions.md",
+    "Explicit fix approval",
+    "Unexecuted cases in scenarios.md"
+  ]
+}

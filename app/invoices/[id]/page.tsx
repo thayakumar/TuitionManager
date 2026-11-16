@@ -1,13 +1,29 @@
+import { ConfirmAction } from "@/components/confirm-action";
+import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Trash2, CheckCircle2, Clock, AlertCircle, FileText,
-  CreditCard, QrCode, Info, User, ArrowLeft,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  FileText,
+  CreditCard,
+  QrCode,
+  Info,
+  User,
+  ArrowLeft,
 } from "lucide-react";
-import { queryOne, queryAll, getSetting } from "@/lib/db";
+import { queryOne, queryAll, getSetting, getSettings } from "@/lib/db";
 import { setInvoiceStatus, deleteInvoice } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,7 +42,11 @@ import { WhatsAppShare } from "@/components/whatsapp-share";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES: { value: InvoiceStatus; label: string; icon: React.ReactNode }[] = [
+const STATUSES: {
+  value: InvoiceStatus;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
   { value: "draft", label: "Draft", icon: <FileText size={14} /> },
   { value: "sent", label: "Sent", icon: <Clock size={14} /> },
   { value: "paid", label: "Paid", icon: <CheckCircle2 size={14} /> },
@@ -62,24 +82,44 @@ function statusColor(status: string) {
   }
 }
 
-export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
-  const id = Number(params.id);
-  const inv = await queryOne<Invoice>("SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes FROM invoices WHERE id = ?", [id]);
+export default async function InvoiceDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  await requireAdminPage();
+  const id = Number((await params).id);
+  const inv = await queryOne<Invoice>(
+    "SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes FROM invoices WHERE id = ?",
+    [id],
+  );
   if (!inv) notFound();
 
-  const [student, items, businessName, businessContact, paymentInstructions, currencySymbol, duitnowQr] =
-    await Promise.all([
-      queryOne<Student>("SELECT id, name, email, phone, guardian_name, guardian_contact, hourly_rate, notes, active, created_at FROM students WHERE id = ?", [inv.student_id]),
-      queryAll<InvoiceItem>(
-        "SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id",
-        [id]
-      ),
-      getSetting("business_name"),
-      getSetting("business_contact"),
-      getSetting("payment_instructions"),
-      getSetting("currency"),
-      getSetting("duitnow_qr"),
-    ]);
+  const [student, items, settings] = await Promise.all([
+    queryOne<Student>(
+      "SELECT id,name,email,phone,guardian_name,guardian_contact FROM students WHERE id=?",
+      [inv.student_id],
+    ),
+    queryAll<InvoiceItem>(
+      "SELECT * FROM invoice_items WHERE invoice_id=? AND description NOT LIKE '[CANCELLED]%' ORDER BY id",
+      [id],
+    ),
+    getSettings([
+      "business_name",
+      "business_contact",
+      "payment_instructions",
+      "currency",
+      "duitnow_qr",
+    ]),
+  ]);
+  const businessName = settings.business_name,
+    businessContact = settings.business_contact,
+    paymentInstructions = settings.payment_instructions,
+    currencySymbol = settings.currency || "RM",
+    duitnowQr = settings.duitnow_qr;
+  const periodEnd = /T16:00:00(?:\.000)?Z$/.test(inv.period_end)
+    ? new Date(Date.parse(inv.period_end) - 1).toISOString()
+    : inv.period_end.slice(0, 10);
 
   if (!student) notFound();
 
@@ -88,7 +128,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   const whatsappText = [
     `Invoice ${inv.invoice_number}`,
     `Student: ${student.name}`,
-    `Period: ${fmtDate(inv.period_start)} — ${fmtDate(inv.period_end)}`,
+    `Period: ${fmtDate(inv.period_start)} — ${fmtDate(periodEnd)}`,
     `Total: ${currency(Number(inv.total_amount), currencySymbol)}`,
     `Status: ${inv.status}`,
   ].join("\n");
@@ -100,14 +140,18 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
           title={
             <div className="flex items-center gap-3">
               <Link href="/invoices">
-                <Button variant="ghost" size="icon" className="text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground"
+                >
                   <ArrowLeft size={18} />
                 </Button>
               </Link>
               <span>{inv.invoice_number}</span>
             </div>
           }
-          subtitle={`${student.name} · ${fmtDate(inv.period_start)} — ${fmtDate(inv.period_end)}`}
+          subtitle={`${student.name} · ${fmtDate(inv.period_start)} — ${fmtDate(periodEnd)}`}
           action={
             <div className="flex gap-2">
               <WhatsAppShare text={whatsappText} />
@@ -123,24 +167,31 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       </div>
 
       {/* Status Toggle */}
-      <Card className="mb-6 no-print shadow-sm border-0">
+      <Card className="mb-6 no-print border shadow-none">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CreditCard size={18} className="text-indigo-500" />
+            <CreditCard size={18} className="text-orange-500" />
             Invoice Status
           </CardTitle>
-          <CardDescription>Update the current status of this invoice</CardDescription>
+          <CardDescription>
+            Update the current status of this invoice
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-1.5 p-1 bg-secondary/50 rounded-xl w-fit">
             {STATUSES.map((s) => (
-              <form key={s.value} action={setInvoiceStatus.bind(null, id, s.value)}>
+              <form
+                key={s.value}
+                action={setInvoiceStatus.bind(null, id, s.value)}
+              >
                 <Button
                   type="submit"
                   variant={inv.status === s.value ? "default" : "ghost"}
                   size="sm"
                   className={`capitalize gap-1.5 rounded-lg ${
-                    inv.status === s.value ? "shadow-sm" : "text-muted-foreground"
+                    inv.status === s.value
+                      ? "shadow-sm"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {s.icon}
@@ -153,33 +204,43 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       </Card>
 
       {/* Invoice Document */}
-      <Card className="mb-6 shadow-sm border-0 overflow-hidden">
+      <Card className="mb-6 border shadow-none overflow-hidden">
         {/* Gradient Header */}
-        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 px-8 py-6 text-white">
+        <div className="invoice-document-header bg-[#b82f25] px-4 py-6 sm:px-8 text-white">
           <div className="flex justify-between items-start">
             <div>
               <div className="text-lg font-bold">{businessName}</div>
               {businessContact && (
-                <div className="text-sm text-white/70 whitespace-pre-line mt-1">{businessContact}</div>
+                <div className="text-sm text-white/70 whitespace-pre-line mt-1">
+                  {businessContact}
+                </div>
               )}
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold tracking-tight">INVOICE</div>
-              <div className="text-sm text-white/80 mt-1">{inv.invoice_number}</div>
-              <div className="text-xs text-white/60 mt-0.5">Issued {fmtDate(inv.issued_at)}</div>
+              <div className="text-sm text-white/80 mt-1">
+                {inv.invoice_number}
+              </div>
+              <div className="text-xs text-white/60 mt-0.5">
+                Issued {fmtDate(inv.issued_at)}
+              </div>
             </div>
           </div>
         </div>
 
-        <CardContent className="pt-6 px-8 pb-8">
+        <CardContent className="pt-6 px-4 pb-8 sm:px-8">
           {/* Bill To */}
           <div className="mb-8 rounded-xl bg-secondary/40 p-5">
             <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-2">
               Bill To
             </div>
-            <div className="text-base font-semibold text-foreground">{student.name}</div>
+            <div className="text-base font-semibold text-foreground">
+              {student.name}
+            </div>
             {student.guardian_name && (
-              <div className="text-sm text-foreground/80">c/o {student.guardian_name}</div>
+              <div className="text-sm text-foreground/80">
+                c/o {student.guardian_name}
+              </div>
             )}
             {(student.email || student.phone) && (
               <div className="text-sm text-muted-foreground mt-0.5">
@@ -195,10 +256,18 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
             <Table>
               <TableHeader>
                 <TableRow className="bg-secondary/30">
-                  <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="text-right font-semibold">Hours</TableHead>
-                  <TableHead className="text-right font-semibold">Rate</TableHead>
-                  <TableHead className="text-right font-semibold">Amount</TableHead>
+                  <TableHead className="font-semibold">
+                    Date, time & duration
+                  </TableHead>
+                  <TableHead className="text-right font-semibold">
+                    Hours
+                  </TableHead>
+                  <TableHead className="text-right font-semibold">
+                    Rate
+                  </TableHead>
+                  <TableHead className="text-right font-semibold">
+                    Amount
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -211,10 +280,18 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
                         idx % 2 === 1 ? "bg-secondary/20" : ""
                       }`}
                     >
-                      <TableCell className="font-medium">{it.description}</TableCell>
-                      <TableCell className="text-right">{Number(it.quantity).toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{currency(Number(it.unit_amount), currencySymbol)}</TableCell>
-                      <TableCell className="text-right font-medium">{currency(Number(it.amount), currencySymbol)}</TableCell>
+                      <TableCell className="font-medium">
+                        {it.description}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {Number(it.quantity).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {currency(Number(it.unit_amount), currencySymbol)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {currency(Number(it.amount), currencySymbol)}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -224,8 +301,10 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
 
           {/* Total */}
           <div className="flex justify-end mt-4">
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl px-6 py-4 text-right">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Amount</div>
+            <div className="bg-[#edf5f1] border border-[#dce9e2] rounded-xl px-6 py-4 text-right">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                Total Amount
+              </div>
               <div className="text-3xl font-bold text-foreground">
                 {currency(Number(inv.total_amount), currencySymbol)}
               </div>
@@ -239,7 +318,9 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
                 <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-2">
                   Notes
                 </div>
-                <div className="text-sm whitespace-pre-wrap text-foreground/80">{inv.notes}</div>
+                <div className="text-sm whitespace-pre-wrap text-foreground/80">
+                  {inv.notes}
+                </div>
               </div>
             </>
           )}
@@ -256,14 +337,22 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
                     Payment Instructions
                   </div>
                   {paymentInstructions && (
-                    <div className="text-sm whitespace-pre-wrap text-blue-900/80">{paymentInstructions}</div>
+                    <div className="text-sm whitespace-pre-wrap text-blue-900/80">
+                      {paymentInstructions}
+                    </div>
                   )}
                 </div>
                 {duitnowQr && (
                   <div className="shrink-0 text-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={duitnowQr} alt="DuitNow QR" className="max-w-24 rounded-lg border bg-white p-1.5" />
-                    <div className="text-[10px] text-muted-foreground mt-1">DuitNow</div>
+                    <img
+                      src={duitnowQr}
+                      alt="DuitNow QR"
+                      className="max-w-24 rounded-lg border bg-white p-1.5"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      DuitNow
+                    </div>
                   </div>
                 )}
               </div>
@@ -274,7 +363,9 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
             <div className="mt-6 text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-emerald-700">
                 <CheckCircle2 size={16} />
-                <span className="text-sm font-medium">Paid on {fmtDate(inv.paid_at)}</span>
+                <span className="text-sm font-medium">
+                  Paid on {fmtDate(inv.paid_at)}
+                </span>
               </div>
             </div>
           )}
@@ -282,25 +373,31 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       </Card>
 
       {/* Danger Zone */}
-      <Card className="no-print shadow-sm border-0 border-l-4 border-l-red-400">
+      <Card className="no-print border shadow-none border-l-4 border-l-red-400">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base text-red-600">
             <AlertCircle size={18} />
             Danger Zone
           </CardTitle>
-          <CardDescription>Irreversible actions for this invoice</CardDescription>
+          <CardDescription>
+            Irreversible actions for this invoice
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 p-4">
             <div>
-              <div className="text-sm font-medium text-foreground">Delete this invoice</div>
-              <div className="text-xs text-muted-foreground">Once deleted, this invoice cannot be recovered.</div>
+              <div className="text-sm font-medium text-foreground">
+                Delete this invoice
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Once deleted, this invoice cannot be recovered.
+              </div>
             </div>
-            <form action={del}>
-              <Button type="submit" variant="destructive" size="sm">
-                <Trash2 size={14} /> Delete
-              </Button>
-            </form>
+            <ConfirmAction
+              action={del}
+              label="Cancel invoice"
+              message="Cancel this invoice? Its history will remain, and its amount will no longer count as revenue or outstanding."
+            />
           </div>
         </CardContent>
       </Card>

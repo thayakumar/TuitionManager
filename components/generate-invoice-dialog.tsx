@@ -1,10 +1,10 @@
 "use client";
-
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Receipt } from "lucide-react";
 import { toast } from "sonner";
-import { generateInvoiceQuick } from "@/lib/actions";
+import { generateInvoiceResult } from "@/lib/actions";
+import { actionError } from "@/lib/action-errors";
 import {
   Dialog,
   DialogContent,
@@ -15,86 +15,102 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-
-const inputClass =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
-
-const selectClass =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
-
-type StudentOption = { id: number; name: string };
-
-function getMonthRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const fmt = (d: Date) => d.toISOString().split("T")[0];
-  return { start: fmt(start), end: fmt(end) };
+function monthRange() {
+  const local = new Date(Date.now() + 8 * 3600000),
+    year = local.getUTCFullYear(),
+    month = local.getUTCMonth();
+  return {
+    start: `${year}-${String(month + 1).padStart(2, "0")}-01`,
+    end: new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10),
+  };
 }
-
 export function GenerateInvoiceDialog({
   students,
   defaultStudentId,
   trigger,
 }: {
-  students: StudentOption[];
+  students: { id: number; name: string }[];
   defaultStudentId?: number;
   trigger?: React.ReactNode;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const { start, end } = getMonthRange();
-
-  function handleSubmit(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      try {
-        const id = await generateInvoiceQuick(formData);
-        toast.success("Invoice generated");
-        setOpen(false);
-        router.refresh();
-        router.push(`/invoices/${id}`);
-      } catch (e: any) {
-        setError(e.message || "Failed to generate invoice");
-      }
-    });
-  }
-
+  const [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState<string | null>(null);
+  const { start, end } = monthRange();
   return (
     <>
-      <span onClick={() => setOpen(true)} className="cursor-pointer">
+      <span
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
+        className="inline-flex cursor-pointer"
+      >
         {trigger ?? (
           <Button>
-            <Receipt size={16} /> Generate invoice
+            <Receipt size={16} />
+            Generate invoice
           </Button>
         )}
       </span>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!busy) setOpen(v);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Receipt size={18} className="text-primary" />
-              Generate Invoice
-            </DialogTitle>
+            <DialogTitle>Generate invoice</DialogTitle>
             <DialogDescription>
-              Pulls all completed and cancelled classes in the selected period
+              Includes unbilled completed, attended lessons. Absences and
+              cancelled lessons are excluded. Rescheduled lessons are included
+              once marked Present.
             </DialogDescription>
           </DialogHeader>
-
-          <form action={handleSubmit} className="space-y-4">
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="gi-student">Student *</Label>
+          {!students.length ? (
+            <p className="text-sm text-muted-foreground">
+              Add an active student first.
+            </p>
+          ) : (
+            <form
+              className="space-y-4"
+              action={async (f) => {
+                if (busy) return;
+                const from = String(f.get("period_start")),
+                  to = String(f.get("period_end"));
+                if (from > to) {
+                  setError("Period end must be on or after period start.");
+                  return;
+                }
+                setBusy(true);
+                setError(null);
+                try {
+                  const result = await generateInvoiceResult(f);
+                  if (!result.success) {
+                    setError(result.error || "Could not generate invoice.");
+                    return;
+                  }
+                  toast.success("Invoice generated");
+                  setOpen(false);
+                  router.push(`/invoices/${result.id}`);
+                  router.refresh();
+                } catch (e) {
+                  setError(actionError(e, "Could not generate invoice."));
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="gi-student">Student</Label>
                 <select
                   id="gi-student"
                   name="student_id"
                   required
-                  defaultValue={defaultStudentId || students[0]?.id}
-                  className={selectClass}
+                  defaultValue={defaultStudentId ?? students[0].id}
+                  className="min-h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
                 >
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -104,55 +120,54 @@ export function GenerateInvoiceDialog({
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="gi-start">Period start *</Label>
-                  <input
-                    id="gi-start"
-                    name="period_start"
-                    type="date"
-                    required
-                    defaultValue={start}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="gi-end">Period end *</Label>
-                  <input
-                    id="gi-end"
-                    name="period_end"
-                    type="date"
-                    required
-                    defaultValue={end}
-                    className={inputClass}
-                  />
-                </div>
+                {[
+                  ["Period start", "period_start", start],
+                  ["Period end", "period_end", end],
+                ].map(([label, name, value]) => (
+                  <label key={name} className="space-y-2 text-xs font-medium">
+                    {label}
+                    <input
+                      name={name}
+                      type="date"
+                      required
+                      defaultValue={value}
+                      className="mt-2 min-h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                    />
+                  </label>
+                ))}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="gi-notes">Notes (optional)</Label>
+              <label className="block text-xs font-medium">
+                Notes (optional)
                 <textarea
-                  id="gi-notes"
                   name="notes"
                   rows={2}
-                  className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  maxLength={20000}
+                  className="mt-2 w-full rounded-xl border border-input bg-card p-3 text-sm"
                 />
-              </div>
-            </div>
-
-            {error && (
-              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Generating..." : "Generate"}
-              </Button>
-            </DialogFooter>
-          </form>
+              </label>
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-xl bg-destructive/5 p-3 text-sm text-destructive"
+                >
+                  {error}
+                </p>
+              )}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Generating…" : "Generate"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </>

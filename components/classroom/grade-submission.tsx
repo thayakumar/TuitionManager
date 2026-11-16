@@ -1,100 +1,132 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { gradeSubmissionAction } from "@/lib/actions";
-import { fmtDateTime } from "@/lib/format";
+import { gradeSubmissionResult as gradeSubmissionAction } from "@/lib/actions";
 import { toast } from "sonner";
 import type { Submission } from "@/lib/types";
-
-const inputClass =
-  "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+import { actionError, ActionValidationError } from "@/lib/action-errors";
+import { AttemptWork } from "./submission-history";
 
 export function GradeSubmissionForm({
   submission,
   maxPoints,
   studentId,
 }: {
-  submission: Submission;
+  submission: Submission & { version: number };
   maxPoints: number | null;
   studentId: number;
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [grade, setGrade] = useState(submission.grade || "");
-  const [feedback, setFeedback] = useState(submission.feedback || "");
-  const [success, setSuccess] = useState(false);
-
-  function handleSubmit() {
-    startTransition(async () => {
-      const result = await gradeSubmissionAction(submission.id, grade, feedback, studentId);
-      if (result?.success) {
-        setSuccess(true);
-        toast.success("Grade returned successfully");
-        router.refresh();
-        setTimeout(() => setSuccess(false), 3000);
-      }
-    });
+  const [busy, setBusy] = useState(false);
+  const [grade, setGrade] = useState(submission.grade ?? "");
+  const [feedback, setFeedback] = useState(submission.feedback ?? "");
+  const [error, setError] = useState("");
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    const value = grade.trim();
+    if (!value) {
+      setError("Enter a grade.");
+      return;
+    }
+    if (
+      maxPoints !== null &&
+      (!Number.isFinite(Number(value)) ||
+        Number(value) < 0 ||
+        Number(value) > maxPoints)
+    ) {
+      setError(`Enter a score from 0 to ${maxPoints}.`);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const result = await gradeSubmissionAction(
+        submission.id,
+        value,
+        feedback,
+        studentId,
+        submission.version,
+      );
+      if (result && !result.success)
+        throw new ActionValidationError(
+          result.error || "Could not save this grade.",
+        );
+      toast.success("Grade returned successfully");
+      router.refresh();
+    } catch (reason) {
+      setError(
+        actionError(
+          reason,
+          "Could not save this grade. Reload to check the latest attempt.",
+        ),
+      );
+    } finally {
+      setBusy(false);
+    }
   }
-
   return (
-    <div className="space-y-4">
-      {success && (
-        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700">
-          <CheckCircle2 size={16} />
-          Grade returned successfully
-        </div>
-      )}
-
-      {submission.graded_at && !success && (
-        <div className="flex items-center gap-2 text-xs text-emerald-600">
-          <CheckCircle2 size={14} />
-          Graded on {fmtDateTime(submission.graded_at)}
-        </div>
-      )}
-
-      <div>
-        <label className="text-sm font-medium text-foreground">Grade</label>
-        <div className="flex items-center gap-2 mt-1">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Grading attempt {submission.version}. If newer work arrives, reload
+        before grading.
+      </p>
+      <div className="space-y-1.5">
+        <label
+          htmlFor={`grade-${submission.id}`}
+          className="text-sm font-medium"
+        >
+          Grade
+        </label>
+        <div className="flex items-center gap-2">
           <input
-            type={maxPoints ? "number" : "text"}
+            id={`grade-${submission.id}`}
+            name="grade"
+            type={maxPoints !== null ? "number" : "text"}
             value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            min={0}
-            max={maxPoints || undefined}
-            placeholder={maxPoints ? "0" : "e.g., A+"}
-            className={`${inputClass} w-24`}
+            onChange={(event) => setGrade(event.target.value)}
+            required
+            min={maxPoints !== null ? 0 : undefined}
+            max={maxPoints ?? undefined}
+            step="any"
+            maxLength={100}
+            disabled={busy}
+            className="h-9 w-28 rounded-md border border-input bg-background px-3 text-sm"
           />
-          {maxPoints && (
+          {maxPoints !== null && (
             <span className="text-sm text-muted-foreground">/ {maxPoints}</span>
           )}
         </div>
       </div>
-
-      <div>
-        <label className="text-sm font-medium text-foreground">
-          Feedback <span className="text-muted-foreground font-normal">(optional)</span>
+      <div className="space-y-1.5">
+        <label
+          htmlFor={`feedback-${submission.id}`}
+          className="text-sm font-medium"
+        >
+          Feedback (optional)
         </label>
         <textarea
+          id={`feedback-${submission.id}`}
+          name="feedback"
           value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
+          onChange={(event) => setFeedback(event.target.value)}
+          maxLength={10000}
           rows={3}
-          placeholder="Add feedback for the student..."
-          className="mt-1 flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          disabled={busy}
+          className="w-full rounded-md border border-input bg-background p-3 text-sm"
         />
       </div>
-
-      <Button onClick={handleSubmit} disabled={isPending || !grade.trim()}>
-        {isPending
-          ? "Saving..."
-          : submission.graded_at
-            ? "Update Grade"
-            : "Return"}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <Button type="submit" disabled={busy}>
+        {busy ? "Saving..." : submission.graded_at ? "Update Grade" : "Return"}
       </Button>
-    </div>
+    </form>
   );
 }
 
@@ -102,53 +134,15 @@ export function SubmissionCard({
   submission,
   maxPoints,
 }: {
-  submission: Submission;
+  submission: Submission & { version: number };
   maxPoints: number | null;
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">
-          Submitted {fmtDateTime(submission.submitted_at)}
-        </span>
-        {submission.graded_at ? (
-          <Badge className="text-xs bg-emerald-500 text-white">Graded</Badge>
-        ) : (
-          <Badge variant="secondary" className="text-xs">Turned in</Badge>
-        )}
-        {submission.grade && (
-          <Badge variant="outline" className="text-xs font-mono">
-            {submission.grade}{maxPoints ? `/${maxPoints}` : ""}
-          </Badge>
-        )}
-      </div>
-
-      {submission.content && (
-        <div className="rounded-lg border border-border/50 p-3">
-          <p className="text-sm whitespace-pre-line">{submission.content}</p>
-        </div>
-      )}
-
-      {submission.file_url && (
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-muted-foreground">Link submitted</p>
-          <a
-            href={/^https?:\/\//i.test(submission.file_url) ? submission.file_url : `https://${submission.file_url}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline break-all"
-          >
-            {submission.file_url.length > 80 ? submission.file_url.slice(0, 80) + "…" : submission.file_url}
-          </a>
-        </div>
-      )}
-
-      {submission.feedback && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
-          <p className="text-xs font-medium text-emerald-700 mb-1">Feedback</p>
-          <p className="text-sm whitespace-pre-line">{submission.feedback}</p>
-        </div>
-      )}
+      <p className="text-sm font-semibold">
+        Latest attempt · {submission.version}
+      </p>
+      <AttemptWork attempt={submission} maxPoints={maxPoints} />
     </div>
   );
 }

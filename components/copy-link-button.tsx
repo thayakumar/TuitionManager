@@ -21,16 +21,32 @@ export function CopyLinkButton({
 }) {
   const [copied, setCopied] = useState(false);
 
-  function handleCopy() {
+  async function handleCopy() {
     const fullUrl = relative ? `${window.location.origin}${url}` : url;
-    navigator.clipboard.writeText(fullUrl);
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+    } catch {
+      window.alert(
+        "Clipboard access was blocked. Please allow clipboard access and try again.",
+      );
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   return (
-    <Button variant={variant} size={size} onClick={handleCopy} className="gap-1.5">
-      {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+    <Button
+      variant={variant}
+      size={size}
+      onClick={handleCopy}
+      className="gap-1.5"
+    >
+      {copied ? (
+        <Check size={14} className="text-emerald-500" />
+      ) : (
+        <Copy size={14} />
+      )}
       {copied ? copiedLabel : label}
     </Button>
   );

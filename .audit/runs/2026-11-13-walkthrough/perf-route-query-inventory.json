@@ -1,0 +1,680 @@
+[
+  {
+    "file": "app/classes/[id]/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 53
+      },
+      {
+        "name": "queryOne",
+        "line": 57
+      },
+      {
+        "name": "queryOne",
+        "line": 58
+      },
+      {
+        "name": "queryOne",
+        "line": 59
+      }
+    ]
+  },
+  {
+    "file": "app/classroom/[studentId]/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 15
+      },
+      {
+        "name": "queryAll",
+        "line": 22
+      },
+      {
+        "name": "queryAll",
+        "line": 26
+      },
+      {
+        "name": "queryAll",
+        "line": 30
+      }
+    ]
+  },
+  {
+    "file": "app/classroom/[studentId]/post/[postId]/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 38
+      },
+      {
+        "name": "queryOne",
+        "line": 42
+      },
+      {
+        "name": "queryAll",
+        "line": 48
+      },
+      {
+        "name": "queryOne",
+        "line": 53
+      }
+    ]
+  },
+  {
+    "file": "app/classroom/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "file": "app/invoices/[id]/page.tsx",
+    "directCalls": 8,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 67
+      },
+      {
+        "name": "queryOne",
+        "line": 72
+      },
+      {
+        "name": "queryAll",
+        "line": 73
+      },
+      {
+        "name": "getSetting",
+        "line": 77
+      },
+      {
+        "name": "getSetting",
+        "line": 78
+      },
+      {
+        "name": "getSetting",
+        "line": 79
+      },
+      {
+        "name": "getSetting",
+        "line": 80
+      },
+      {
+        "name": "getSetting",
+        "line": 81
+      }
+    ]
+  },
+  {
+    "file": "app/invoices/new/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "file": "app/invoices/page.tsx",
+    "directCalls": 3,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 59
+      },
+      {
+        "name": "queryAll",
+        "line": 65
+      },
+      {
+        "name": "getSetting",
+        "line": 70
+      }
+    ]
+  },
+  {
+    "file": "app/meeting/[classId]/page.tsx",
+    "directCalls": 5,
+    "calls": [
+      {
+        "name": "isAdminRequest",
+        "line": 13
+      },
+      {
+        "name": "getStudentSession",
+        "line": 14
+      },
+      {
+        "name": "queryOne",
+        "line": 20
+      },
+      {
+        "name": "queryOne",
+        "line": 35
+      },
+      {
+        "name": "queryOne",
+        "line": 46
+      }
+    ]
+  },
+  {
+    "file": "app/notifications/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "directCalls": 11,
+    "calls": [
+      {
+        "name": "getSetting",
+        "line": 30
+      },
+      {
+        "name": "getSetting",
+        "line": 31
+      },
+      {
+        "name": "queryAll",
+        "line": 33
+      },
+      {
+        "name": "queryAll",
+        "line": 41
+      },
+      {
+        "name": "queryAll",
+        "line": 48
+      },
+      {
+        "name": "queryAll",
+        "line": 56
+      },
+      {
+        "name": "queryOne",
+        "line": 62
+      },
+      {
+        "name": "queryAll",
+        "line": 83
+      },
+      {
+        "name": "queryAll",
+        "line": 91
+      },
+      {
+        "name": "queryOne",
+        "line": 98
+      },
+      {
+        "name": "queryAll",
+        "line": 107
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/classroom/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 15
+      },
+      {
+        "name": "queryAll",
+        "line": 24
+      },
+      {
+        "name": "queryAll",
+        "line": 28
+      },
+      {
+        "name": "queryAll",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/classroom/post/[postId]/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 36
+      },
+      {
+        "name": "queryOne",
+        "line": 42
+      },
+      {
+        "name": "queryAll",
+        "line": 48
+      },
+      {
+        "name": "queryOne",
+        "line": 52
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/layout.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "getStudentSession",
+        "line": 18
+      },
+      {
+        "name": "queryOne",
+        "line": 23
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/notes/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 27
+      },
+      {
+        "name": "queryAll",
+        "line": 36
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/notifications/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 36
+      },
+      {
+        "name": "queryAll",
+        "line": 42
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 22
+      },
+      {
+        "name": "queryAll",
+        "line": 36
+      },
+      {
+        "name": "queryAll",
+        "line": 43
+      },
+      {
+        "name": "queryOne",
+        "line": 50
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/profile/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 46
+      },
+      {
+        "name": "queryOne",
+        "line": 52
+      }
+    ]
+  },
+  {
+    "file": "app/portal/student/[studentId]/schedule/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 60
+      },
+      {
+        "name": "queryAll",
+        "line": 72
+      }
+    ]
+  },
+  {
+    "file": "app/requests/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 26
+      }
+    ]
+  },
+  {
+    "file": "app/schedule/new/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "file": "app/schedule/page.tsx",
+    "directCalls": 3,
+    "calls": [
+      {
+        "name": "isAdminRequest",
+        "line": 18
+      },
+      {
+        "name": "queryAll",
+        "line": 24
+      },
+      {
+        "name": "queryAll",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "file": "app/schedule/recurring/new/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 23
+      }
+    ]
+  },
+  {
+    "file": "app/settings/page.tsx",
+    "directCalls": 6,
+    "calls": [
+      {
+        "name": "getSetting",
+        "line": 20
+      },
+      {
+        "name": "getSetting",
+        "line": 21
+      },
+      {
+        "name": "getSetting",
+        "line": 22
+      },
+      {
+        "name": "getSetting",
+        "line": 23
+      },
+      {
+        "name": "getSetting",
+        "line": 24
+      },
+      {
+        "name": "queryAll",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/attendance/page.tsx",
+    "directCalls": 3,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 15
+      },
+      {
+        "name": "queryAll",
+        "line": 24
+      },
+      {
+        "name": "queryOne",
+        "line": 28
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/invoices/[invoiceId]/page.tsx",
+    "directCalls": 9,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 36
+      },
+      {
+        "name": "queryOne",
+        "line": 43
+      },
+      {
+        "name": "queryOne",
+        "line": 51
+      },
+      {
+        "name": "queryAll",
+        "line": 52
+      },
+      {
+        "name": "getSetting",
+        "line": 56
+      },
+      {
+        "name": "getSetting",
+        "line": 57
+      },
+      {
+        "name": "getSetting",
+        "line": 58
+      },
+      {
+        "name": "getSetting",
+        "line": 59
+      },
+      {
+        "name": "getSetting",
+        "line": 60
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/invoices/page.tsx",
+    "directCalls": 3,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 17
+      },
+      {
+        "name": "getSetting",
+        "line": 24
+      },
+      {
+        "name": "queryAll",
+        "line": 26
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/layout.tsx",
+    "directCalls": 3,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 15
+      },
+      {
+        "name": "queryOne",
+        "line": 21
+      },
+      {
+        "name": "getSetting",
+        "line": 27
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/page.tsx",
+    "directCalls": 6,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 17
+      },
+      {
+        "name": "getSetting",
+        "line": 24
+      },
+      {
+        "name": "queryOne",
+        "line": 27
+      },
+      {
+        "name": "queryAll",
+        "line": 28
+      },
+      {
+        "name": "queryOne",
+        "line": 32
+      },
+      {
+        "name": "queryAll",
+        "line": 42
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/reports/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 30
+      },
+      {
+        "name": "queryAll",
+        "line": 36
+      }
+    ]
+  },
+  {
+    "file": "app/share/[token]/schedule/page.tsx",
+    "directCalls": 4,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 16
+      },
+      {
+        "name": "queryOne",
+        "line": 23
+      },
+      {
+        "name": "queryAll",
+        "line": 29
+      },
+      {
+        "name": "queryAll",
+        "line": 33
+      }
+    ]
+  },
+  {
+    "file": "app/students/[id]/edit/page.tsx",
+    "directCalls": 1,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "file": "app/students/[id]/page.tsx",
+    "directCalls": 11,
+    "calls": [
+      {
+        "name": "queryOne",
+        "line": 60
+      },
+      {
+        "name": "getSetting",
+        "line": 61
+      },
+      {
+        "name": "queryAll",
+        "line": 65
+      },
+      {
+        "name": "queryAll",
+        "line": 71
+      },
+      {
+        "name": "queryAll",
+        "line": 75
+      },
+      {
+        "name": "queryAll",
+        "line": 79
+      },
+      {
+        "name": "queryAll",
+        "line": 83
+      },
+      {
+        "name": "queryAll",
+        "line": 87
+      },
+      {
+        "name": "queryAll",
+        "line": 94
+      },
+      {
+        "name": "queryOne",
+        "line": 109
+      },
+      {
+        "name": "queryOne",
+        "line": 113
+      }
+    ]
+  },
+  {
+    "file": "app/students/page.tsx",
+    "directCalls": 2,
+    "calls": [
+      {
+        "name": "queryAll",
+        "line": 41
+      },
+      {
+        "name": "getSetting",
+        "line": 42
+      }
+    ]
+  }
+]

@@ -16,7 +16,8 @@ export type Student = {
 };
 
 export type ClassStatus = "scheduled" | "completed" | "canceled";
-export type Attendance = "present" | "absent" | "late" | null;
+export type Attendance = "present" | "absent" | null;
+export type LegacyAttendance = Attendance | "late";
 
 export type ClassRow = {
   id: number;
@@ -26,7 +27,7 @@ export type ClassRow = {
   subject: string | null;
   location: string | null;
   status: ClassStatus;
-  attendance: Attendance;
+  attendance: LegacyAttendance;
   recurrence_id: number | null;
   is_trial: number;
   cancel_reason: string | null;
@@ -162,6 +163,7 @@ export type PostAttachment = {
 
 export type Submission = {
   id: number;
+  version: number;
   post_id: number;
   student_id: number;
   content: string | null;
@@ -237,4 +239,16 @@ export type AppNotification = {
   link: string | null;
   read: number;
   created_at: string;
+};
+
+export type SubmissionVersion = {
+  id: number;
+  submission_id: number;
+  version: number;
+  content: string | null;
+  file_url: string | null;
+  grade: string | null;
+  feedback: string | null;
+  submitted_at: string;
+  graded_at: string | null;
 };

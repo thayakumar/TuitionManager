@@ -1,6 +1,9 @@
+import { requireAdminPage } from "@/lib/auth";
+import { LessonActionForm } from "@/components/lesson-action-form";
+import { fmtDateInput, fmtISODate } from "@/lib/format";
 import Link from "next/link";
 import { queryAll } from "@/lib/db";
-import { createRecurrence } from "@/lib/actions";
+import { createRecurrenceQuick } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,15 +16,25 @@ import { format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 export default async function NewRecurringPage({
   searchParams,
 }: {
-  searchParams: { student?: string };
+  searchParams: Promise<{ student?: string }>;
 }) {
+  await requireAdminPage();
+  const query = await searchParams;
   const students = await queryAll<Student>(
-    "SELECT * FROM students WHERE active = 1 ORDER BY name"
+    "SELECT id,name,subject FROM students WHERE active = 1 ORDER BY name",
   );
 
   if (students.length === 0) {
@@ -33,19 +46,29 @@ export default async function NewRecurringPage({
     );
   }
 
-  const defaultStart = format(new Date(), "yyyy-MM-dd");
+  const defaultStart = fmtISODate(new Date().toISOString());
 
   return (
     <>
-      <PageHeader title="Set up recurring classes" subtitle="Auto-generates classes on selected days" />
-      <form action={createRecurrence} className="max-w-xl">
+      <PageHeader
+        title="Set up recurring classes"
+        subtitle="Malaysia time · no end date generates through 31 December of the chosen start year"
+      />
+      <LessonActionForm
+        action={createRecurrenceQuick}
+        successPath="/schedule"
+        className="max-w-xl"
+      >
         <Card>
           <CardContent className="pt-5 space-y-4">
             <SelectField
               label="Student *"
               name="student_id"
-              defaultValue={searchParams.student || String(students[0].id)}
-              options={students.map((s) => ({ value: String(s.id), label: s.name }))}
+              defaultValue={query.student || String(students[0].id)}
+              options={students.map((s) => ({
+                value: String(s.id),
+                label: s.name,
+              }))}
             />
 
             <div>
@@ -53,21 +76,46 @@ export default async function NewRecurringPage({
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {DAYS.map((day, i) => (
                   <label key={i} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="day_of_week" value={String(i)} />
+                    <input
+                      type="checkbox"
+                      name="day_of_week"
+                      value={String(i)}
+                    />
                     {day}
                   </label>
                 ))}
               </div>
             </div>
 
-            <Field label="Time *" name="time" type="time" required defaultValue="16:00" />
+            <Field
+              label="Time *"
+              name="time"
+              type="time"
+              required
+              defaultValue="16:00"
+            />
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Duration (minutes)" name="duration_minutes" type="number" defaultValue={60} />
-              <Field label="Subject" name="subject" placeholder="e.g. Mathematics" />
+              <Field
+                label="Duration (minutes)"
+                name="duration_minutes"
+                type="number"
+                defaultValue={60}
+                min={5}
+                max={1440}
+              />
+              <Field
+                label="Subject"
+                name="subject"
+                placeholder="e.g. Mathematics"
+              />
             </div>
 
-            <Field label="Location" name="location" placeholder="e.g. Zoom / Home" />
+            <Field
+              label="Location"
+              name="location"
+              placeholder="e.g. Zoom / Home"
+            />
 
             <SelectField
               label="Frequency"
@@ -80,11 +128,27 @@ export default async function NewRecurringPage({
               ]}
             />
 
-            <Field label="Custom interval (days)" name="custom_interval_days" type="number" placeholder="e.g. 10" />
+            <Field
+              label="Custom interval (days)"
+              name="custom_interval_days"
+              type="number"
+              placeholder="e.g. 10"
+            />
 
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Start date *" name="start_date" type="date" required defaultValue={defaultStart} />
-              <Field label="End date" name="end_date" type="date" placeholder="Optional" />
+              <Field
+                label="Start date *"
+                name="start_date"
+                type="date"
+                required
+                defaultValue={defaultStart}
+              />
+              <Field
+                label="End date"
+                name="end_date"
+                type="date"
+                placeholder="Optional"
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -95,7 +159,7 @@ export default async function NewRecurringPage({
             </div>
           </CardContent>
         </Card>
-      </form>
+      </LessonActionForm>
     </>
   );
 }

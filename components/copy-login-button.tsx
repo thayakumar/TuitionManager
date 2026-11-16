@@ -17,7 +17,14 @@ export function CopyLoginButton({
   async function handleCopy() {
     const base = window.location.origin;
     const text = `Student Portal Login\nURL: ${base}/portal/student\nUsername: ${username}\nPassword: ${password}`;
-    await navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      toast.error(
+        "Clipboard access was blocked. Please allow it and try again.",
+      );
+      return;
+    }
     setCopied(true);
     toast.success("Login info copied to clipboard");
     setTimeout(() => setCopied(false), 2000);

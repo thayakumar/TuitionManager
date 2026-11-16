@@ -14,17 +14,24 @@ async function getPrivateKey() {
   return cachedKey;
 }
 
+export function getJaasAppId(): string {
+  return APP_ID;
+}
+
 export function isJaasConfigured() {
   return !!(APP_ID && API_KEY_ID && process.env.JAAS_PRIVATE_KEY);
 }
 
 export async function generateJaasJwt(opts: {
   userName: string;
+  room: string;
   isModerator: boolean;
   userId: string;
   email?: string;
 }): Promise<string | undefined> {
   if (!isJaasConfigured()) return undefined;
+  if (!opts.room || opts.room === "*" || /[\r\n]/.test(opts.room))
+    throw new Error("A specific meeting room is required");
 
   const key = await getPrivateKey();
   if (!key) return undefined;
@@ -35,7 +42,7 @@ export async function generateJaasJwt(opts: {
     aud: "jitsi",
     iss: "chat",
     sub: APP_ID,
-    room: "*",
+    room: opts.room,
     context: {
       user: {
         id: opts.userId,

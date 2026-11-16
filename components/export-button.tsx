@@ -1,7 +1,8 @@
 "use client";
+import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { actionError } from "@/lib/action-errors";
 export function ExportButton({
   getData,
   filename,
@@ -9,20 +10,42 @@ export function ExportButton({
   getData: () => Promise<string>;
   filename: string;
 }) {
-  async function handleExport() {
-    const csv = await getData();
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState<string | null>(null);
   return (
-    <Button variant="outline" onClick={handleExport} className="gap-1.5">
-      <Download size={16} /> Export CSV
-    </Button>
+    <div>
+      <Button
+        variant="outline"
+        disabled={busy}
+        onClick={async () => {
+          if (busy) return;
+          setBusy(true);
+          setError(null);
+          try {
+            const csv = await getData(),
+              url = URL.createObjectURL(
+                new Blob([csv], { type: "text/csv;charset=utf-8;" }),
+              ),
+              a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          } catch (e) {
+            setError(actionError(e, "Export could not be downloaded."));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <Download size={16} />
+        {busy ? "Preparing…" : "Export CSV"}
+      </Button>
+      {error && (
+        <p role="alert" className="mt-1 max-w-xs text-xs text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

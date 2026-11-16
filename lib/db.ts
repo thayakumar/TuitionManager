@@ -1,20 +1,27 @@
-import { createClient, type Client, type Row, type InValue } from "@libsql/client";
+import {
+  createClient,
+  type Client,
+  type Row,
+  type InValue,
+  type Transaction,
+} from "@libsql/client";
 
-let _client: Client | null = null;
+// Bump only when a reviewed migration is added. A prepared database needs one
+// version read per process, rather than executing DDL on every cold page request.
+export const SCHEMA_VERSION = 2;
+let client: Client | null = null;
+let initialization: Promise<void> | undefined;
+let writeQueue: Promise<void> = Promise.resolve();
 
 export function getClient(): Client {
-  if (_client) return _client;
-  _client = createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN,
-  });
-  return _client;
+  if (client) return client;
+  const url = process.env.TURSO_DATABASE_URL;
+  if (!url) throw new Error("TURSO_DATABASE_URL must be configured");
+  client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  return client;
 }
 
-export async function migrate() {
-  const c = getClient();
-  await c.execute("PRAGMA foreign_keys = ON");
-  await c.executeMultiple(`
+const BASE_SCHEMA = `
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -134,9 +141,8 @@ export async function migrate() {
     INSERT OR IGNORE INTO settings(key, value) VALUES ('business_contact', '');
     INSERT OR IGNORE INTO settings(key, value) VALUES ('currency', 'RM');
     INSERT OR IGNORE INTO settings(key, value) VALUES ('payment_instructions', 'Bank transfer within 7 days.');
-  `);
 
-  await c.executeMultiple(`
+
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL CHECK(type IN ('material','assignment','quiz','announcement')),
@@ -250,90 +256,266 @@ export async function migrate() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_type, recipient_id, read);
-  `);
+  `;
 
-  // Unique constraints added idempotently
-  try { await c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_students_username ON students(username)"); } catch {}
-  try { await c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_submissions_unique ON submissions(post_id, student_id)"); } catch {}
+const ADDED_COLUMNS: Record<string, Record<string, string>> = {
+  classes: {
+    recurrence_id: "INTEGER REFERENCES recurrences(id) ON DELETE SET NULL",
+    is_trial: "INTEGER NOT NULL DEFAULT 0",
+    cancel_reason: "TEXT",
+    rescheduled_from: "INTEGER REFERENCES classes(id) ON DELETE SET NULL",
+    meeting_room: "TEXT",
+    meeting_notes: "TEXT",
+  },
+  students: { username: "TEXT", password: "TEXT" },
+  posts: {
+    topic_id: "INTEGER REFERENCES topics(id) ON DELETE SET NULL",
+    max_points: "INTEGER",
+    updated_at: "TEXT",
+  },
+  submissions: { version: "INTEGER NOT NULL DEFAULT 1" },
+  notifications: { event_key: "TEXT" },
+  invoices: { billing_month: "TEXT" },
+  recurrences: { generated_through: "TEXT" },
+};
 
-  const alterColumns = [
-    "ALTER TABLE classes ADD COLUMN recurrence_id INTEGER REFERENCES recurrences(id) ON DELETE SET NULL",
-    "ALTER TABLE classes ADD COLUMN is_trial INTEGER NOT NULL DEFAULT 0",
-    "ALTER TABLE classes ADD COLUMN cancel_reason TEXT",
-    "ALTER TABLE classes ADD COLUMN rescheduled_from INTEGER REFERENCES classes(id) ON DELETE SET NULL",
-    "ALTER TABLE classes ADD COLUMN meeting_room TEXT",
-    "ALTER TABLE students ADD COLUMN username TEXT",
-    "ALTER TABLE students ADD COLUMN password TEXT",
-    "ALTER TABLE classes ADD COLUMN meeting_notes TEXT",
-    "ALTER TABLE posts ADD COLUMN topic_id INTEGER REFERENCES topics(id) ON DELETE SET NULL",
-    "ALTER TABLE posts ADD COLUMN max_points INTEGER",
-    "ALTER TABLE posts ADD COLUMN updated_at TEXT",
-  ];
-  for (const sql of alterColumns) {
-    try {
-      await c.execute(sql);
-    } catch {
-      // Column already exists — safe to ignore
+async function applyMigration(tx: Transaction) {
+  await tx.executeMultiple(BASE_SCHEMA);
+  // Introspect first: ignoring every ALTER error hides unavailable columns and
+  // data corruption. Column definitions are fixed application constants.
+  for (const [table, definitions] of Object.entries(ADDED_COLUMNS)) {
+    const existing = new Set(
+      (await tx.execute(`PRAGMA table_info(${table})`)).rows.map((row) =>
+        String(row.name),
+      ),
+    );
+    for (const [name, definition] of Object.entries(definitions)) {
+      if (!existing.has(name))
+        await tx.execute(
+          `ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`,
+        );
     }
   }
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS student_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_sessions_student ON student_sessions(student_id);
+    CREATE INDEX IF NOT EXISTS idx_student_sessions_expiry ON student_sessions(expires_at);
+    CREATE TABLE IF NOT EXISTS submission_versions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submission_id INTEGER NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+      version INTEGER NOT NULL CHECK(version > 0),
+      max_points INTEGER,
+      content TEXT,
+      file_url TEXT,
+      grade TEXT,
+      feedback TEXT,
+      submitted_at TEXT NOT NULL,
+      graded_at TEXT,
+      UNIQUE(submission_id, version)
+    );
+    CREATE INDEX IF NOT EXISTS idx_submission_versions_submission ON submission_versions(submission_id, version DESC);
+  `);
 
-  // One-time move of the old single meeting_notes column into the scoped
-  // class_notes table. Existing notes were all tutor-authored, so they become
-  // teacher notes; students start with an empty slate.
-  const notesSplit = await c.execute(
-    "SELECT value FROM settings WHERE key = 'notes_split_v1'"
+  const versionColumns = new Set(
+    (await tx.execute("PRAGMA table_info(submission_versions)")).rows.map(
+      (row) => String(row.name),
+    ),
   );
-  if (notesSplit.rows.length === 0) {
-    await c.execute(`
-      INSERT OR IGNORE INTO class_notes(class_id, scope, content, updated_at)
-      SELECT id, 'teacher', meeting_notes, datetime('now')
-      FROM classes
-      WHERE meeting_notes IS NOT NULL AND TRIM(meeting_notes) != ''
-    `);
-    await c.execute(
-      "INSERT OR REPLACE INTO settings(key, value) VALUES ('notes_split_v1', '1')"
+  if (!versionColumns.has("max_points"))
+    await tx.execute(
+      "ALTER TABLE submission_versions ADD COLUMN max_points INTEGER",
+    );
+
+  // Preserve every previously stored submission if an older release permitted
+  // duplicates. The latest row becomes the projection; all attempts are retained.
+  const duplicates = await tx.execute(
+    "SELECT post_id, student_id FROM submissions GROUP BY post_id, student_id HAVING COUNT(*) > 1",
+  );
+  for (const duplicate of duplicates.rows) {
+    const attempts = (
+      await tx.execute({
+        sql: "SELECT * FROM submissions WHERE post_id=? AND student_id=? ORDER BY submitted_at, id",
+        args: [duplicate.post_id, duplicate.student_id],
+      })
+    ).rows;
+    const latest = attempts[attempts.length - 1];
+    for (let index = 0; index < attempts.length; index++) {
+      const a = attempts[index];
+      await tx.execute({
+        sql: "INSERT INTO submission_versions(submission_id,version,content,file_url,grade,feedback,submitted_at,graded_at) VALUES(?,?,?,?,?,?,?,?)",
+        args: [
+          latest.id,
+          index + 1,
+          a.content,
+          a.file_url,
+          a.grade,
+          a.feedback,
+          a.submitted_at,
+          a.graded_at,
+        ],
+      });
+    }
+    await tx.execute({
+      sql: "DELETE FROM submissions WHERE post_id=? AND student_id=? AND id<>?",
+      args: [duplicate.post_id, duplicate.student_id, latest.id],
+    });
+    await tx.execute({
+      sql: "UPDATE submissions SET version=? WHERE id=?",
+      args: [attempts.length, latest.id],
+    });
+  }
+  await tx.execute(`INSERT OR IGNORE INTO submission_versions(submission_id,version,content,file_url,grade,feedback,submitted_at,graded_at)
+    SELECT id,version,content,file_url,grade,feedback,submitted_at,graded_at FROM submissions`);
+
+  // Existing legacy attempts have only the current rubric available. Once this
+  // initial snapshot is recorded, future rubric edits never rewrite history.
+  await tx.execute(`UPDATE submission_versions SET max_points=(
+    SELECT p.max_points FROM submissions s JOIN posts p ON p.id=s.post_id
+    WHERE s.id=submission_versions.submission_id
+  ) WHERE max_points IS NULL`);
+
+  // This index must follow username creation. A real collision is deliberately
+  // surfaced for review; silently reassigning existing credentials is unsafe.
+  await tx.executeMultiple(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_students_username ON students(username);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_students_username_casefold ON students(lower(username)) WHERE username IS NOT NULL AND trim(username) <> '';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_submissions_unique ON submissions(post_id, student_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_event_key ON notifications(event_key) WHERE event_key IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_classes_student_status_date ON classes(student_id, status, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_classes_status_date ON classes(status, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_classes_recurrence_date ON classes(recurrence_id, scheduled_at);
+    CREATE INDEX IF NOT EXISTS idx_notifications_inbox ON notifications(recipient_type, recipient_id, created_at DESC, id DESC);
+    CREATE INDEX IF NOT EXISTS idx_invoices_billing_status ON invoices(billing_month, status);
+  `);
+  const notesMigrated = await tx.execute(
+    "SELECT value FROM settings WHERE key='notes_split_v1'",
+  );
+  if (!notesMigrated.rows.length) {
+    await tx.execute(`INSERT OR IGNORE INTO class_notes(class_id,scope,content,updated_at)
+      SELECT id,'teacher',meeting_notes,datetime('now') FROM classes
+      WHERE meeting_notes IS NOT NULL AND trim(meeting_notes)<>''`);
+    await tx.execute(
+      "INSERT INTO settings(key,value) VALUES ('notes_split_v1','1')",
     );
   }
-
-  await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_username', 'admin')");
-  await c.execute("INSERT OR IGNORE INTO settings(key, value) VALUES ('admin_password', 'admin123')");
-
-  // Clean up expired admin sessions
-  await c.execute("DELETE FROM admin_sessions WHERE expires_at < datetime('now')");
+  await tx.executeMultiple(`
+    UPDATE invoices SET billing_month=strftime('%Y-%m',period_start,'+8 hours') WHERE billing_month IS NULL;
+    UPDATE recurrences SET generated_through=(SELECT date(MAX(scheduled_at),'+8 hours') FROM classes WHERE recurrence_id=recurrences.id) WHERE generated_through IS NULL;
+    INSERT OR IGNORE INTO settings(key,value) VALUES ('admin_username','admin');
+    INSERT OR IGNORE INTO settings(key,value) VALUES ('admin_password','admin123');
+    DELETE FROM settings WHERE key LIKE 'student_session_%';
+  `);
+  await tx.execute(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
-let _migrated = false;
-export async function ensureMigrated() {
-  if (_migrated) return;
-  await migrate();
-  _migrated = true;
+async function initialize() {
+  const database = getClient();
+  const current = Number(
+    (await database.execute("PRAGMA user_version")).rows[0]?.user_version ?? 0,
+  );
+  if (current > SCHEMA_VERSION)
+    throw new Error("Database schema is newer than this application release");
+  if (current === SCHEMA_VERSION) return;
+  const tx = await database.transaction("write");
+  try {
+    // Another deployment instance may have migrated while we waited for its lock.
+    const lockedVersion = Number(
+      (await tx.execute("PRAGMA user_version")).rows[0]?.user_version ?? 0,
+    );
+    if (lockedVersion < SCHEMA_VERSION) await applyMigration(tx);
+    else if (lockedVersion > SCHEMA_VERSION)
+      throw new Error("Database schema is newer than this application release");
+    await tx.commit();
+  } catch (error) {
+    if (!tx.closed) await tx.rollback();
+    throw error;
+  } finally {
+    tx.close();
+  }
+}
+
+export function ensureMigrated(): Promise<void> {
+  if (!initialization) {
+    initialization = initialize().catch((error) => {
+      initialization = undefined;
+      throw error;
+    });
+  }
+  return initialization;
+}
+
+// Explicit setup/deployment entry point; shares the same migration coordination.
+export async function migrate(): Promise<void> {
+  await ensureMigrated();
+}
+
+export async function withTransaction<T>(
+  operation: (tx: Transaction) => Promise<T>,
+): Promise<T> {
+  await ensureMigrated();
+  // SQLite has a single writer. Queue this process's transactions rather than
+  // starting a second local BEGIN IMMEDIATE while the first is awaiting work.
+  // The database write lock still protects callers from other server processes.
+  const result = writeQueue.then(async () => {
+    const tx = await getClient().transaction("write");
+    try {
+      const value = await operation(tx);
+      await tx.commit();
+      return value;
+    } catch (error) {
+      if (!tx.closed) await tx.rollback();
+      throw error;
+    } finally {
+      tx.close();
+    }
+  });
+  writeQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
 }
 
 function rowToObject<T>(row: Row): T {
   return row as unknown as T;
 }
-
-export async function queryAll<T>(sql: string, args: InValue[] = []): Promise<T[]> {
+export async function queryAll<T>(
+  sql: string,
+  args: InValue[] = [],
+): Promise<T[]> {
   await ensureMigrated();
-  const result = await getClient().execute({ sql, args });
-  return result.rows.map((r) => rowToObject<T>(r));
+  return (await getClient().execute({ sql, args })).rows.map((row) =>
+    rowToObject<T>(row),
+  );
 }
-
-export async function queryOne<T>(sql: string, args: InValue[] = []): Promise<T | undefined> {
-  await ensureMigrated();
-  const result = await getClient().execute({ sql, args });
-  return result.rows.length > 0 ? rowToObject<T>(result.rows[0]) : undefined;
+export async function queryOne<T>(
+  sql: string,
+  args: InValue[] = [],
+): Promise<T | undefined> {
+  return (await queryAll<T>(sql, args))[0];
 }
-
 export async function execute(sql: string, args: InValue[] = []) {
   await ensureMigrated();
   return getClient().execute({ sql, args });
 }
-
-export async function getSetting(key: string): Promise<string> {
-  const row = await queryOne<{ value: string }>(
-    "SELECT value FROM settings WHERE key = ?",
-    [key]
+export async function getSettings(
+  keys: readonly string[],
+): Promise<Record<string, string>> {
+  if (!keys.length) return {};
+  const rows = await queryAll<{ key: string; value: string }>(
+    `SELECT key,value FROM settings WHERE key IN (${keys.map(() => "?").join(",")})`,
+    [...keys],
   );
-  return row?.value ?? "";
+  return Object.fromEntries(
+    keys.map((key) => [key, rows.find((row) => row.key === key)?.value ?? ""]),
+  );
+}
+export async function getSetting(key: string): Promise<string> {
+  return (await getSettings([key]))[key];
 }

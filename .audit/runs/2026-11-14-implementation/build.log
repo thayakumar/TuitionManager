@@ -1,0 +1,79 @@
+
+> tuition-manager@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.29
+   - Experiments (use with caution):
+     · staleTimes
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.9s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/9) ...
+   Generating static pages (2/9)
+   Generating static pages (4/9)
+   Generating static pages (6/9)
+ ✓ Generating static pages (9/9)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                 Size  First Load JS
+┌ ƒ /                                                    2.58 kB         170 kB
+├ ○ /_not-found                                             1 kB         103 kB
+├ ƒ /api/upload                                            145 B         103 kB
+├ ƒ /classes/[id]                                        5.47 kB         161 kB
+├ ƒ /classroom                                           2.53 kB         120 kB
+├ ƒ /classroom/[studentId]                                 206 B         205 kB
+├ ƒ /classroom/[studentId]/post/[postId]                 2.31 kB         203 kB
+├ ƒ /financial-history                                   1.61 kB         107 kB
+├ ƒ /invoices                                            4.34 kB         157 kB
+├ ƒ /invoices/[id]                                       2.73 kB         123 kB
+├ ƒ /invoices/new                                        3.95 kB         157 kB
+├ ○ /login                                                 145 B         103 kB
+├ ƒ /meeting/[classId]                                   6.39 kB         128 kB
+├ ƒ /notifications                                       2.54 kB         117 kB
+├ ○ /portal                                                145 B         103 kB
+├ ƒ /portal/[studentId]                                    145 B         103 kB
+├ ○ /portal/admin                                         3.6 kB         118 kB
+├ ○ /portal/student                                      3.65 kB         118 kB
+├ ƒ /portal/student/[studentId]                            286 B         106 kB
+├ ƒ /portal/student/[studentId]/classroom                  196 B         205 kB
+├ ƒ /portal/student/[studentId]/classroom/post/[postId]  3.17 kB         133 kB
+├ ƒ /portal/student/[studentId]/notes                      272 B         103 kB
+├ ƒ /portal/student/[studentId]/notifications            2.48 kB         117 kB
+├ ƒ /portal/student/[studentId]/profile                  2.03 kB         119 kB
+├ ƒ /portal/student/[studentId]/schedule                 3.46 kB         156 kB
+├ ƒ /requests                                             3.6 kB         135 kB
+├ ƒ /schedule                                            48.6 kB         239 kB
+├ ƒ /schedule/new                                        2.22 kB         125 kB
+├ ƒ /schedule/recurring                                  3.06 kB         129 kB
+├ ƒ /schedule/recurring/new                              2.22 kB         125 kB
+├ ƒ /settings                                            1.54 kB         121 kB
+├ ƒ /share/[token]                                         286 B         106 kB
+├ ƒ /share/[token]/attendance                              272 B         103 kB
+├ ƒ /share/[token]/invoices                                286 B         106 kB
+├ ƒ /share/[token]/invoices/[invoiceId]                  2.11 kB         122 kB
+├ ƒ /share/[token]/reports                                 145 B         103 kB
+├ ƒ /share/[token]/schedule                                272 B         103 kB
+├ ƒ /students                                            4.72 kB         160 kB
+├ ƒ /students/[id]                                       7.61 kB         175 kB
+├ ƒ /students/[id]/edit                                  1.56 kB         124 kB
+└ ƒ /students/new                                        1.56 kB         124 kB
++ First Load JS shared by all                             102 kB
+  ├ chunks/1255-b157aaadbc533cfc.js                      46.3 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js                  54.2 kB
+  └ other shared chunks (total)                          1.95 kB
+
+
+ƒ Middleware                                             34.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

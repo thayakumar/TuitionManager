@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { SignInShell } from "@/components/sign-in-shell";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, ShieldCheck } from "lucide-react";
 import { loginAdmin } from "@/lib/actions";
@@ -8,16 +9,18 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 const inputClass =
-  "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+  "flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(formData: FormData) {
+  async function handleSubmit(formData: FormData) {
+    if (isPending) return;
     setError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const result = await loginAdmin(formData);
       if (result.success) {
         router.push("/");
@@ -25,24 +28,16 @@ export default function AdminLoginPage() {
       } else {
         setError(result.error || "Invalid credentials");
       }
-    });
+    } catch {
+      setError("Unable to sign in right now. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg mb-4">
-            <ShieldCheck size={28} />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Admin Login</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            TuitionHub &middot; Tutor Management Portal
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <form action={handleSubmit} className="space-y-4">
+    <SignInShell role="Admin">
+          <form action={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="admin-username">Username</Label>
               <input
@@ -69,22 +64,24 @@ export default function AdminLoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div
+                role="alert"
+                className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              >
                 {error}
               </div>
             )}
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? "Signing in..." : (
+              {isPending ? (
+                "Signing in..."
+              ) : (
                 <>
                   <LogIn size={16} /> Sign In
                 </>
               )}
             </Button>
           </form>
-        </div>
-
-      </div>
-    </div>
+    </SignInShell>
   );
 }

@@ -1,0 +1,973 @@
+[
+  {
+    "id": "HTTP-forged-/students",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "hasAlice": true
+    }
+  },
+  {
+    "id": "HTTP-forged-/settings",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "hasAlice": false
+    }
+  },
+  {
+    "id": "HTTP-forged-/invoices",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "hasAlice": true
+    }
+  },
+  {
+    "id": "HTTP-forged-/requests",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "hasAlice": false
+    }
+  },
+  {
+    "id": "HTTP-forged-/notifications",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "hasAlice": false
+    }
+  },
+  {
+    "id": "HTTP-forged-/schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 307,
+      "hasAlice": false
+    }
+  },
+  {
+    "id": "HTTP-no-cookie-admin",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 307
+    }
+  },
+  {
+    "id": "UI-admin-login",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "url": "http://127.0.0.1:4310/"
+    }
+  },
+  {
+    "id": "UI-calendar-view-switch",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "buttons": [
+        {
+          "text": "Month",
+          "label": null,
+          "render": "[object Object]"
+        }
+      ]
+    }
+  },
+  {
+    "id": "UI-student-login",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "url": "http://127.0.0.1:4310/portal/student/1"
+    }
+  },
+  {
+    "id": "HTTP-student-cross-owner-post",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "hasBobPrivate": true
+    }
+  },
+  {
+    "id": "HTTP-student-other-dashboard",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 307
+    }
+  },
+  {
+    "id": "HTTP-parent-valid-token",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "HTTP-parent-invalid-token",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 404
+    }
+  },
+  {
+    "id": "UI-console-errors",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": []
+  },
+  {
+    "id": "HTTP-anonymous-admin-notifications",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "body": "0:[\"$@1\",[\"fACel7bUYSRNpZk6Gi-ca\",null]]\n1:[{\"id\":1,\"type\":\"audit\",\"title\":\"Admin private message\",\"message\":\"ADMIN_PRIVATE_MARKER\",\"link\":null,\"read\":0,\"created_at\":\"2026-11-12 15:48:15\"}]\n"
+    }
+  },
+  {
+    "id": "HTTP-anonymous-other-notifications",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "body": "0:[\"$@1\",[\"fACel7bUYSRNpZk6Gi-ca\",null]]\n1:[{\"id\":2,\"type\":\"audit\",\"title\":\"Bob private message\",\"message\":\"BOB_NOTIFICATION_MARKER\",\"link\":null,\"read\":0,\"created_at\":\"2026-11-12 15:48:15\"}]\n"
+    }
+  },
+  {
+    "id": "HTTP-anonymous-mark-notification",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "body": "0:[\"$@1\",[\"fACel7bUYSRNpZk6Gi-ca\",null]]\n1:\"$undefined\"\n"
+    }
+  },
+  {
+    "id": "HTTP-anonymous-cross-owner-request",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "body": "3:I[9107,[],\"ClientPageRoot\"]\n4:I[2655,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"327\",\"static/chunks/327-3f39cdb55d4b1d2f.js\",\"8883\",\"static/chunks/app/portal/admin/page-5af8694595d069aa.js\"],\"default\",1]\n5:I[4707,[],\"\"]\n6:I[6423,[],\"\"]\n7:I[8351,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"4735\",\"static/chunks/4735-66a2d7a3ba971915.js\",\"2972\",\"static/chunks/2972-7319afaaa769e53d.js\",\"9631\",\"static/chunks/9631-283b268fff05bb29.js\",\"9347\",\"static/chunks/9347-95ea81eb05fb2031.js\",\"8782\",\"static/chunks/8782-fee760b1a14c56dd.js\",\"9246\",\"static/chunks/9246-db0260b06461b057.js\",\"3185\",\"static/chunks/app/layout-a3831ed9f4d66883.js\"],\"LayoutShell\"]\n8:I[8533,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"4735\",\"static/chunks/4735-66a2d7a3ba971915.js\",\"2972\",\"static/chunks/2972-7319afaaa769e53d.js\",\"9631\",\"static/chunks/9631-283b268fff05bb29.js\",\"9347\",\"static/chunks/9347-95ea81eb05fb2031.js\",\"8782\",\"static/chunks/8782-fee760b1a14c56dd.js\",\"9246\",\"static/chunks/9246-db0260b06461b057.js\",\"3185\",\"static/chunks/app/layout-a3831ed9f4d66883.js\"],\"default\"]\n9:I[4803,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"4735\",\"static/chunks/4735-66a2d7a3ba971915.js\",\"2972\",\"static/chunks/2972-7319afaaa769e53d.js\",\"9631\",\"static/chunks/9631-283b268fff05bb29.js\",\"9347\",\"static/chunks/9347-95ea81eb05fb2031.js\",\"8782\",\"static/chunks/8782-fee760b1a14c56dd.js\",\"9246\",\"static/chunks/9246-db0260b06461b057.js\",\"3185\",\"static/chunks/app/layout-a3831ed9f4d66883.js\"],\"MainWrapper\"]\na:I[3490,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"7601\",\"static/chunks/app/error-3a01edda3bbb09d0.js\"],\"default\"]\nb:I[4438,[\"5194\",\"static/chunks/5194-dd5a9c9a23017789.js\",\"4735\",\"static/chunks/4735-66a2d7a3ba971915.js\",\"2972\",\"static/chunks/2972-7319afaaa769e53d.js\",\"9631\",\"static/chunks/9631-283b268fff05bb29.js\",\"9347\",\"static/chunks/9347-95ea81eb05fb2031.js\",\"8782\",\"static/chunks/8782-fee760b1a14c56dd.js\",\"9246\",\"static/chunks/9246-db0260b06461b057.js\",\"3185\",\"static/chunks/app/layout-a3831ed9f4d66883.js\"],\"Toaster\"]\n0:[\"$@1\",[\"fACel7bUYSRNpZk6Gi-ca\",[[[\"\",{\"children\":[\"portal\",{\"children\":[\"admin\",{\"children\":[\"__PAGE__\",{}]}]}]},\"$undefined\",\"$undefined\",true],[\"\",{\"children\":[\"portal\",{\"children\":[\"admin\",{\"children\":[\"__PAGE__\",{},[[\"$L2\",[\"$\",\"$L3\",null,{\"props\":{\"params\":{},\"searchParams\":{}},\"Component\":\"$4\"}],null],null],null]},[null,[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\",\"portal\",\"children\",\"admin\",\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L6\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"notFoundStyles\":\"$undefined\"}]],null]},[null,[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\",\"portal\",\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L6\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"notFoundStyles\":\"$undefined\"}]],null]},[[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/d513397ac517a304.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}],[\"$\",\"link\",\"1\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/171e07e65ba75e66.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],[\"$\",\"html\",null,{\"lang\":\"en\",\"className\":\"__variable_d8ebd1\",\"children\":[\"$\",\"body\",null,{\"className\":\"antialiased font-sans\",\"children\":[[\"$\",\"$L7\",null,{\"children\":[[\"$\",\"$L8\",null,{}],[\"$\",\"$L9\",null,{\"children\":[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\"],\"error\":\"$a\",\"errorStyles\":[],\"errorScripts\":[],\"template\":[\"$\",\"$L6\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":[[\"$\",\"title\",null,{\"children\":\"404: This page could not be found.\"}],[\"$\",\"div\",null,{\"style\":{\"fontFamily\":\"system-ui,\\\"Segoe UI\\\",Roboto,Helvetica,Arial,sans-serif,\\\"Apple Color Emoji\\\",\\\"Segoe UI Emoji\\\"\",\"height\":\"100vh\",\"textAlign\":\"center\",\"display\":\"flex\",\"flexDirection\":\"column\",\"alignItems\":\"center\",\"justifyContent\":\"center\"},\"children\":[\"$\",\"div\",null,{\"children\":[[\"$\",\"style\",null,{\"dangerouslySetInnerHTML\":{\"__html\":\"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}\"}}],[\"$\",\"h1\",null,{\"className\":\"next-error-h1\",\"style\":{\"display\":\"inline-block\",\"margin\":\"0 20px 0 0\",\"padding\":\"0 23px 0 0\",\"fontSize\":24,\"fontWeight\":500,\"verticalAlign\":\"top\",\"lineHeight\":\"49px\"},\"children\":\"404\"}],[\"$\",\"div\",null,{\"style\":{\"display\":\"inline-block\"},\"children\":[\"$\",\"h2\",null,{\"style\":{\"fontSize\":14,\"fontWeight\":400,\"lineHeight\":\"49px\",\"margin\":0},\"children\":\"This page could not be found.\"}]}]]}]}]],\"notFoundStyles\":[]}]}]]}],[\"$\",\"$Lb\",null,{\"richColors\":true,\"position\":\"top-right\",\"closeButton\":true}]]}]}]],null],null],[\"$Lc\",null]]]]]\n1:{\"success\":true}\nc:[[\"$\",\"meta\",\"0\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1, maximum-scale=1\"}],[\"$\",\"meta\",\"1\",{\"name\":\"theme-color\",\"content\":\"#4F46E5\"}],[\"$\",\"meta\",\"2\",{\"charSet\":\"utf-8\"}],[\"$\",\"title\",\"3\",{\"children\":\"TuitionHub\"}],[\"$\",\"meta\",\"4\",{\"name\":\"description\",\"content\":\"Tuition management \u2014 schedule, attendance, reports, invoices\"}],[\"$\",\"link\",\"5\",{\"rel\":\"manifest\",\"href\":\"/manifest.json\",\"crossOrigin\":\"use-credentials\"}],[\"$\",\"meta\",\"6\",{\"name\":\"apple-mobile-web-app-capable\",\"content\":\"yes\"}],[\"$\",\"meta\",\"7\",{\"name\":\"apple-mobile-web-app-title\",\"content\":\"TuitionHub\"}],[\"$\",\"meta\",\"8\",{\"name\":\"apple-mobile-web-app-status-bar-style\",\"content\":\"default\"}],[\"$\",\"meta\",\"9\",{\"name\":\"next-size-adjust\"}]]\n2:null\n"
+    }
+  },
+  {
+    "id": "HTTP-forged-cookie-admin-write",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 500,
+      "body": "0:[\"$@1\",[\"fACel7bUYSRNpZk6Gi-ca\",null]]\n1:E{\"digest\":\"2412914663\"}\n"
+    }
+  },
+  {
+    "id": "HTTP-anonymous-upload",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "body": {
+        "fileUrl": "https://example.invalid/audit-file",
+        "fileName": "audit.txt"
+      },
+      "external_service": "local fake upload connector only"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/students",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/students"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/students/new",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/students/new"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/students/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/students/1"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/students/1/edit",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/students/1/edit"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/classes/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/classes/1"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/classroom",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/classroom"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/classroom/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/classroom/1"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/classroom/1/post/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/classroom/1/post/1"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/schedule"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/schedule/new",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/schedule/new"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/schedule/recurring/new",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/schedule/recurring/new"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/invoices",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/invoices"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/invoices/new",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/invoices/new"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/invoices/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/invoices/1"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/settings",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/settings"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/requests",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/requests"
+    }
+  },
+  {
+    "id": "SMOKE-admin-/notifications",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200,
+      "url": "http://127.0.0.1:4310/notifications"
+    }
+  },
+  {
+    "id": "UI-KL-invoice-month-dates",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": [
+      {
+        "name": "period_start",
+        "value": "2026-10-31"
+      },
+      {
+        "name": "period_end",
+        "value": "2026-11-29"
+      }
+    ]
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice/attendance",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice/schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice/reports",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice/invoices",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-parent-/share/audit-parent-alice/invoices/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "UI-parent-canceled-outstanding",
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "actual": {
+      "text": "Audit Alice\nParent View\nDashboard\nAttendance\nSchedule\nClass Reports\nInvoices\nTuition by Ananth \u00b7 TuitionHub\nInvoices\n\n2 invoices\n\nTotal Invoiced\n\nRM 160.00\n\nTotal Paid\n\nRM 0.00\n\nOutstanding\n\nRM 160.00\n\nAUDIT-1\nSent\n\nPeriod: Sun, 1 Nov 2026 \u2014 Tue, 1 Dec 2026\n\nIssued: Thu, 12 Nov 2026\n\nRM 80.00\n\nAUDIT-2\nCanceled\n\nPeriod: Sun, 1 Nov 2026 \u2014 Tue, 1 Dec 2026\n\nIssued: Thu, 12 Nov 2026\n\nRM 80.00",
+      "expectedOutstanding": 80
+    }
+  },
+  {
+    "id": "UI-calendar-menu-interaction",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {}
+  },
+  {
+    "id": "SMOKE-student",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/schedule",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/profile",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/notes",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/notifications",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/classroom",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "SMOKE-student/classroom/post/1",
+    "result": "Pass",
+    "evidence_level": "Executed",
+    "actual": {
+      "status": 200
+    }
+  },
+  {
+    "id": "fresh-username-index",
+    "actual": [],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "anonymous-cross-owner-reschedule",
+    "actual": [
+      {
+        "class_id": 1,
+        "student_id": 1,
+        "status": "pending"
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "anonymous-admin-notifications",
+    "actual": [
+      {
+        "id": 1,
+        "type": "reschedule_request",
+        "title": "Reschedule Request",
+        "message": "A student has requested to reschedule a class.",
+        "link": "/requests",
+        "read": 0,
+        "created_at": "2026-11-12 15:46:48"
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "anonymous-mark-all-admin-read",
+    "actual": [
+      {
+        "read": 1
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "cross-owner-assignment",
+    "actual": [
+      {
+        "post_owner": 2,
+        "submitter": 1
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "cross-owner-quiz",
+    "actual": [
+      {
+        "student_id": 1,
+        "is_correct": 1
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "repeated-approval-trial-loss",
+    "actual": [
+      {
+        "student_id": 2,
+        "is_trial": 0,
+        "rescheduled_from": 1
+      },
+      {
+        "student_id": 2,
+        "is_trial": 0,
+        "rescheduled_from": 1
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "wrong-notification-recipient",
+    "actual": [
+      {
+        "recipient_id": 1
+      },
+      {
+        "recipient_id": 1
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "recurring-class-defaults",
+    "actual": [
+      {
+        "attendance": "present",
+        "meeting_room": null
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "concurrent-invoices-calls",
+    "actual": [
+      {
+        "status": "fulfilled",
+        "value": 1
+      },
+      {
+        "status": "fulfilled",
+        "value": 2
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "double-billed-classes",
+    "actual": [
+      {
+        "class_id": 5,
+        "bills": 2
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "deactivated-student-note",
+    "actual": "Not authorized",
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-results.json"
+  },
+  {
+    "id": "deactivated-existing-session",
+    "actual": 1,
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-extra-results.json"
+  },
+  {
+    "id": "zone-less-10am-input",
+    "actual": [
+      {
+        "scheduled_at": "2026-11-20T10:00:00.000Z"
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-extra-results.json"
+  },
+  {
+    "id": "invalid-reschedule-error",
+    "actual": "Invalid time value",
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-extra-results.json"
+  },
+  {
+    "id": "failed-reschedule-state",
+    "actual": [
+      {
+        "status": "canceled"
+      }
+    ],
+    "result": "Observed",
+    "evidence_level": "Executed",
+    "method": "real TypeScript modules + isolated SQLite; auth/cache/redirect or cookies stubbed as documented",
+    "source": "audit-backend-extra-results.json"
+  },
+  {
+    "id": "TRACE-F14",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "day_of_week99 can never satisfy getDay comparison; nonpositive custom interval can move backward indefinitely. Intentionally not executed to avoid hanging the machine.",
+    "refs": "lib/actions.ts:799-805,835-840,858-880",
+    "finding_ids": [
+      "F14"
+    ]
+  },
+  {
+    "id": "TRACE-F17",
+    "result": "Policy-dependent",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Present+late+absent completed fixture computes admin33%, parent67%; adding unmarked completed produces parent dashboard50% versus attendance67%. Cancellation representation also removes absent lessons from completed-only denominators.",
+    "refs": "app/students/[id]/page.tsx:126-143; app/share/[token]/page.tsx:35-51; app/share/[token]/attendance/page.tsx:29-41",
+    "finding_ids": [
+      "F17"
+    ]
+  },
+  {
+    "id": "TRACE-F18",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Classes This Month counts every class after month start, including December in November; agenda compares UTC date(timestamp) to MYT today.",
+    "refs": "app/page.tsx:28,76-78,94,136-137",
+    "finding_ids": [
+      "F18"
+    ]
+  },
+  {
+    "id": "TRACE-F19",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "On same UTC date ISO T sorts after SQLite space:01:00 lesson compares greater than now15:00. Other views use ISO bounds and exclude it.",
+    "refs": "app/students/[id]/page.tsx:72; app/share/[token]/page.tsx:29",
+    "finding_ids": [
+      "F19"
+    ]
+  },
+  {
+    "id": "TRACE-F20",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Parent has eight future classes but query LIMIT5 and UI says five upcoming; detail invoice total caps at10.",
+    "refs": "app/share/[token]/page.tsx:29,119; app/students/[id]/page.tsx:72,80,329,442",
+    "finding_ids": [
+      "F20"
+    ]
+  },
+  {
+    "id": "TRACE-F21",
+    "result": "Policy-dependent",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Recorded prior Q5 allows latest submission replacing previous; UI removes form after first turn-in. Direct upsert changes content but leaves grade/graded_at, implying new content was graded.",
+    "refs": "app/portal/student/[studentId]/classroom/post/[postId]/page.tsx:125-129; lib/actions.ts:1068-1070",
+    "finding_ids": [
+      "F21"
+    ]
+  },
+  {
+    "id": "TRACE-F23",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Save A starts; user types B; A finishes and marks all text saved; leave before B debounce skips save and unmount cancels timer. DB keeps A. No delayed-network browser execution yet.",
+    "refs": "components/meeting-room.tsx:45-70,83-98",
+    "finding_ids": [
+      "F23"
+    ]
+  },
+  {
+    "id": "TRACE-F24",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "TopicSelector snapshots props once; createTopic refreshes props but localTopics is unchanged and returned id is discarded. Toast succeeds while new option remains absent until remount.",
+    "refs": "components/classroom-post-dialog.tsx:252-278; lib/actions.ts:1123-1134",
+    "finding_ids": [
+      "F24"
+    ]
+  },
+  {
+    "id": "TRACE-F25",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "When JaaS configured, tokens authorize room wildcard while app route authorizes one class; calendar copies free meet.jit.si URL rather than app/JaaS room. External video not tested.",
+    "refs": "lib/jaas.ts:38; components/schedule-calendar-wrapper.tsx:164-168,294; components/jitsi-meeting.tsx:40-43",
+    "finding_ids": [
+      "F25"
+    ]
+  },
+  {
+    "id": "TRACE-F26",
+    "result": "Policy-dependent",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Negative hourly rates/durations and arbitrary runtime status strings pass Number/TypeScript-only checks. Numeric grade999/100 bypasses native validation because Return is not a form submit.",
+    "refs": "lib/actions.ts:124,154,179,204,247,283,311-315,325,723-730,1155-1171; components/classroom/grade-submission.tsx:31-39,62-90",
+    "finding_ids": [
+      "F26"
+    ]
+  },
+  {
+    "id": "TRACE-F27",
+    "result": "Policy-dependent",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Quick cancel notifies, form cancel does not; direct reschedule/recurrence omit class notifications; report variants invalidate different surfaces. Already-open role pages have no realtime updates.",
+    "refs": "lib/actions.ts:255,291,368-391,429,473,479-515,746-776,875-877,1166-1168",
+    "finding_ids": [
+      "F27"
+    ]
+  },
+  {
+    "id": "TRACE-F31",
+    "result": "Policy-dependent",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Only immediate confirmation Notification exists. There is no reminder scheduler, push subscription or service worker; UI promises notifications before upcoming classes.",
+    "refs": "components/notification-toggle.tsx:17-25,33-39",
+    "finding_ids": [
+      "F31"
+    ]
+  },
+  {
+    "id": "TRACE-F33",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Status badges have hover/cursor styling but no click handler, link or query filter; table always renders all invoices.",
+    "refs": "app/invoices/page.tsx:162-188,231",
+    "finding_ids": [
+      "F33"
+    ]
+  },
+  {
+    "id": "TRACE-F34",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "UI says2MB; server rejects above512000bytes. A700KB image meets UI promise and fails save.",
+    "refs": "app/settings/page.tsx:180; lib/actions.ts:963",
+    "finding_ids": [
+      "F34"
+    ]
+  },
+  {
+    "id": "TRACE-F35",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "Values beginning =,+,-,@ can be interpreted as formulas by spreadsheet software; quoting delimiters does not neutralize formulas. Inputs are largely admin-entered, so risk depends on trusted-data assumptions.",
+    "refs": "lib/export.ts:7-11",
+    "finding_ids": [
+      "F35"
+    ]
+  },
+  {
+    "id": "TRACE-F36",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "maximumScale1 restricts zoom in browsers that honor it. Actual assistive-device behavior was not tested.",
+    "refs": "app/layout.tsx:28",
+    "finding_ids": [
+      "F36"
+    ]
+  },
+  {
+    "id": "TRACE-F37",
+    "result": "Fail",
+    "evidence_level": "Traced",
+    "expected": "See finding proposed behavior and recorded policy",
+    "actual": "README describes no accounts/local better-sqlite3 although current code requires libSQL URL and login; security docs describe old session store and middleware guarantees. Historical audit marks /api removed but current middleware includes it.",
+    "refs": "README.md:1-35; CLAUDE.md:19-31,127-138; next.config.mjs:4",
+    "finding_ids": [
+      "F37"
+    ]
+  },
+  {
+    "id": "POLICY-INVOICE-ABSENCE",
+    "expected": {
+      "canceled_class_present": false,
+      "completed_absent_amount": 0,
+      "total_amount": 80
+    },
+    "actual": {
+      "invoice": {
+        "total_amount": 160
+      },
+      "items": [
+        {
+          "class_id": 1,
+          "status": "completed",
+          "attendance": "present",
+          "amount": 80,
+          "description": "Sat, 10 Oct 2026 10:00 am (60 min)"
+        },
+        {
+          "class_id": 2,
+          "status": "canceled",
+          "attendance": "absent",
+          "amount": 0,
+          "description": "[CANCELLED] Sun, 11 Oct 2026 10:00 am (60 min)"
+        },
+        {
+          "class_id": 3,
+          "status": "completed",
+          "attendance": "absent",
+          "amount": 80,
+          "description": "Mon, 12 Oct 2026 10:00 am (60 min)"
+        }
+      ]
+    },
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "refs": [
+      "lib/actions.ts:649-654",
+      "lib/actions.ts:667-669",
+      "lib/actions.ts:700-713"
+    ],
+    "explanation": "Canceled class is included as zero-amount line; completed/absent class billed80 because generation checks status not attendance. Total160 rather than80.",
+    "finding_ids": [
+      "F28"
+    ]
+  },
+  {
+    "id": "POLICY-STOP-RECURRENCE",
+    "expected": {
+      "past_scheduled": "preserved",
+      "future_scheduled": "preserved row with status canceled",
+      "past_completed": "preserved"
+    },
+    "actual": {
+      "before": [
+        {
+          "id": 4,
+          "scheduled_at": "2020-01-01T10:00:00.000Z",
+          "status": "scheduled",
+          "recurrence_id": 1
+        },
+        {
+          "id": 5,
+          "scheduled_at": "2099-01-01T10:00:00.000Z",
+          "status": "scheduled",
+          "recurrence_id": 1
+        },
+        {
+          "id": 6,
+          "scheduled_at": "2020-01-02T10:00:00.000Z",
+          "status": "completed",
+          "recurrence_id": 1
+        }
+      ],
+      "after": [
+        {
+          "id": 6,
+          "scheduled_at": "2020-01-02T10:00:00.000Z",
+          "status": "completed",
+          "recurrence_id": null
+        }
+      ],
+      "redirect": "REDIRECT:/schedule",
+      "recurrences": []
+    },
+    "result": "Fail",
+    "evidence_level": "Executed",
+    "refs": [
+      "lib/actions.ts:884-891",
+      "lib/db.ts:260"
+    ],
+    "explanation": "DELETE classes WHERE recurrence_id AND scheduled removes both past and future scheduled rows; completed row survives with recurrence_idNULL due FK ON DELETE SET NULL. Requirement is cancellation of future rows only while preserving history.",
+    "finding_ids": [
+      "F29"
+    ]
+  }
+]

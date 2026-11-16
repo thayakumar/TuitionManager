@@ -1,0 +1,68 @@
+[
+  {
+    "name": "dashboard-unpaid",
+    "sql": "SELECT * FROM invoices WHERE status IN ('draft','sent','overdue') ORDER BY issued_at DESC LIMIT 5",
+    "rows": [
+      {
+        "id": 4,
+        "parent": 0,
+        "notused": 0,
+        "detail": "SCAN invoices"
+      },
+      {
+        "id": 39,
+        "parent": 0,
+        "notused": 0,
+        "detail": "USE TEMP B-TREE FOR ORDER BY"
+      }
+    ]
+  },
+  {
+    "name": "dashboard-today",
+    "sql": "SELECT * FROM classes WHERE date(scheduled_at) = '2026-11-13' ORDER BY scheduled_at",
+    "rows": [
+      {
+        "id": 4,
+        "parent": 0,
+        "notused": 0,
+        "detail": "SCAN classes USING INDEX idx_classes_scheduled_at"
+      }
+    ]
+  },
+  {
+    "name": "student-upcoming",
+    "sql": "SELECT * FROM classes WHERE student_id=1 AND status='scheduled' AND scheduled_at>='2026-11-13T00:00:00Z' ORDER BY scheduled_at LIMIT 10",
+    "rows": [
+      {
+        "id": 5,
+        "parent": 0,
+        "notused": 0,
+        "detail": "SEARCH classes USING INDEX idx_classes_student (student_id=?)"
+      },
+      {
+        "id": 27,
+        "parent": 0,
+        "notused": 0,
+        "detail": "USE TEMP B-TREE FOR ORDER BY"
+      }
+    ]
+  },
+  {
+    "name": "student-notifications",
+    "sql": "SELECT * FROM notifications WHERE recipient_type='student' AND recipient_id=1 ORDER BY created_at DESC LIMIT 50",
+    "rows": [
+      {
+        "id": 5,
+        "parent": 0,
+        "notused": 0,
+        "detail": "SEARCH notifications USING INDEX idx_notifications_recipient (recipient_type=? AND recipient_id=?)"
+      },
+      {
+        "id": 24,
+        "parent": 0,
+        "notused": 0,
+        "detail": "USE TEMP B-TREE FOR ORDER BY"
+      }
+    ]
+  }
+]

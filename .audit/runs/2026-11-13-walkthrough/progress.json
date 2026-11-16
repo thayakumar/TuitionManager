@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-13",
+  "phase": "Superseded by completed local implementation verification",
+  "case_entries": 109,
+  "explicit_browser_check_counts": {
+    "PASS": 75,
+    "FAIL": 12,
+    "BLOCKED": 1
+  },
+  "calendar_raw_observations": "separate; not auto-scored",
+  "source_code_changed": true,
+  "business_rules": {
+    "absence": "free; canceled lessons omitted from invoice",
+    "invoicing": "month-end; post-issue corrections outside stated workflow",
+    "stop_recurrence": "cancel future; preserve history"
+  },
+  "style_reference": "thayakumar/daily-journal-habit-tracker",
+  "pending": [],
+  "historical_pre_repair_counts": true,
+  "implementation_run": "../2026-11-14-implementation/progress.json"
+}

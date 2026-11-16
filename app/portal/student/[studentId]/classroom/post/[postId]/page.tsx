@@ -1,263 +1,227 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, BookOpen, ClipboardList, Megaphone, HelpCircle,
-  Calendar, FileText, ExternalLink, CheckCircle2,
+  ArrowLeft,
+  BookOpen,
+  ClipboardList,
+  Megaphone,
+  HelpCircle,
+  Calendar,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { queryAll, queryOne } from "@/lib/db";
+import { requireStudent } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDateTime, fmtShortDate } from "@/lib/format";
 import { SubmissionForm } from "@/components/classroom/submission-form";
+import {
+  AttemptWork,
+  SubmissionHistory,
+  safeSubmissionHref,
+  type SubmissionAttempt,
+} from "@/components/classroom/submission-history";
 import type { Post, PostAttachment, Submission, Student } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-type PostType = "material" | "assignment" | "quiz" | "announcement";
-
-const POST_TYPE_CONFIG: Record<PostType, { icon: typeof BookOpen; color: string; bg: string; label: string }> = {
-  material: { icon: BookOpen, color: "text-blue-600", bg: "bg-blue-50", label: "Material" },
-  assignment: { icon: ClipboardList, color: "text-amber-600", bg: "bg-amber-50", label: "Assignment" },
-  quiz: { icon: HelpCircle, color: "text-purple-600", bg: "bg-purple-50", label: "Quiz" },
-  announcement: { icon: Megaphone, color: "text-emerald-600", bg: "bg-emerald-50", label: "Announcement" },
+const POST_TYPE_CONFIG = {
+  material: { icon: BookOpen, label: "Material" },
+  assignment: { icon: ClipboardList, label: "Assignment" },
+  quiz: { icon: HelpCircle, label: "Quiz" },
+  announcement: { icon: Megaphone, label: "Announcement" },
 };
 
+type CurrentSubmission = Submission & { version: number };
 export default async function StudentPostDetailPage({
   params,
 }: {
-  params: { studentId: string; postId: string };
+  params: Promise<{ studentId: string; postId: string }>;
 }) {
-  const studentId = Number(params.studentId);
-  const postId = Number(params.postId);
-
+  const resolvedParams = await params;
+  const studentId = Number(resolvedParams.studentId);
+  const postId = Number(resolvedParams.postId);
+  await requireStudent(studentId);
+  if (!Number.isSafeInteger(postId) || postId <= 0) notFound();
   const [student, post] = await Promise.all([
-    queryOne<Student>(
-      `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-              guardian_contact, username, active, created_at
-       FROM students WHERE id = ? AND active = 1`,
-      [studentId]
+    queryOne<Pick<Student, "id" | "name">>(
+      "SELECT id, name FROM students WHERE id = ? AND active = 1",
+      [studentId],
     ),
-    queryOne<Post>("SELECT * FROM posts WHERE id = ?", [postId]),
+    queryOne<Post>(
+      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE id = ? AND student_id = ?",
+      [postId, studentId],
+    ),
   ]);
-
   if (!student || !post) notFound();
-
   const [attachments, submission] = await Promise.all([
     queryAll<PostAttachment>(
-      "SELECT * FROM post_attachments WHERE post_id = ? ORDER BY id",
-      [postId]
+      "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
+      [postId],
     ),
-    queryOne<Submission>(
-      "SELECT * FROM submissions WHERE post_id = ? AND student_id = ? ORDER BY submitted_at DESC",
-      [postId, studentId]
-    ),
+    post.type === "assignment"
+      ? queryOne<CurrentSubmission>(
+          "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at, version FROM submissions WHERE post_id = ? AND student_id = ?",
+          [postId, studentId],
+        )
+      : Promise.resolve(undefined),
   ]);
-
-  const config = POST_TYPE_CONFIG[(post.type as PostType)] || POST_TYPE_CONFIG.material;
+  const attempts = submission
+    ? await queryAll<SubmissionAttempt>(
+        "SELECT version, content, file_url, grade, feedback, submitted_at, graded_at, max_points FROM submission_versions WHERE submission_id = ? ORDER BY version DESC",
+        [submission.id],
+      )
+    : [];
+  const config = POST_TYPE_CONFIG[post.type] ?? POST_TYPE_CONFIG.material;
   const Icon = config.icon;
-  const isAssignment = post.type === "assignment";
-
   return (
-    <>
-      <div className="flex items-center gap-2 mb-4">
-        <Link href={`/portal/student/${studentId}/classroom`}>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
-            <ArrowLeft size={14} />
-            My Class
-          </Button>
-        </Link>
-      </div>
-
-      <Card className="shadow-sm border-0">
-        <CardContent className="p-6">
+    <div className="space-y-5">
+      <Link href={`/portal/student/${studentId}/classroom`}>
+        <Button variant="ghost" size="sm" className="gap-1.5">
+          <ArrowLeft size={14} />
+          My Class
+        </Button>
+      </Link>
+      <div className={post.type === "assignment" ? "classroom-assignment-layout" : ""}>
+      <Card>
+        <CardContent className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className={`flex size-11 items-center justify-center rounded-xl ${config.bg} shrink-0`}>
-              <Icon size={22} className={config.color} />
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Icon size={22} />
             </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">{post.title}</h1>
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <span>Tutor</span>
-                <span>&middot;</span>
-                <span>{fmtShortDate(post.created_at)}</span>
-              </div>
-              {isAssignment && (
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  {post.max_points != null && (
-                    <Badge variant="outline" className="text-[10px]">
-                      {post.max_points} points
-                    </Badge>
-                  )}
-                  {post.due_at && (
-                    <span className="flex items-center gap-1 text-xs text-amber-600">
-                      <Calendar size={12} />
-                      Due {fmtDateTime(post.due_at)}
-                    </span>
-                  )}
-                  <SubmissionStatusBadge
-                    submission={submission}
-                    dueAt={post.due_at}
-                  />
-                </div>
-              )}
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-primary">{config.label}</p>
+              <h1 className="break-words text-3xl font-medium text-primary">
+                {post.title}
+              </h1>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tutor · {fmtShortDate(post.created_at)}
+                {post.updated_at
+                  ? ` · Edited ${fmtShortDate(post.updated_at)}`
+                  : ""}
+              </p>
             </div>
           </div>
-
-          <Separator className="my-4" />
-
-          {post.body && (
-            <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-              {post.body}
+          {post.type === "assignment" && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {post.max_points !== null && (
+                <Badge variant="outline">{post.max_points} points</Badge>
+              )}
+              {post.due_at && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Calendar size={12} />
+                  Due {fmtDateTime(post.due_at)}
+                </span>
+              )}
+              <SubmissionStatus submission={submission} dueAt={post.due_at} />
             </div>
           )}
-
-          <AttachmentsList attachments={attachments} />
+          <Separator className="my-4" />
+          {post.body ? (
+            <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+              {post.body}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No additional instructions.
+            </p>
+          )}
+          {attachments.length > 0 && (
+            <div className="mt-5 space-y-2">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Attachments
+              </h2>
+              {attachments.map((attachment) => {
+                const href = safeSubmissionHref(attachment.file_url);
+                return href ? (
+                  <a
+                    key={attachment.id}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted/40"
+                  >
+                    <FileText size={17} className="shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1 break-words">
+                      {attachment.file_name}
+                    </span>
+                    <ExternalLink size={14} className="shrink-0" />
+                  </a>
+                ) : (
+                  <p
+                    key={attachment.id}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {attachment.file_name}: attachment unavailable.
+                  </p>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {isAssignment && (
-        <Card className="shadow-sm border-0 mt-4">
-          <CardContent className="p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Your Work</h3>
-
+      {post.type === "assignment" && (
+        <Card>
+          <CardContent className="space-y-5 p-5 sm:p-6">
+            <h2 className="font-semibold">Your work</h2>
             {submission ? (
-              <SubmittedWork submission={submission} maxPoints={post.max_points} />
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-medium">
+                    Latest attempt · {submission.version}
+                  </h3>
+                  <Badge
+                    variant={submission.graded_at ? "default" : "secondary"}
+                  >
+                    {submission.graded_at ? "Graded" : "Awaiting grading"}
+                  </Badge>
+                </div>
+                <AttemptWork attempt={submission} maxPoints={post.max_points} />
+                <details className="rounded-xl border border-border p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-primary">
+                    Submit a new attempt
+                  </summary>
+                  <div className="mt-4">
+                    <SubmissionForm
+                      postId={postId}
+                      studentId={studentId}
+                      studentName={student.name}
+                      resubmission
+                    />
+                  </div>
+                </details>
+                <SubmissionHistory
+                  attempts={attempts}
+                  latestVersion={submission.version}
+                  maxPoints={post.max_points}
+                />
+              </>
             ) : (
-              <SubmissionForm postId={postId} studentId={studentId} />
+              <SubmissionForm
+                postId={postId}
+                studentId={studentId}
+                studentName={student.name}
+              />
             )}
           </CardContent>
         </Card>
       )}
-    </>
+      </div>
+    </div>
   );
 }
-
-function SubmissionStatusBadge({
+function SubmissionStatus({
   submission,
   dueAt,
 }: {
-  submission: Submission | undefined;
+  submission: CurrentSubmission | undefined;
   dueAt: string | null;
 }) {
-  if (submission?.graded_at) {
-    return <Badge className="text-[10px] bg-emerald-500 text-white">Graded</Badge>;
-  }
-  if (submission) {
-    const late = dueAt && new Date(submission.submitted_at) > new Date(dueAt);
-    return (
-      <Badge variant="secondary" className="text-[10px]">
-        {late ? "Done late" : "Turned in"}
-      </Badge>
-    );
-  }
-  if (dueAt && new Date(dueAt) < new Date()) {
-    return (
-      <Badge variant="destructive" className="text-[10px]">Missing</Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="text-[10px] text-muted-foreground">Assigned</Badge>
-  );
-}
-
-function SubmittedWork({
-  submission,
-  maxPoints,
-}: {
-  submission: Submission;
-  maxPoints: number | null;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">
-          Submitted {fmtDateTime(submission.submitted_at)}
-        </span>
-        {submission.graded_at ? (
-          <Badge className="text-[10px] bg-emerald-500 text-white">Graded</Badge>
-        ) : (
-          <Badge variant="secondary" className="text-[10px]">Turned in</Badge>
-        )}
-      </div>
-
-      {submission.content && (
-        <div className="rounded-lg border border-border/50 p-3">
-          <p className="text-sm whitespace-pre-line">{submission.content}</p>
-        </div>
-      )}
-
-      {submission.file_url && (
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-muted-foreground">Link submitted</p>
-          <a
-            href={/^https?:\/\//i.test(submission.file_url) ? submission.file_url : `https://${submission.file_url}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline break-all"
-          >
-            {submission.file_url.length > 80 ? submission.file_url.slice(0, 80) + "…" : submission.file_url}
-          </a>
-        </div>
-      )}
-
-      {submission.grade != null && (
-        <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 size={16} className="text-indigo-600" />
-            <span className="text-sm font-semibold text-foreground">
-              {submission.grade}{maxPoints ? `/${maxPoints}` : ""}
-            </span>
-          </div>
-          {submission.graded_at && (
-            <p className="text-[11px] text-muted-foreground">
-              Graded on {fmtDateTime(submission.graded_at)}
-            </p>
-          )}
-        </div>
-      )}
-
-      {submission.feedback && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
-          <p className="text-xs font-medium text-emerald-700 mb-1">Feedback</p>
-          <p className="text-sm whitespace-pre-line">{submission.feedback}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AttachmentsList({ attachments }: { attachments: PostAttachment[] }) {
-  if (attachments.length === 0) return null;
-
-  return (
-    <div className="mt-4 space-y-2">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        Attachments
-      </p>
-      {attachments.map((att) => (
-        <a
-          key={att.id}
-          href={att.file_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2.5 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors group"
-        >
-          <div className="flex size-9 items-center justify-center rounded-lg bg-muted shrink-0">
-            <FileText size={16} className="text-muted-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-              {att.file_name}
-            </p>
-            {att.file_type && (
-              <p className="text-[10px] text-muted-foreground">{att.file_type}</p>
-            )}
-          </div>
-          <ExternalLink size={14} className="text-muted-foreground shrink-0" />
-        </a>
-      ))}
-    </div>
-  );
+  if (submission?.graded_at) return <Badge>Graded</Badge>;
+  if (submission) return <Badge variant="secondary">Awaiting grading</Badge>;
+  if (dueAt && Date.parse(dueAt) < Date.now())
+    return <Badge variant="destructive">Missing</Badge>;
+  return <Badge variant="outline">Assigned</Badge>;
 }

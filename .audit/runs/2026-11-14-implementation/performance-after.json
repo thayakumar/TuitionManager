@@ -1,0 +1,706 @@
+{
+  "database": "/tmp/tuition-perf-audit-4802.db",
+  "method": "Actual db.ts and page async functions transpiled in memory, real isolated SQLite; child UI imports stubbed, auth helper mocked. Local direct calls; synthetic latency explicitly labeled, not production timings.",
+  "results": [
+    {
+      "name": "cold-single-helper",
+      "syntheticLatencyMs": 0,
+      "wallMs": 1.56,
+      "callCount": 2,
+      "counts": {
+        "execute": 2,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 2,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "PRAGMA user_version",
+          "startMs": 0.65,
+          "durationMs": 0.09
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.74,
+          "durationMs": 0.59
+        }
+      ]
+    },
+    {
+      "name": "cold-two-concurrent-helpers",
+      "syntheticLatencyMs": 0,
+      "wallMs": 1.95,
+      "callCount": 3,
+      "counts": {
+        "execute": 3,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 3,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "PRAGMA user_version",
+          "startMs": 0.57,
+          "durationMs": 0.2
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.79,
+          "durationMs": 1.08
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.8,
+          "durationMs": 1.07
+        }
+      ]
+    },
+    {
+      "name": "cold-eight-concurrent-helpers",
+      "syntheticLatencyMs": 0,
+      "wallMs": 5.37,
+      "callCount": 9,
+      "counts": {
+        "execute": 9,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 9,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "PRAGMA user_version",
+          "startMs": 0.33,
+          "durationMs": 0.15
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.49,
+          "durationMs": 4.84
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.52,
+          "durationMs": 4.82
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.65,
+          "durationMs": 4.69
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.8,
+          "durationMs": 4.54
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.86,
+          "durationMs": 4.47
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.92,
+          "durationMs": 4.42
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.99,
+          "durationMs": 4.35
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 1.05,
+          "durationMs": 4.29
+        }
+      ]
+    },
+    {
+      "name": "warm-dashboard",
+      "syntheticLatencyMs": 0,
+      "wallMs": 25.87,
+      "callCount": 8,
+      "counts": {
+        "execute": 8,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 8,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?,?)",
+          "startMs": 1.45,
+          "durationMs": 3.51
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
+          "startMs": 1.46,
+          "durationMs": 3.5
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.scheduled_at>=? AND c.scheduled_at<? ORDER BY c.scheduled_at",
+          "startMs": 1.6,
+          "durationMs": 3.36
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.status='scheduled' AND c.scheduled_at>=? ORDER BY c.scheduled_at LIMIT 5",
+          "startMs": 1.65,
+          "durationMs": 3.31
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id LEFT JOIN reports r ON r.class_id=c.id WHERE c.status='completed' AND c.attendance IN ('present','late') AND c.scheduled_at<? AND r.id IS NULL ORDER BY c.scheduled_at DESC LIMIT 5",
+          "startMs": 1.69,
+          "durationMs": 3.27
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ORDER BY i.issued_at DESC",
+          "startMs": 1.72,
+          "durationMs": 3.24
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND scheduled_at>=? AND scheduled_at<? THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming FROM classes",
+          "startMs": 1.75,
+          "durationMs": 3.2
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT SUM(CASE WHEN attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN attendance='absent' THEN 1 ELSE 0 END) AS absent FROM classes WHERE status<>'canceled' AND scheduled_at>=? AND scheduled_at<=?",
+          "startMs": 1.79,
+          "durationMs": 3.17
+        }
+      ]
+    },
+    {
+      "name": "warm-student-detail",
+      "syntheticLatencyMs": 0,
+      "wallMs": 4.74,
+      "callCount": 11,
+      "counts": {
+        "execute": 11,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 11,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.96,
+          "durationMs": 0.37
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?)",
+          "startMs": 0.97,
+          "durationMs": 0.36
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
+          "startMs": 0.97,
+          "durationMs": 0.36
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at",
+          "startMs": 1.4,
+          "durationMs": 0.68
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status != 'scheduled' ORDER BY scheduled_at DESC",
+          "startMs": 1.4,
+          "durationMs": 0.68
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC",
+          "startMs": 1.4,
+          "durationMs": 0.68
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC",
+          "startMs": 1.4,
+          "durationMs": 0.68
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.id, c.scheduled_at, c.subject, cn.content FROM classes c\n       JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'\n       WHERE c.student_id = ? AND cn.content != ''\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 1.41,
+          "durationMs": 0.67
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT r.id, r.class_id, c.scheduled_at, c.subject,\n              r.topics_covered, r.homework, r.performance,\n              r.strengths, r.areas_to_improve, r.next_focus, r.rating\n       FROM reports r\n       JOIN classes c ON c.id = r.class_id\n       WHERE c.student_id = ?\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 1.41,
+          "durationMs": 0.67
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT token FROM share_tokens WHERE student_id = ? AND active = 1 ORDER BY id DESC LIMIT 1",
+          "startMs": 1.41,
+          "durationMs": 0.67
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT\n        (SELECT COUNT(*) FROM classes WHERE student_id = ?) AS total_classes,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_classes,\n        (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours,\n        (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE student_id = ? AND status <> 'canceled') AS total_revenue,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late')) AS present_count,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late','absent')) AS completed_for_attendance",
+          "startMs": 1.41,
+          "durationMs": 0.67
+        }
+      ]
+    },
+    {
+      "name": "warm-invoice-detail",
+      "syntheticLatencyMs": 0,
+      "wallMs": 2.4,
+      "callCount": 4,
+      "counts": {
+        "execute": 4,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 4,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes FROM invoices WHERE id = ?",
+          "startMs": 0.4,
+          "durationMs": 0.33
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,email,phone,guardian_name,guardian_contact FROM students WHERE id=?",
+          "startMs": 0.75,
+          "durationMs": 0.34
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM invoice_items WHERE invoice_id=? AND description NOT LIKE '[CANCELLED]%' ORDER BY id",
+          "startMs": 0.76,
+          "durationMs": 0.33
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?,?,?,?,?)",
+          "startMs": 0.76,
+          "durationMs": 0.33
+        }
+      ]
+    },
+    {
+      "name": "warm-classroom",
+      "syntheticLatencyMs": 0,
+      "wallMs": 0.82,
+      "callCount": 4,
+      "counts": {
+        "execute": 4,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 4,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
+          "startMs": 0.17,
+          "durationMs": 0.25
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE student_id = ? ORDER BY created_at DESC",
+          "startMs": 0.45,
+          "durationMs": 0.27
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, student_id, name, sort_order FROM topics WHERE student_id = ? ORDER BY sort_order, name",
+          "startMs": 0.45,
+          "durationMs": 0.27
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT post_id, grade, graded_at, submitted_at\n       FROM submissions WHERE student_id = ? ORDER BY submitted_at DESC",
+          "startMs": 0.46,
+          "durationMs": 0.26
+        }
+      ]
+    },
+    {
+      "name": "warm-schedule",
+      "syntheticLatencyMs": 0,
+      "wallMs": 1.08,
+      "callCount": 2,
+      "counts": {
+        "execute": 2,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 2,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT c.id, c.student_id, c.scheduled_at, c.duration_minutes, c.subject, c.location, c.status, c.attendance, c.recurrence_id, c.is_trial, c.cancel_reason, c.rescheduled_from, c.meeting_room, c.created_at, s.name AS student_name, s.hourly_rate, cn.content AS teacher_notes\n       FROM classes c JOIN students s ON s.id = c.student_id\n       LEFT JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'\n       WHERE c.scheduled_at >= ? AND c.scheduled_at < ?\n       ORDER BY c.scheduled_at",
+          "startMs": 0.45,
+          "durationMs": 0.45
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, name, subject FROM students WHERE active = 1 ORDER BY name",
+          "startMs": 0.48,
+          "durationMs": 0.43
+        }
+      ]
+    },
+    {
+      "name": "warm-dashboard",
+      "syntheticLatencyMs": 30,
+      "wallMs": 33.22,
+      "callCount": 8,
+      "counts": {
+        "execute": 8,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 8,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?,?)",
+          "startMs": 0.13,
+          "durationMs": 30.98
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
+          "startMs": 0.17,
+          "durationMs": 31.05
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.scheduled_at>=? AND c.scheduled_at<? ORDER BY c.scheduled_at",
+          "startMs": 0.18,
+          "durationMs": 31.17
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.status='scheduled' AND c.scheduled_at>=? ORDER BY c.scheduled_at LIMIT 5",
+          "startMs": 0.18,
+          "durationMs": 31.29
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id LEFT JOIN reports r ON r.class_id=c.id WHERE c.status='completed' AND c.attendance IN ('present','late') AND c.scheduled_at<? AND r.id IS NULL ORDER BY c.scheduled_at DESC LIMIT 5",
+          "startMs": 0.19,
+          "durationMs": 31.47
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ORDER BY i.issued_at DESC",
+          "startMs": 0.19,
+          "durationMs": 31.7
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND scheduled_at>=? AND scheduled_at<? THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming FROM classes",
+          "startMs": 0.19,
+          "durationMs": 31.95
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT SUM(CASE WHEN attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN attendance='absent' THEN 1 ELSE 0 END) AS absent FROM classes WHERE status<>'canceled' AND scheduled_at>=? AND scheduled_at<=?",
+          "startMs": 0.19,
+          "durationMs": 32.31
+        }
+      ]
+    },
+    {
+      "name": "warm-student-detail",
+      "syntheticLatencyMs": 30,
+      "wallMs": 64.03,
+      "callCount": 11,
+      "counts": {
+        "execute": 11,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 11,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 0.03,
+          "durationMs": 30.76
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?)",
+          "startMs": 0.1,
+          "durationMs": 30.83
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
+          "startMs": 0.11,
+          "durationMs": 30.94
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at",
+          "startMs": 31.09,
+          "durationMs": 30.49
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status != 'scheduled' ORDER BY scheduled_at DESC",
+          "startMs": 31.11,
+          "durationMs": 30.58
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC",
+          "startMs": 31.11,
+          "durationMs": 30.77
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC",
+          "startMs": 31.11,
+          "durationMs": 30.83
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.id, c.scheduled_at, c.subject, cn.content FROM classes c\n       JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'\n       WHERE c.student_id = ? AND cn.content != ''\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 31.11,
+          "durationMs": 31.06
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT r.id, r.class_id, c.scheduled_at, c.subject,\n              r.topics_covered, r.homework, r.performance,\n              r.strengths, r.areas_to_improve, r.next_focus, r.rating\n       FROM reports r\n       JOIN classes c ON c.id = r.class_id\n       WHERE c.student_id = ?\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 31.11,
+          "durationMs": 31.21
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT token FROM share_tokens WHERE student_id = ? AND active = 1 ORDER BY id DESC LIMIT 1",
+          "startMs": 31.12,
+          "durationMs": 31.26
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT\n        (SELECT COUNT(*) FROM classes WHERE student_id = ?) AS total_classes,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_classes,\n        (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours,\n        (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE student_id = ? AND status <> 'canceled') AS total_revenue,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late')) AS present_count,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late','absent')) AS completed_for_attendance",
+          "startMs": 31.12,
+          "durationMs": 31.59
+        }
+      ]
+    },
+    {
+      "name": "warm-invoice-detail",
+      "syntheticLatencyMs": 30,
+      "wallMs": 63.09,
+      "callCount": 4,
+      "counts": {
+        "execute": 4,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 4,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes FROM invoices WHERE id = ?",
+          "startMs": 0.03,
+          "durationMs": 30.67
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,email,phone,guardian_name,guardian_contact FROM students WHERE id=?",
+          "startMs": 30.74,
+          "durationMs": 30.65
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM invoice_items WHERE invoice_id=? AND description NOT LIKE '[CANCELLED]%' ORDER BY id",
+          "startMs": 30.77,
+          "durationMs": 30.83
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?,?,?,?,?)",
+          "startMs": 30.77,
+          "durationMs": 31.01
+        }
+      ]
+    },
+    {
+      "name": "warm-classroom",
+      "syntheticLatencyMs": 30,
+      "wallMs": 61.49,
+      "callCount": 4,
+      "counts": {
+        "execute": 4,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 4,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
+          "startMs": 0.13,
+          "durationMs": 30.56
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE student_id = ? ORDER BY created_at DESC",
+          "startMs": 30.73,
+          "durationMs": 30.46
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, student_id, name, sort_order FROM topics WHERE student_id = ? ORDER BY sort_order, name",
+          "startMs": 30.74,
+          "durationMs": 30.54
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT post_id, grade, graded_at, submitted_at\n       FROM submissions WHERE student_id = ? ORDER BY submitted_at DESC",
+          "startMs": 30.75,
+          "durationMs": 30.65
+        }
+      ]
+    },
+    {
+      "name": "warm-schedule",
+      "syntheticLatencyMs": 30,
+      "wallMs": 31.43,
+      "callCount": 2,
+      "counts": {
+        "execute": 2,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 2,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "SELECT c.id, c.student_id, c.scheduled_at, c.duration_minutes, c.subject, c.location, c.status, c.attendance, c.recurrence_id, c.is_trial, c.cancel_reason, c.rescheduled_from, c.meeting_room, c.created_at, s.name AS student_name, s.hourly_rate, cn.content AS teacher_notes\n       FROM classes c JOIN students s ON s.id = c.student_id\n       LEFT JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'\n       WHERE c.scheduled_at >= ? AND c.scheduled_at < ?\n       ORDER BY c.scheduled_at",
+          "startMs": 0.31,
+          "durationMs": 30.87
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id, name, subject FROM students WHERE active = 1 ORDER BY name",
+          "startMs": 0.34,
+          "durationMs": 30.99
+        }
+      ]
+    },
+    {
+      "name": "cold-student-detail-30ms-simulated",
+      "syntheticLatencyMs": 30,
+      "wallMs": 94.65,
+      "callCount": 12,
+      "counts": {
+        "execute": 12,
+        "executeMultiple": 0
+      },
+      "migrationInvocations": 0,
+      "sqlStatementCount": 12,
+      "calls": [
+        {
+          "method": "execute",
+          "sql": "PRAGMA user_version",
+          "startMs": 0.45,
+          "durationMs": 30.16
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM students WHERE id = ?",
+          "startMs": 30.64,
+          "durationMs": 31.12
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT key,value FROM settings WHERE key IN (?)",
+          "startMs": 30.66,
+          "durationMs": 31.19
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
+          "startMs": 30.67,
+          "durationMs": 31.29
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at",
+          "startMs": 62,
+          "durationMs": 30.82
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM classes WHERE student_id = ? AND status != 'scheduled' ORDER BY scheduled_at DESC",
+          "startMs": 62.02,
+          "durationMs": 31.03
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC",
+          "startMs": 62.02,
+          "durationMs": 31.17
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT * FROM student_notes WHERE student_id = ? ORDER BY created_at DESC",
+          "startMs": 62.24,
+          "durationMs": 31.02
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT c.id, c.scheduled_at, c.subject, cn.content FROM classes c\n       JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'\n       WHERE c.student_id = ? AND cn.content != ''\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 62.24,
+          "durationMs": 31.09
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT r.id, r.class_id, c.scheduled_at, c.subject,\n              r.topics_covered, r.homework, r.performance,\n              r.strengths, r.areas_to_improve, r.next_focus, r.rating\n       FROM reports r\n       JOIN classes c ON c.id = r.class_id\n       WHERE c.student_id = ?\n       ORDER BY c.scheduled_at DESC",
+          "startMs": 62.24,
+          "durationMs": 31.24
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT token FROM share_tokens WHERE student_id = ? AND active = 1 ORDER BY id DESC LIMIT 1",
+          "startMs": 62.24,
+          "durationMs": 31.29
+        },
+        {
+          "method": "execute",
+          "sql": "SELECT\n        (SELECT COUNT(*) FROM classes WHERE student_id = ?) AS total_classes,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_classes,\n        (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours,\n        (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE student_id = ? AND status <> 'canceled') AS total_revenue,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late')) AS present_count,\n        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late','absent')) AS completed_for_attendance",
+          "startMs": 62.25,
+          "durationMs": 31.44
+        }
+      ]
+    }
+  ]
+}

@@ -1,38 +1,26 @@
-import { notFound, redirect } from "next/navigation";
-import { queryOne } from "@/lib/db";
-import { getStudentSession } from "@/lib/auth";
+import { WorkspaceHeader } from "@/components/workspace-header";
+import { ownStudentContext } from "@/lib/portal-context";
 import { PortalNav } from "@/components/portal-nav";
-import type { Student } from "@/lib/types";
-
 export const dynamic = "force-dynamic";
-
 export default async function StudentPortalLayout({
-  params,
+  params: paramsPromise,
   children,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
   children: React.ReactNode;
 }) {
-  const id = Number(params.studentId);
-
-  const sessionStudentId = await getStudentSession();
-  if (!sessionStudentId || sessionStudentId !== id) {
-    redirect("/portal/student");
-  }
-
-  const student = await queryOne<Student>(
-    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-            guardian_contact, username, active, created_at
-     FROM students WHERE id = ? AND active = 1`,
-    [id]
-  );
-  if (!student) notFound();
-
+  const params = await paramsPromise;
+  const student = await ownStudentContext(Number(params.studentId));
   return (
     <>
-      <PortalNav role="student" studentId={id} studentName={student.name} />
+      <PortalNav
+        role="student"
+        studentId={student.id}
+        studentName={student.name}
+      />
       <main className="min-h-screen bg-background md:ml-60">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <WorkspaceHeader role="Student" name={student.name} />
+        <div className="workspace-page mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
         </div>
       </main>

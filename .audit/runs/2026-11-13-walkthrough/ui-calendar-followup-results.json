@@ -1,0 +1,71 @@
+[
+  {
+    "name": "month drag own event to November28",
+    "result": "Executed",
+    "data": {
+      "afterDropDetail": "UICalendar · UI Math\n\nThursday, November 26 · 12:00 AM – 1:00 AM\n\nJoin Meeting\n\nmeet.jit.si/tuitionhub-wot-ikcn-ndq\n\nATTENDANCE\n\nPresent\nLate\nAbsent\nCompleted\nView full details\nClose"
+    }
+  },
+  {
+    "name": "calendar create range drag",
+    "result": "Executed",
+    "data": {
+      "dialogVisible": false,
+      "selection": 0
+    }
+  },
+  {
+    "name": "trash actually cancels and offers reschedule",
+    "result": "Executed",
+    "data": {
+      "text": "Reschedule Class?\n\nThis class has been cancelled and marked absent. Would you like to reschedule it?\n\nNew date & time\nNo thanks\nReschedule\nClose",
+      "ownEvents": 1
+    }
+  },
+  {
+    "name": "canceled event allows late attendance",
+    "result": "Executed",
+    "data": {
+      "before": "UICalendar · UI Math\n\nThursday, November 26 · 12:00 AM – 1:00 AM\n\nJoin Meeting\n\nmeet.jit.si/tuitionhub-wot-ikcn-ndq\n\nATTENDANCE\n\nPresent\nLate\nAbsent\nCanceled\nView full details\nClose",
+      "after": "UICalendar · UI Math\n\nThursday, November 26 · 12:00 AM – 1:00 AM\n\nJoin Meeting\n\nmeet.jit.si/tuitionhub-wot-ikcn-ndq\n\nATTENDANCE\n\nPresent\nLate\nAbsent\nCompleted\nView full details\nClose"
+    }
+  },
+  {
+    "name": "mark absent through calendar",
+    "result": "Executed",
+    "data": {
+      "toast": "e\n10\n11\n12\n13\nAudit Alice · UIAUDIT canceled\n14\n15\nAudit Alice · UIAUDIT future\n16\n17\n18\n19\nAudit Bob\n20\n21\n22\n23\n24\n25\nUICalendar · UI Math\n26\n27\n28\n29\n30\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\nAttendance marked"
+    }
+  },
+  {
+    "name": "invoice filter badge does not filter",
+    "result": "Executed",
+    "data": {
+      "before": [
+        "INV-2026-0001UICalendarSun, 1 Nov 2026 — Tue, 1 Dec 2026Fri, 13 Nov 2026RM 80.00draft",
+        "AUDIT-1Audit AliceSun, 1 Nov 2026 — Tue, 1 Dec 2026Thu, 12 Nov 2026RM 80.00sent",
+        "AUDIT-2Audit AliceSun, 1 Nov 2026 — Tue, 1 Dec 2026Thu, 12 Nov 2026RM 80.00canceled"
+      ],
+      "after": [
+        "INV-2026-0001UICalendarSun, 1 Nov 2026 — Tue, 1 Dec 2026Fri, 13 Nov 2026RM 80.00draft",
+        "AUDIT-1Audit AliceSun, 1 Nov 2026 — Tue, 1 Dec 2026Thu, 12 Nov 2026RM 80.00sent",
+        "AUDIT-2Audit AliceSun, 1 Nov 2026 — Tue, 1 Dec 2026Thu, 12 Nov 2026RM 80.00canceled"
+      ]
+    }
+  },
+  {
+    "name": "invoice export download",
+    "result": "Executed",
+    "data": {
+      "file": "invoices.csv"
+    }
+  },
+  {
+    "name": "own invoice delete",
+    "result": "Executed",
+    "data": {
+      "url": "http://127.0.0.1:4310/invoices",
+      "ownInvoiceStillListed": false
+    }
+  }
+]

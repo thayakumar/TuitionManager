@@ -1,7 +1,9 @@
 "use client";
+import { actionError } from "@/lib/action-errors";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fmtDateInput, fmtISODate } from "@/lib/format";
 import { CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { createClassQuick } from "@/lib/actions";
@@ -35,19 +37,29 @@ export function ScheduleClassDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const defaultTime = new Date(Date.now() + 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
+  const defaultTime = fmtDateInput(
+    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  );
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
+  async function handleSubmit(formData: FormData) {
+    if (isPending) return;
+    setPending(true);
+    setError(null);
+    try {
       await createClassQuick(formData);
       toast.success("Class scheduled");
       setOpen(false);
       router.refresh();
-    });
+    } catch (e) {
+      setError(
+        actionError(e, "Unable to save this schedule. Please try again."),
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -60,16 +72,22 @@ export function ScheduleClassDialog({
         )}
       </span>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!isPending) {
+            setOpen(v);
+            setError(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarPlus size={18} className="text-primary" />
               Schedule Class
             </DialogTitle>
-            <DialogDescription>
-              Schedule a new class session
-            </DialogDescription>
+            <DialogDescription>Schedule a new class session</DialogDescription>
           </DialogHeader>
 
           <form action={handleSubmit} className="space-y-4">
@@ -109,6 +127,8 @@ export function ScheduleClassDialog({
                     name="duration_minutes"
                     type="number"
                     defaultValue={60}
+                    min={5}
+                    max={1440}
                     className={inputClass}
                   />
                 </div>
@@ -141,8 +161,20 @@ export function ScheduleClassDialog({
               </label>
             </div>
 
+            {error && (
+              <p
+                role="alert"
+                className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

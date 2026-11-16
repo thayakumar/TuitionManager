@@ -1,0 +1,13 @@
+{
+  "remaining_validation": [
+    {
+      "item": "Authenticated Vercel/Turso performance before/after deployment",
+      "reason": "No deployment performed; production actions and private data were not used."
+    },
+    {
+      "item": "Live external integrations and broader devices",
+      "reason": "Real Google upload/video calls, physical print output and exhaustive device/browser combinations were not executed."
+    }
+  ],
+  "deployment_status": "Not pushed or deployed"
+}

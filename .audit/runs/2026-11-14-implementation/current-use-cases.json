@@ -1,0 +1,712 @@
+[
+  {
+    "role": "Admin",
+    "page": "Access and navigation",
+    "action": "sign in and navigate my workspace",
+    "result": "my management pages open only with a real current admin session",
+    "depends": "Admin session; sidebar; dashboard",
+    "check": "Sign in, reload, sign out; another admin session stays independent. A forged cookie cannot expose records.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.1.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Access and navigation",
+    "action": "collapse the sidebar or use the mobile menu",
+    "result": "the preference persists and the mobile menu closes when I choose a destination",
+    "depends": "Browser preference; destination route",
+    "check": "At390px open menu, choose Invoices; verify menu closes and controls fit.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.1.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Dashboard",
+    "action": "review this month, upcoming lessons, attendance and finances",
+    "result": "cards use the same Malaysia-time periods and billing-month totals as their detail pages",
+    "depends": "Classes; attendance; invoices; Financial History",
+    "check": "Compare each summary with the rows it links to; future months do not inflate this month.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.2.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Students and profiles",
+    "action": "add a student",
+    "result": "an active roster/profile record and portal credentials are created",
+    "depends": "Roster counts; classroom directory; scheduling/invoice pickers; student login",
+    "check": "New student can sign in; no lesson or invoice appears merely from enrollment.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.3.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Students and profiles",
+    "action": "edit profile, contact, rate or active status",
+    "result": "current identity/settings update, and future first-time invoice calculation uses the current rate",
+    "depends": "Admin/student/parent identity; future invoice generation; profile notification",
+    "check": "Reload other role views. Existing invoice line amounts remain snapshots. Name edits do not silently change credentials.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.3.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Students and profiles",
+    "action": "deactivate a student",
+    "result": "student access ends immediately while historical lessons, work, reports and invoices remain",
+    "depends": "Server sessions; active lists; historical records",
+    "check": "Try old student session and a new login: both denied. No historical records disappear.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.3.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Students and profiles",
+    "action": "copy login instructions",
+    "result": "the intended student portal link and credentials are copied for manual sharing",
+    "depends": "Clipboard only",
+    "check": "Paste locally and verify correct student; blocked clipboard gives an error. No message sends automatically.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.3.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Students and profiles",
+    "action": "export the roster",
+    "result": "a safe CSV downloads without changing the roster",
+    "depends": "CSV; roster data",
+    "check": "Compare rows, quoting and safe spreadsheet text; export action rejects other roles.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.3.5"
+  },
+  {
+    "role": "Admin",
+    "page": "Student notes and parent links",
+    "action": "add, search, expand or delete an administrative note",
+    "result": "the intended profile timeline changes, independent of class reports and meeting notes",
+    "depends": "student_notes; profile list/count",
+    "check": "Reload; search and clear filter; delete only own selected note. Other note types and students stay unchanged.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.4.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Student notes and parent links",
+    "action": "generate or copy a parent link",
+    "result": "a guardian can read only the linked student\u2019s shared data",
+    "depends": "Active share token; parent dashboard/schedule/reports/invoices",
+    "check": "Open in independent parent session; credentials/private teacher notes are absent.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.4.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Student notes and parent links",
+    "action": "revoke or replace a parent link",
+    "result": "the old link stops granting new access while historical business records remain",
+    "depends": "Share tokens; every parent page",
+    "check": "Refresh old link and invoice detail:404. Another student\u2019s parent link still works.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.4.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Schedule and lesson details",
+    "action": "create a one-off lesson",
+    "result": "one scheduled, unmarked lesson with a meeting room is saved at the entered MYT time",
+    "depends": "All role schedules; upcoming counts; student notification",
+    "check": "Enter10:00MYT; it displays10:00 everywhere. Another student\u2019s overlapping booking is rejected.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.5.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Schedule and lesson details",
+    "action": "switch Month/Week/Day/5days/Agenda and move through dates",
+    "result": "the selected range loads the corresponding lesson records without moving them",
+    "depends": "Calendar range URL/data; no business writes",
+    "check": "Navigate beyond the initial month; compare the same lesson\u2019s time in each view.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.5.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Schedule and lesson details",
+    "action": "click a day or select a time range",
+    "result": "the lesson dialog uses that proposed date/time/duration",
+    "depends": "Create dialog; class write only on save",
+    "check": "Cancel leaves no record; save once creates exactly one lesson.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.5.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Schedule and lesson details",
+    "action": "drag or resize a scheduled lesson",
+    "result": "a proposed time/duration is confirmed before the authorized change is saved",
+    "depends": "Class time/duration; overlap validation; all schedules; student notice",
+    "check": "Keep original leaves DB unchanged; Confirm updates it; a conflict rejects without changing other lessons.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.5.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Schedule and lesson details",
+    "action": "open/edit a lesson",
+    "result": "the correct student, schedule, duration, state, room and private notes appear",
+    "depends": "Class detail; calendar; student/parent views; future billing inputs",
+    "check": "Change one field, reload related views, and ensure state/attendance remain valid. Completed/canceled lessons cannot be dragged.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.5.5"
+  },
+  {
+    "role": "Admin",
+    "page": "Attendance and class reports",
+    "action": "mark Present",
+    "result": "the held lesson becomes completed and attended",
+    "depends": "Attendance lists/rate; teaching hours; pending report; billable lesson; student notice",
+    "check": "A60-minute attended lesson atRM80/hour becomes eligible forRM80 once, unless a free trial.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.6.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Attendance and class reports",
+    "action": "mark Absent",
+    "result": "a last-minute cancellation/no-show is recorded, completed as missed, and never charged",
+    "depends": "Attendance denominator; student/parent status; invoice exclusion; student notice",
+    "check": "Absent appears as Absent, affects attendance rate, and creates no invoice line.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.6.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Attendance and class reports",
+    "action": "correct Present/Absent attendance",
+    "result": "the recorded result and relevant summaries agree after reload",
+    "depends": "Attendance and dashboards; student notification",
+    "check": "Present\u2194Absent is reflected across roles. Advance-canceled lessons cannot be silently resurrected by marking attendance.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.6.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Attendance and class reports",
+    "action": "save or update a class report",
+    "result": "one report persists and its parent-visible topics/homework/feedback update",
+    "depends": "Class report; completion; pending-report count; parent expandable table",
+    "check": "Inline and quick edit prefill existing content. Edit one field; unchanged report fields survive.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.6.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Attendance and class reports",
+    "action": "review attendance percentage",
+    "result": "Present divided by Present+Absent is shown consistently",
+    "depends": "Admin profile/dashboard; parent dashboard/attendance",
+    "check": "3Present+1Absent+1Cancelled =75%; unmarked/future/canceled excluded. No Late option.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.6.5"
+  },
+  {
+    "role": "Admin",
+    "page": "Cancel and reschedule",
+    "action": "cancel a lesson in advance",
+    "result": "the original stays in history as Cancelled, unmarked, free and reschedulable",
+    "depends": "All schedules; notifications; invoice exclusion",
+    "check": "Cancel is clearly labeled, not confused with permanent deletion; no canceled line appears in invoice.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.7.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Cancel and reschedule",
+    "action": "reschedule an advance-canceled/scheduled lesson",
+    "result": "one linked replacement is scheduled; original remains canceled",
+    "depends": "Owner/duration/location/trial; room; schedules; notifications",
+    "check": "Replacement retains free trial status. Mark replacement Present later and invoice it once; original never charges.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.7.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Recurring series",
+    "action": "create a recurring series without an end date",
+    "result": "lessons generate from the start date through31December of that start year",
+    "depends": "Individual class rows; schedule; generated-through date; student notice",
+    "check": "Matching weekdays only, correct MYT times, unique rooms, unmarked attendance, no duplicates and no overlap.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.8.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Recurring series",
+    "action": "choose weekdays, weekly/biweekly/custom interval and an earlier end date",
+    "result": "the finite chosen pattern is generated only within its allowed range",
+    "depends": "Series rules and materialized lessons",
+    "check": "Check first/last date by hand; invalid/nonpositive interval is rejected before generating rows.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.8.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Recurring series",
+    "action": "open Manage series and stop future lessons",
+    "result": "future scheduled rows become Cancelled; past/history and series remain readable",
+    "depends": "Class/series state; all schedules; notification",
+    "check": "Confirm stop; row count/history retained and future bookings no longer block time slots.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.8.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Recurring series",
+    "action": "extend a series through the following year",
+    "result": "additional lessons generate through the displayed next December31",
+    "depends": "Series horizon; new classes; overlap checks; student notice",
+    "check": "Existing lessons are not duplicated; canceled/stopped series is not silently restarted.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.8.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "generate a month-end invoice",
+    "result": "unbilled attended completed lessons become invoice lines in an atomic operation",
+    "depends": "Invoice header/items; class billing claims; parent documents/balance; revenue",
+    "check": "Canceled/absent omitted. Date/time/duration only, no subject; lines sum to total; concurrent generation cannot double-bill.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "invoice a rescheduled attended lesson",
+    "result": "the replacement appears once at its normal or preserved trial rate",
+    "depends": "Replacement state; invoice items; parent invoice",
+    "check": "Approve/move replacement \u2192 Present \u2192 generate correct month. Original canceled lesson does not appear.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "choose an invoice period",
+    "result": "correct local calendar dates select the intended billing month(s)",
+    "depends": "Invoice period and lessons; billing_month",
+    "check": "November defaults1\u201330Nov. End before start shows a useful message; empty/already-billed selection does not create empty/duplicate documents.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "filter and inspect invoices",
+    "result": "the chosen status is applied and the right student/document opens",
+    "depends": "Invoice list; student links; details",
+    "check": "Paid filter excludes drafts; clear filters restores all. Canceled invoice history is retained.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "mark an invoice Draft/Sent/Paid/Overdue/Cancelled",
+    "result": "manual bookkeeping status and related balances update consistently",
+    "depends": "Dashboard; Financial History; parent status/debt; notification",
+    "check": "Paid is not an online transfer. Canceled invoice contributes neither revenue nor outstanding; October stays October even paid inNovember.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.5"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "cancel an invoice document",
+    "result": "it remains as canceled history and is removed from active amounts owed",
+    "depends": "Financial history; parent/admin outstanding",
+    "check": "Confirm cancellation; history stays. Do not treat cancellation as deleting/rebilling historical lines.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.9.6"
+  },
+  {
+    "role": "Admin",
+    "page": "Invoices",
+    "action": "print/save PDF, export CSV or compose a WhatsApp message",
+    "result": "a copy/download/compose action occurs without changing payment status",
+    "depends": "Browser print; CSV; user-controlled external compose",
+    "check": "Print invokes browser function; actual printer/WhatsApp sending is external and was not executed.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.9.7"
+  },
+  {
+    "role": "Admin",
+    "page": "Financial History",
+    "action": "review all financial history and monthly bar/trend charts",
+    "result": "revenue is allocated to invoice billing month, with Paid and Outstanding separated",
+    "depends": "All invoices; dashboard/monthly summary; status changes",
+    "check": "RM1000 billed inOctober = October revenue, whetherRM700 paid then or later; canceled excluded.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.10.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Financial History",
+    "action": "filter by student, status and month range",
+    "result": "summary, chart and table use the same selected invoices",
+    "depends": "Monthly aggregates and invoice history",
+    "check": "Compare selected table rows against cards/charts; zero intervening months remain visible in a time series.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.10.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Classroom and topics",
+    "action": "open one student\u2019s classroom and create/rename/delete topics",
+    "result": "classwork organization updates without deleting submitted work",
+    "depends": "Admin/student topic groups and post choices",
+    "check": "Deleting a topic moves its posts to No topic; other student\u2019s topics/work remain unchanged.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.11.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Classroom and topics",
+    "action": "create a topic inside an open post dialog",
+    "result": "the new topic becomes immediately selectable/selected",
+    "depends": "Topic record and final post.topic_id",
+    "check": "Post under the new topic without closing/reopening; student sees the same grouping.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.11.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Classroom and topics",
+    "action": "post material, assignment or announcement",
+    "result": "the intended student sees it and receives a scoped notification",
+    "depends": "Posts; topic group; student inbox; assignment state",
+    "check": "No other student can open or submit to the post. Quiz authoring is not a current screen.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.11.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Classroom and topics",
+    "action": "edit a posted item",
+    "result": "the same post updates and its student is notified of meaningful changes",
+    "depends": "Instructions/due/points/topic; student list/detail/inbox",
+    "check": "Reload student view; no-op save does not spam duplicate notices; existing attempts remain preserved.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.11.4"
+  },
+  {
+    "role": "Admin",
+    "page": "Classroom and topics",
+    "action": "delete a post with confirmation",
+    "result": "the intended content and dependent classroom data are removed",
+    "depends": "Post, attachments/submissions/questions per FK; student list; notification",
+    "check": "Review destructive scope before confirming; cancel leaves it intact. Financial invoices are unrelated.",
+    "evidence": "Implemented; live integration/manual check remains",
+    "id": "1.11.5"
+  },
+  {
+    "role": "Admin",
+    "page": "Submission grading and history",
+    "action": "open Student Work for an assignment",
+    "result": "the latest attempt and expandable earlier work/feedback appear",
+    "depends": "Current submission projection; immutable attempt lineage",
+    "check": "Only one current grade form is exposed, not a grade form on every historic version.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.12.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Submission grading and history",
+    "action": "grade the latest submission and return feedback",
+    "result": "the latest grade becomes the current result across classwork/Grades/student views",
+    "depends": "Current projection and matching version; student notification",
+    "check": "Grade0..max only;999/100 rejected. Older attempts keep their work/grades and are read-only.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.12.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Submission grading and history",
+    "action": "try grading an old open form after a student resubmits",
+    "result": "the stale save is rejected with a reload message",
+    "depends": "Expected version; new attempt integrity",
+    "check": "New work remains ungraded until evaluated; old form cannot accidentally grade newer content.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.12.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Reschedule Requests",
+    "action": "review a pending student request",
+    "result": "preferences/reason appear while the original lesson stays scheduled",
+    "depends": "Request row; admin inbox; original class",
+    "check": "Sending a request alone changes no schedule/invoice; duplicate pending requests are blocked.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.13.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Reschedule Requests",
+    "action": "approve one preferred time",
+    "result": "original canceled and exactly one replacement created, followed by notification",
+    "depends": "Request resolution; owner/trial/duration; all role schedules",
+    "check": "Replayed approval/rejection cannot create another replacement or contradict the resolved state.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.13.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Reschedule Requests",
+    "action": "reject a request with a note",
+    "result": "student receives the explanation and original booking is unchanged",
+    "depends": "Request state; student inbox; schedule",
+    "check": "No replacement/charge created. Other requests/students unaffected.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.13.3"
+  },
+  {
+    "role": "Admin",
+    "page": "Notifications",
+    "action": "view or mark messages read",
+    "result": "the true circular unread count updates when messages arrive/read",
+    "depends": "Scoped inbox; bell/menu; all-unread aggregate",
+    "check": "Count is not limited to displayed50; opening a notification marks it read; forged/other-role calls denied.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.14.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Settings",
+    "action": "save business name/contact/currency/payment instructions",
+    "result": "branding/labels/instructions update where used",
+    "depends": "Admin/parent invoice and business views",
+    "check": "Settings are live labels, not currency conversion. Existing line amounts remain fixed.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "1.15.1"
+  },
+  {
+    "role": "Admin",
+    "page": "Settings",
+    "action": "upload or remove a DuitNow QR image",
+    "result": "invoice presentation changes; payment state does not",
+    "depends": "QR setting; invoice and print views",
+    "check": "Image limit500KB matches UI; failure keeps previous data. No holiday or browser reminder controls remain.",
+    "evidence": "Implemented; live integration/manual check remains",
+    "id": "1.15.2"
+  },
+  {
+    "role": "Admin",
+    "page": "Meeting and private notes",
+    "action": "join an authorized class and save private teacher notes",
+    "result": "correct room is used and scoped notes persist safely",
+    "depends": "Meeting owner/session; private class_notes; draft/save queue",
+    "check": "Save latest text before leaving; old acknowledgment cannot mark new edits saved. Live video provider verification is separate.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "1.16.1"
+  },
+  {
+    "role": "Student",
+    "page": "Sign in and dashboard",
+    "action": "sign in with my tutor-issued account",
+    "result": "only my active, unexpired session can read my pages",
+    "depends": "Student session; own profile and dashboard",
+    "check": "Changing URL to another student/post does not expose their data; deactivation removes access.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.1.1"
+  },
+  {
+    "role": "Student",
+    "page": "Sign in and dashboard",
+    "action": "view upcoming lessons and completed learning",
+    "result": "my counts and times agree with My Schedule and parent view",
+    "depends": "Own classes; latest preview versus full count",
+    "check": "Preview shows first entries but total reflects full set; canceled is distinct from absent.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.1.2"
+  },
+  {
+    "role": "Student",
+    "page": "My Schedule",
+    "action": "see my full history and confirmed future lessons",
+    "result": "all generated-year lessons are listed in Malaysia time",
+    "depends": "My dashboard; tutor calendar; parent schedule",
+    "check": "Canceled originals and replacements retain clear state; no direct student cancellation button exists.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.2.1"
+  },
+  {
+    "role": "Student",
+    "page": "My Schedule",
+    "action": "request a new time with preferences and reason",
+    "result": "my tutor gets a pending request; existing booking remains",
+    "depends": "Pending request; admin notification",
+    "check": "Cancel dialog makes no request. I cannot request for another student or duplicate a pending request.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.2.2"
+  },
+  {
+    "role": "Student",
+    "page": "My Schedule",
+    "action": "receive approval or rejection",
+    "result": "my inbox explains the outcome and schedules reflect the decision",
+    "depends": "Request resolution; canceled original/replacement or unchanged original",
+    "check": "View link opens my own schedule; rejection note visible. Reload parent view and compare.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.2.3"
+  },
+  {
+    "role": "Student",
+    "page": "My Class",
+    "action": "open materials, assignments and announcements by topic",
+    "result": "I read only items assigned to me",
+    "depends": "Posts/topics/attachments; inbox links",
+    "check": "Tutor edits appear after reload and notify me. Parent portal does not expose my assignment workspace.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.3.1"
+  },
+  {
+    "role": "Student",
+    "page": "Assignments",
+    "action": "turn in text or an attachment/link",
+    "result": "one meaningful new attempt is recorded and the tutor can review it",
+    "depends": "Current submission; history; classwork state; tutor notification",
+    "check": "Blank/whitespace alone cannot turn in. Only supported4MB image/PDF or safe HTTPS link; failed upload does not create false submission.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.4.1"
+  },
+  {
+    "role": "Student",
+    "page": "Assignments",
+    "action": "submit a newer attempt",
+    "result": "a new version awaits grading, with previous work/grades retained below",
+    "depends": "Version history and latest state; tutor inbox",
+    "check": "Third attempt does not erase first/second. Old attempts are not open for grading.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.4.2"
+  },
+  {
+    "role": "Student",
+    "page": "Assignments",
+    "action": "read a returned grade and feedback",
+    "result": "the latest evaluated attempt\u2019s result matches the tutor\u2019s view",
+    "depends": "Latest grade; Grades/classwork status; graded date",
+    "check": "After resubmission current work shows Awaiting grading, not an inherited grade; expand earlier attempts to see their evaluations.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.4.3"
+  },
+  {
+    "role": "Student",
+    "page": "Private class notes",
+    "action": "write meeting notes and review them later",
+    "result": "only my student-scope notes appear in Student Notes",
+    "depends": "Owned class and scoped note record",
+    "check": "Teacher private notes never appear here; draft recovery and save-before-leave protect recent typing.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "2.5.1"
+  },
+  {
+    "role": "Student",
+    "page": "Notifications",
+    "action": "open updates or mark messages read",
+    "result": "the numeric unread circle reflects actual unseen messages",
+    "depends": "Only my inbox; related schedule/classwork view",
+    "check": "My read action cannot clear another student/admin inbox; new relevant edits/grades/schedule changes inform me.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.6.1"
+  },
+  {
+    "role": "Student",
+    "page": "My Profile",
+    "action": "review my details and copy an active parent link",
+    "result": "my guardian can access the read-only shared view if tutor has enabled it",
+    "depends": "Own profile; active bearer link; clipboard",
+    "check": "I cannot create/revoke a parent token or edit my grade/rate from profile.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.7.1"
+  },
+  {
+    "role": "Student",
+    "page": "Access and mobile navigation",
+    "action": "sign out or use the phone menu",
+    "result": "session ends or chosen own page opens with the menu closed",
+    "depends": "Cookie/session; own route",
+    "check": "Opening protected page after logout returns to login; phone content fits390px.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "2.8.1"
+  },
+  {
+    "role": "Parent",
+    "page": "Shared dashboard and access",
+    "action": "open my child\u2019s active share link",
+    "result": "I receive read-only access to that child\u2019s shared information",
+    "depends": "Scoped bearer token; dashboard and child records",
+    "check": "Invalid/revoked token denies every shared page; another invoice ID cannot bypass child ownership.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.1.1"
+  },
+  {
+    "role": "Parent",
+    "page": "Shared dashboard and access",
+    "action": "review upcoming lessons, attendance and balance",
+    "result": "cards agree with detail pages and use full counts",
+    "depends": "Classes; Present/Absent denominator; active invoices",
+    "check": "3Present+1Absent+1Cancelled=75%; upcoming count is not capped by the preview length.",
+    "evidence": "Automated real-module/SQLite regression; UI details also implemented",
+    "id": "3.1.2"
+  },
+  {
+    "role": "Parent",
+    "page": "Schedule and attendance",
+    "action": "view lesson dates, attendance and reschedule history",
+    "result": "I see canceled originals and confirmed replacements after tutor actions",
+    "depends": "Tutor/student schedules; attendance rate",
+    "check": "I cannot cancel/reschedule or mark attendance; a pending request alone changes nothing.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.2.1"
+  },
+  {
+    "role": "Parent",
+    "page": "Class reports",
+    "action": "scan the compact report table and expand one row",
+    "result": "only the selected report\u2019s detail opens",
+    "depends": "Class report; date/duration/rating; tutor update",
+    "check": "Reports begin collapsed; expand/collapse using pointer or keyboard. Private notes/assignment submissions stay outside parent view.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.3.1"
+  },
+  {
+    "role": "Parent",
+    "page": "Invoices",
+    "action": "review invoices and outstanding amount",
+    "result": "only my child\u2019s documents and active debt are shown",
+    "depends": "Invoice status; Paid/Outstanding; billing month",
+    "check": "Canceled invoice documents can remain in history but never count as debt; canceled/absent lessons are omitted from generated lines.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.4.1"
+  },
+  {
+    "role": "Parent",
+    "page": "Invoices",
+    "action": "open, print or save an invoice",
+    "result": "a readable document shows lesson date/time/duration, amounts, status and payment instructions",
+    "depends": "Scoped invoice items; browser print/PDF; optional QR",
+    "check": "No subject in new lines; print invokes browser. Viewing/paying outside app does not automatically mark Paid.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.4.2"
+  },
+  {
+    "role": "Parent",
+    "page": "Mobile navigation and revocation",
+    "action": "choose another page on my phone or reopen a revoked link",
+    "result": "menu closes on navigation; revoked link fails on refresh",
+    "depends": "Scoped token and current route",
+    "check": "Invoice/schedule/reports remain readable on390px without another family\u2019s data.",
+    "evidence": "Browser verified with isolated fake data",
+    "id": "3.5.1"
+  }
+]

@@ -31,13 +31,13 @@ export function ReportRow({
   return (
     <>
       <tr
-        className="border-b border-border/50 hover:bg-indigo-50/30 transition-colors cursor-pointer"
+        className="border-b border-border/50 hover:bg-primary/5 transition-colors cursor-pointer"
         onClick={() => setOpen(!open)}
       >
         <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
           <Link
             href={`/classes/${r.class_id}`}
-            className="hover:text-indigo-600 hover:underline"
+            className="hover:text-primary hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             {fmtDateTime(r.scheduled_at)}
@@ -51,18 +51,31 @@ export function ReportRow({
             <span className="inline-flex items-center gap-0.5 text-amber-500 font-medium">
               {r.rating}/5
             </span>
-          ) : "—"}
+          ) : (
+            "—"
+          )}
         </td>
         <td className="py-2.5 px-3 text-center">
-          {open ? (
-            <ChevronDown size={14} className="text-muted-foreground" />
-          ) : (
-            <ChevronRight size={14} className="text-muted-foreground" />
-          )}
+          <button
+            type="button"
+            className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg hover:bg-primary/10"
+            aria-expanded={open}
+            aria-label={`${open ? "Collapse" : "Expand"} report for ${fmtDateTime(r.scheduled_at)}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            {open ? (
+              <ChevronDown size={14} className="text-muted-foreground" />
+            ) : (
+              <ChevronRight size={14} className="text-muted-foreground" />
+            )}
+          </button>
         </td>
       </tr>
       {open && (
-        <tr className="border-b border-border/50 bg-indigo-50/20">
+        <tr className="border-b border-border/50 bg-primary/5">
           <td colSpan={4} className="px-3 py-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <DetailItem label="Subject" value={r.subject || defaultSubject} />
@@ -84,7 +97,9 @@ function DetailItem({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">{label}</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
+        {label}
+      </p>
       <p className="text-foreground whitespace-pre-line">{value}</p>
     </div>
   );

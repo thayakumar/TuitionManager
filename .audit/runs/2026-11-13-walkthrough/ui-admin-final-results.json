@@ -1,0 +1,188 @@
+{
+  "target": "local production build http://127.0.0.1:4310, isolated fake DB",
+  "own_student_id": 3,
+  "own_assignment_id": 8,
+  "results": [
+    {
+      "id": "A01",
+      "title": "Admin login",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A02",
+      "title": "Roster Add Student empty name prevents submission",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A03",
+      "title": "Create own student valid details sid3",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A04",
+      "title": "Edit own student and reload persistence",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A05",
+      "title": "Add long note, expand, search/no-match state",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A06",
+      "title": "Delete own note",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A07",
+      "title": "Copy student credentials clipboard",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A08",
+      "title": "Generate/copy parent link and render correct parent view",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A09",
+      "title": "Revoke link causes HTTP404",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A10",
+      "title": "Export CSV includes created student",
+      "status": "PASS",
+      "evidence": "Executed"
+    },
+    {
+      "id": "A11",
+      "title": "Classroom empty and New Material modal",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A12",
+      "title": "Open material and edit content",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A13",
+      "title": "Delete material cancel then confirm",
+      "status": "BLOCKED",
+      "evidence": "Executed",
+      "detail": "Harness icon locator incorrect; deletion not executed. This is not an app failure."
+    },
+    {
+      "id": "A14",
+      "title": "Create topic standalone",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A15",
+      "title": "Inline topic creation updates selector",
+      "status": "FAIL",
+      "evidence": "Executed",
+      "detail": "Error: new topic absent from open selector: No topic,UI Topic One,UI Topic One"
+    },
+    {
+      "id": "A16",
+      "title": "Create assignment with valid title,points,due date",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": "Assignment created correctly; initial immediate page.url read stale; correct owned post ID8 discovered from settled classroom href."
+    },
+    {
+      "id": "A17",
+      "title": "Assignment Instructions/Student Work tabs empty",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A18",
+      "title": "Student submits work through real UI",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A19",
+      "title": "Grade rejects out-of-range999 of100",
+      "status": "FAIL",
+      "evidence": "Executed",
+      "detail": "Error: invalid grade999/100 persisted and displayed"
+    },
+    {
+      "id": "A20",
+      "title": "Update grade valid85 and feedback persistence",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A21",
+      "title": "Classroom grade list matches detail",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A22",
+      "title": "Announcement creation",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    },
+    {
+      "id": "A23",
+      "title": "Mobile nav opens and link navigation works",
+      "status": "FAIL",
+      "evidence": "Executed",
+      "detail": "Navigation reached /students, but mobile drawer stayed visibly open; expected drawer closes after selecting destination."
+    },
+    {
+      "id": "A24",
+      "title": "Restore desktop and sign out",
+      "status": "PASS",
+      "evidence": "Executed",
+      "detail": ""
+    }
+  ],
+  "environment_interruptions": [
+    {
+      "description": "Local server4310 became unresponsive; parent restarted. Root cause unknown; no product finding.",
+      "recovered": true
+    }
+  ],
+  "excluded_harness_errors": [
+    "duplicate New Post locator repaired",
+    "trash icon locator unexecuted",
+    "stale URL fixture post3 corrected to own post8; dependent grading rerun",
+    "one premature context close corrected; submission confirmed persisted"
+  ],
+  "unrun": [
+    "Settings global mutation",
+    "Holiday add/delete browser",
+    "QR upload/remove browser",
+    "External file service",
+    "External video",
+    "Real browser reminder delivery",
+    "Topic rename/delete browser",
+    "Admin post deletion confirmation completion"
+  ]
+}

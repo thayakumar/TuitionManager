@@ -7,9 +7,11 @@ const PUBLIC_PATHS = [
   "/portal/student",
   "/portal",
   "/share/",
-  "/api/",
   "/_next/",
   "/favicon.ico",
+  "/manifest.json",
+  "/icon-192.svg",
+  "/icon-512.svg",
 ];
 
 export function middleware(request: NextRequest) {
@@ -20,6 +22,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Upload performs real admin-or-student session validation in its handler.
+  if (pathname.startsWith("/api/")) return NextResponse.next();
+
+  // Presence checks only avoid needless page work; server read/action guards
+  // verify token ownership, active status and expiry.
   // Student portal routes require student_session cookie
   if (pathname.startsWith("/portal/student/")) {
     const studentSession = request.cookies.get("student_session")?.value;

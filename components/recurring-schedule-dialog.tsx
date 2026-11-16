@@ -1,7 +1,9 @@
 "use client";
+import { actionError } from "@/lib/action-errors";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fmtDateInput, fmtISODate } from "@/lib/format";
 import { Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { createRecurrenceQuick } from "@/lib/actions";
@@ -22,7 +24,15 @@ const inputClass =
 const selectClass =
   "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 type StudentOption = { id: number; name: string };
 
@@ -37,17 +47,27 @@ export function RecurringScheduleDialog({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const defaultStart = new Date().toISOString().split("T")[0];
+  const defaultStart = fmtISODate(new Date().toISOString());
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
+  async function handleSubmit(formData: FormData) {
+    if (isPending) return;
+    setPending(true);
+    setError(null);
+    try {
       await createRecurrenceQuick(formData);
-      toast.success("Recurring schedule created");
+      toast.success("Recurring lessons scheduled through the selected year");
       setOpen(false);
       router.refresh();
-    });
+    } catch (e) {
+      setError(
+        actionError(e, "Unable to save this schedule. Please try again."),
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -60,7 +80,15 @@ export function RecurringScheduleDialog({
         )}
       </span>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!isPending) {
+            setOpen(v);
+            setError(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -68,7 +96,8 @@ export function RecurringScheduleDialog({
               Recurring Schedule
             </DialogTitle>
             <DialogDescription>
-              Auto-generates classes on selected days
+              Generates lessons through 31 December of the start year when no
+              end date is entered. Times are MYT.
             </DialogDescription>
           </DialogHeader>
 
@@ -95,7 +124,10 @@ export function RecurringScheduleDialog({
                 <Label className="text-sm">Days of week *</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {DAYS.map((day, i) => (
-                    <label key={i} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <label
+                      key={i}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         name="day_of_week"
@@ -128,6 +160,8 @@ export function RecurringScheduleDialog({
                     name="duration_minutes"
                     type="number"
                     defaultValue={60}
+                    min={5}
+                    max={1440}
                     className={inputClass}
                   />
                 </div>
@@ -201,8 +235,20 @@ export function RecurringScheduleDialog({
               </div>
             </div>
 
+            {error && (
+              <p
+                role="alert"
+                className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>

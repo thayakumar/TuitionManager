@@ -1,22 +1,18 @@
 "use client";
+import { actionError } from "@/lib/action-errors";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  Pencil, Trash2, X as XIcon, Copy, Video, Check, Clock,
-  MapPin, Calendar, ExternalLink, Ban,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Ban, Check, Copy, ExternalLink, Video, X } from "lucide-react";
+import { toast } from "sonner";
 import { EventCalendar } from "@/components/reui/event-calendar/event-calendar";
+import { EventCalendarNav } from "@/components/reui/event-calendar/event-calendar-nav";
 import { EventCalendarContent } from "@/components/reui/event-calendar/event-calendar-content";
-import {
-  EventCalendarNav,
-  EventCalendarToolbar,
-} from "@/components/reui/event-calendar/event-calendar-nav";
 import type {
   CalendarEvent,
+  EventCalendarProposedUpdate,
   EventCalendarSlotInfo,
-  EventCalendarOccurrence,
 } from "@/components/reui/event-calendar/event-calendar-types";
 import {
   Dialog,
@@ -29,11 +25,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { createClassQuick, markAttendance, deleteClassQuick, cancelClassQuick, rescheduleClassQuick } from "@/lib/actions";
-import { format, addMinutes, addDays } from "date-fns";
-import type { Attendance } from "@/lib/types";
+import {
+  createClassQuick,
+  markAttendance,
+  cancelClassQuick,
+  moveClassQuick,
+  rescheduleClassQuick,
+} from "@/lib/actions";
+import { fmtDateInput, fmtDateTime } from "@/lib/format";
 
 type ClassData = {
   id: number;
@@ -48,483 +47,550 @@ type ClassData = {
   meeting_room: string | null;
   teacher_notes: string | null;
 };
-
 type Student = { id: number; name: string; subject: string | null };
-
-const STATUS_COLORS: Record<string, string> = {
-  scheduled: "#818CF8",
-  completed: "#34D399",
-  canceled: "#F87171",
-};
+const inputClass =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ScheduleCalendarWrapper({
   classes,
   students,
+  month,
 }: {
   classes: ClassData[];
   students: Student[];
+  month: string;
 }) {
   const router = useRouter();
-
-  // Add-class dialog state
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isAddPending, startAddTransition] = useTransition();
-
-  // Event detail popover state
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
-  const [isActionPending, startActionTransition] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [add, setAdd] = useState<{ date: string; duration: number } | null>(
+    null,
+  );
+  const [cancelId, setCancelId] = useState<number | null>(null);
+  const [rescheduleId, setRescheduleId] = useState<number | null>(null);
+  const [proposal, setProposal] = useState<EventCalendarProposedUpdate | null>(
+    null,
+  );
   const [copied, setCopied] = useState(false);
-
-  // Reschedule dialog state
-  const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [cancelledClassId, setCancelledClassId] = useState<number | null>(null);
-  const [isReschedulePending, startRescheduleTransition] = useTransition();
-
-  const events: CalendarEvent[] = classes.map((c) => ({
-    id: String(c.id),
-    title: `${c.student_name}${c.subject ? ` · ${c.subject}` : ""}`,
-    start: new Date(c.scheduled_at),
-    end: new Date(
-      new Date(c.scheduled_at).getTime() + c.duration_minutes * 60000
-    ),
-    color: STATUS_COLORS[c.status] ?? "#818CF8",
-    data: c,
-  }));
-
-  function handleSlotClick(slot: EventCalendarSlotInfo) {
-    setSelectedDate(slot.date);
-    setAddDialogOpen(true);
+  const selected = classes.find((c) => c.id === selectedId);
+  const events: CalendarEvent[] = useMemo(
+    () =>
+      classes.map((c) => ({
+        id: String(c.id),
+        title: `${c.student_name}${c.subject ? ` · ${c.subject}` : ""}`,
+        start: new Date(c.scheduled_at),
+        end: new Date(
+          new Date(c.scheduled_at).getTime() + c.duration_minutes * 60000,
+        ),
+        color:
+          c.status === "completed"
+            ? "#10b981"
+            : c.status === "canceled"
+              ? "#94a3b8"
+              : "#d93624",
+        readOnly: c.status !== "scheduled",
+        data: c,
+      })),
+    [classes],
+  );
+  function run(
+    action: () => Promise<unknown>,
+    message: string,
+    done?: () => void,
+  ) {
+    setError(null);
+    setPending(true);
+    void (async () => {
+      try {
+        await action();
+        toast.success(message);
+        done?.();
+        router.refresh();
+      } catch (e) {
+        setError(
+          actionError(e, "The change could not be saved. Please try again."),
+        );
+      } finally {
+        setPending(false);
+      }
+    })();
   }
-
-  function handleEventClick(occ: EventCalendarOccurrence) {
-    const c = occ.event.data as ClassData;
-    setSelectedClass(c);
-    setDetailOpen(true);
-    setCopied(false);
-  }
-
-  function handleAddSubmit(formData: FormData) {
-    startAddTransition(async () => {
-      await createClassQuick(formData);
-      toast.success("Class scheduled");
-      setAddDialogOpen(false);
-      router.refresh();
+  function slot(slot: EventCalendarSlotInfo) {
+    setError(null);
+    const value = fmtDateInput(slot.date.toISOString());
+    setAdd({
+      date: slot.allDay ? `${value.slice(0, 10)}T09:00` : value,
+      duration: slot.end
+        ? Math.max(
+            15,
+            Math.round((slot.end.getTime() - slot.date.getTime()) / 60000),
+          )
+        : 60,
     });
   }
-
-  function handleAttendance(attendance: Attendance) {
-    if (!selectedClass) return;
-    startActionTransition(async () => {
-      await markAttendance(selectedClass.id, attendance);
-      toast.success("Attendance marked");
-      setDetailOpen(false);
-      router.refresh();
-    });
-  }
-
-  function handleCancel() {
-    if (!selectedClass) return;
-    startActionTransition(async () => {
-      await cancelClassQuick(selectedClass.id);
-      toast.success("Class cancelled");
-      setCancelledClassId(selectedClass.id);
-      setDetailOpen(false);
-      setRescheduleOpen(true);
-      router.refresh();
-    });
-  }
-
-  function handleDelete() {
-    if (!selectedClass) return;
-    startActionTransition(async () => {
-      await cancelClassQuick(selectedClass.id);
-      toast.success("Class cancelled");
-      setCancelledClassId(selectedClass.id);
-      setDetailOpen(false);
-      setRescheduleOpen(true);
-      router.refresh();
-    });
-  }
-
-  function handleRescheduleSubmit(formData: FormData) {
-    if (!cancelledClassId) return;
-    const scheduledAt = String(formData.get("reschedule_date") || "");
-    if (!scheduledAt) return;
-    startRescheduleTransition(async () => {
-      await rescheduleClassQuick(cancelledClassId, scheduledAt);
-      toast.success("Class rescheduled");
-      setRescheduleOpen(false);
-      setCancelledClassId(null);
-      router.refresh();
-    });
-  }
-
-  function copyMeetingLink() {
-    if (!selectedClass?.meeting_room) return;
-    navigator.clipboard.writeText(`https://meet.jit.si/${selectedClass.meeting_room}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  const dateOnly = format(selectedDate, "yyyy-MM-dd");
-
-  // Format event detail date
-  const detailStart = selectedClass ? new Date(selectedClass.scheduled_at) : null;
-  const detailEnd = detailStart && selectedClass
-    ? addMinutes(detailStart, selectedClass.duration_minutes)
-    : null;
-  const detailDateStr = detailStart
-    ? `${format(detailStart, "EEEE, MMMM d")} · ${format(detailStart, "h:mm a")} – ${detailEnd ? format(detailEnd, "h:mm a") : ""}`
-    : "";
-
+  const feedback = error && (
+    <p
+      role="alert"
+      className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+    >
+      {error}
+    </p>
+  );
   return (
     <>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Times are shown in Malaysia time (MYT). Drag a scheduled class to
+        propose a change; you will confirm before it is saved.
+      </p>
       <EventCalendar
         events={events}
+        timeZone="Asia/Kuala_Lumpur"
         defaultView="month"
-        onSlotClick={handleSlotClick}
-        onEventClick={handleEventClick}
-        className="h-[500px] sm:h-[640px] lg:h-[720px] w-full rounded-xl border bg-card text-card-foreground shadow-sm"
-        renderEvent={({ occurrence }) => {
-          const data = occurrence.event.data as ClassData;
-          return (
-            <div className="flex items-center gap-1 w-full min-w-0">
-              <span className="truncate font-medium">{occurrence.event.title}</span>
-              {data?.meeting_room && (
-                <span className="shrink-0 flex size-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm">
-                  <Video size={10} className="text-white" />
-                </span>
-              )}
-            </div>
-          );
+        defaultDate={new Date(`${month}-15T04:00:00Z`)}
+        onDateChange={(date) => {
+          const next = fmtDateInput(date.toISOString()).slice(0, 7);
+          if (next !== month)
+            router.replace(`/schedule?month=${next}`, { scroll: false });
         }}
+        onSlotClick={slot}
+        onSelectSlot={(s) =>
+          slot({ date: s.start, end: s.end, allDay: s.allDay, view: s.view })
+        }
+        canDropEvent={(u) =>
+          (u.event.data as ClassData | undefined)?.status === "scheduled" &&
+          !u.allDay &&
+          u.end > u.start
+        }
+        onDragBlocked={() =>
+          toast.info("Only scheduled classes can be moved or resized.")
+        }
+        onEventUpdate={(u) => {
+          setError(null);
+          setProposal(u);
+          return false;
+        }}
+        onEventClick={(o) => {
+          setError(null);
+          setCopied(false);
+          setSelectedId(Number(o.event.id));
+        }}
+        loading={pending}
+        className="h-[560px] w-full rounded-xl border bg-card shadow-sm lg:h-[740px]"
       >
-        <div className="flex flex-wrap items-center gap-2 border-b px-2">
-          <EventCalendarNav className="min-w-0 flex-1" />
-          <EventCalendarToolbar />
-        </div>
+        <EventCalendarNav />
         <EventCalendarContent />
       </EventCalendar>
 
-      {/* ─── Event Detail Popover (Google Calendar style) ─── */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden">
-          {selectedClass && (
+      <Dialog
+        open={!!selected}
+        onOpenChange={(v) => {
+          if (!v && !pending) setSelectedId(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {selected?.student_name}
+              {selected?.subject ? ` · ${selected.subject}` : ""}
+            </DialogTitle>
+            <DialogDescription>
+              {selected ? fmtDateTime(selected.scheduled_at) : ""} ·{" "}
+              {selected?.duration_minutes} minutes · MYT
+            </DialogDescription>
+          </DialogHeader>
+          {selected && (
             <>
-              {/* Top toolbar */}
-              <div className="flex items-center justify-end gap-1 px-3 pt-3">
-                <Link href={`/classes/${selectedClass.id}`}>
-                  <Button variant="ghost" size="icon-sm" title="Edit">
-                    <Pencil size={14} />
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  title="Delete"
-                  onClick={handleDelete}
-                  disabled={isActionPending}
-                >
-                  <Trash2 size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setDetailOpen(false)}
-                >
-                  <XIcon size={14} />
-                </Button>
-              </div>
-
-              {/* Title + date */}
-              <div className="px-5 pb-3">
-                <div className="flex items-start gap-3">
-                  <div
-                    className="mt-1.5 size-3 rounded-full shrink-0"
-                    style={{ backgroundColor: STATUS_COLORS[selectedClass.status] ?? "#818CF8" }}
-                  />
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold text-foreground leading-tight">
-                      {selectedClass.student_name}
-                      {selectedClass.subject ? ` · ${selectedClass.subject}` : ""}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {detailDateStr}
-                    </p>
-                    {selectedClass.is_trial ? (
-                      <Badge variant="outline" className="text-[10px] mt-1">TRIAL</Badge>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              {/* Meeting link */}
-              {selectedClass.meeting_room && (
-                <div className="px-5 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/meeting/${selectedClass.id}`}
-                      target="_blank"
-                      className="flex-1"
-                    >
-                      <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                        <Video size={16} /> Join Meeting
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={copyMeetingLink}
-                      title="Copy meeting link"
-                    >
-                      {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                    </Button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground mt-1 truncate font-mono">
-                    meet.jit.si/{selectedClass.meeting_room}
-                  </p>
-                </div>
-              )}
-
-              {/* Location */}
-              {selectedClass.location && (
-                <div className="px-5 pb-3 flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin size={14} className="shrink-0" />
-                  {selectedClass.location}
-                </div>
-              )}
-
-              {/* Teacher Notes */}
-              {selectedClass.teacher_notes && (
-                <div className="px-5 pb-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Teacher Notes
-                  </p>
-                  <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-foreground whitespace-pre-wrap">
-                    {selectedClass.teacher_notes}
-                  </div>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Attendance / status actions */}
-              <div className="px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  Attendance
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant={selectedClass.attendance === "present" ? "default" : "outline"}
-                    className={selectedClass.attendance === "present"
-                      ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                      : "text-emerald-700 border-emerald-200 hover:bg-emerald-50"}
-                    onClick={() => handleAttendance("present")}
-                    disabled={isActionPending}
-                  >
-                    <Check size={14} /> Present
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={selectedClass.attendance === "late" ? "default" : "outline"}
-                    className={selectedClass.attendance === "late"
-                      ? "bg-amber-500 hover:bg-amber-600 text-white"
-                      : "text-amber-700 border-amber-200 hover:bg-amber-50"}
-                    onClick={() => handleAttendance("late")}
-                    disabled={isActionPending}
-                  >
-                    <Clock size={14} /> Late
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={selectedClass.attendance === "absent" ? "default" : "outline"}
-                    className={selectedClass.attendance === "absent"
-                      ? "bg-red-500 hover:bg-red-600 text-white"
-                      : "text-red-700 border-red-200 hover:bg-red-50"}
-                    onClick={() => handleAttendance("absent")}
-                    disabled={isActionPending}
-                  >
-                    <XIcon size={14} /> Absent
-                  </Button>
-                  {selectedClass.status === "scheduled" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-gray-700 border-gray-200 hover:bg-gray-50"
-                      onClick={handleCancel}
-                      disabled={isActionPending}
-                    >
-                      <Ban size={14} /> Cancel
-                    </Button>
-                  )}
-                </div>
-
-                {selectedClass.status !== "scheduled" && (
-                  <div className="mt-2">
-                    <Badge
-                      variant={selectedClass.status === "completed" ? "default" : "destructive"}
-                      className="text-[10px] capitalize"
-                    >
-                      {selectedClass.status}
-                    </Badge>
-                  </div>
+              <div className="flex gap-2">
+                <Badge variant="outline" className="capitalize">
+                  {selected.status}
+                </Badge>
+                {!!selected.is_trial && (
+                  <Badge variant="secondary">Trial · free</Badge>
                 )}
+                <Badge variant="outline">
+                  {selected.attendance || "Attendance not marked"}
+                </Badge>
               </div>
-
-              <Separator />
-
-              {/* View details link */}
-              <div className="px-5 py-3">
-                <Link
-                  href={`/classes/${selectedClass.id}`}
-                  className="flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+              {selected.location && (
+                <p className="text-sm">{selected.location}</p>
+              )}
+              {selected.teacher_notes && (
+                <div className="rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap">
+                  <strong>Private teacher notes</strong>
+                  <p>{selected.teacher_notes}</p>
+                </div>
+              )}
+              {selected.meeting_room && selected.status !== "canceled" && (
+                <div className="flex gap-2">
+                  <Button asChild className="flex-1">
+                    <Link href={`/meeting/${selected.id}`}>
+                      <Video size={16} /> Join meeting
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    title="Copy meeting link"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          `${window.location.origin}/meeting/${selected.id}`,
+                        );
+                        setCopied(true);
+                      } catch {
+                        toast.error(
+                          "Could not copy the link. Open class details to share it.",
+                        );
+                      }
+                    }}
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </Button>
+                </div>
+              )}
+              {selected.status !== "canceled" && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Record attendance</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={
+                        selected.attendance === "present"
+                          ? "default"
+                          : "outline"
+                      }
+                      disabled={pending}
+                      onClick={() =>
+                        run(
+                          () => markAttendance(selected.id, "present"),
+                          "Marked present",
+                          () => setSelectedId(null),
+                        )
+                      }
+                    >
+                      <Check size={16} /> Present
+                    </Button>
+                    <Button
+                      variant={
+                        selected.attendance === "absent" ? "default" : "outline"
+                      }
+                      disabled={pending}
+                      onClick={() =>
+                        run(
+                          () => markAttendance(selected.id, "absent"),
+                          "Marked absent — no charge",
+                          () => setSelectedId(null),
+                        )
+                      }
+                    >
+                      <X size={16} /> Absent
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Absent means a missed session and is free. Use Cancel for
+                    advance notice.
+                  </p>
+                </div>
+              )}
+              {selected.status === "scheduled" && (
+                <Button
+                  variant="outline"
+                  disabled={pending}
+                  onClick={() => {
+                    setError(null);
+                    setCancelId(selected.id);
+                    setSelectedId(null);
+                  }}
                 >
-                  <ExternalLink size={14} /> View full details
+                  <Ban size={16} /> Cancel class
+                </Button>
+              )}
+              {selected.status === "canceled" && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRescheduleId(selected.id);
+                    setSelectedId(null);
+                  }}
+                >
+                  Schedule replacement
+                </Button>
+              )}
+              {feedback}
+              <Button asChild variant="secondary">
+                <Link href={`/classes/${selected.id}`}>
+                  <ExternalLink size={16} /> View full details
                 </Link>
-              </div>
+              </Button>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* ─── Reschedule Dialog ─── */}
-      <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
-        <DialogContent className="sm:max-w-sm">
+      <Dialog
+        open={cancelId !== null}
+        onOpenChange={(v) => {
+          if (!v && !pending) setCancelId(null);
+        }}
+      >
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reschedule Class?</DialogTitle>
+            <DialogTitle>Cancel this class?</DialogTitle>
             <DialogDescription>
-              This class has been cancelled and marked absent. Would you like to reschedule it?
+              The original class stays in your records as canceled and free.
+              This is different from marking a student absent.
             </DialogDescription>
           </DialogHeader>
-          <form action={handleRescheduleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reschedule_date">New date &amp; time</Label>
-              <input
-                type="datetime-local"
-                id="reschedule_date"
-                name="reschedule_date"
-                required
-                defaultValue={format(addDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm")}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-            </div>
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="ghost" onClick={() => { setRescheduleOpen(false); setCancelledClassId(null); }}>
-                No thanks
+          {feedback}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={pending}
+              onClick={() => setCancelId(null)}
+            >
+              Keep class
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() =>
+                cancelId !== null &&
+                run(
+                  () => cancelClassQuick(cancelId),
+                  "Class canceled",
+                  () => {
+                    setRescheduleId(cancelId);
+                    setCancelId(null);
+                  },
+                )
+              }
+            >
+              {pending ? "Canceling…" : "Confirm cancellation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={rescheduleId !== null}
+        onOpenChange={(v) => {
+          if (!v && !pending) setRescheduleId(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule a replacement?</DialogTitle>
+            <DialogDescription>
+              The original remains canceled. The replacement keeps its student,
+              duration and trial status.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            action={(f) => {
+              const date = String(f.get("reschedule_date") || "");
+              if (rescheduleId !== null)
+                run(
+                  () => rescheduleClassQuick(rescheduleId, date),
+                  "Replacement scheduled",
+                  () => setRescheduleId(null),
+                );
+            }}
+            className="space-y-4"
+          >
+            <Label htmlFor="replacement-date">New date and time (MYT)</Label>
+            <input
+              id="replacement-date"
+              className={inputClass}
+              type="datetime-local"
+              name="reschedule_date"
+              required
+              defaultValue={fmtDateInput(
+                new Date(Date.now() + 86400000).toISOString(),
+              )}
+            />
+            {feedback}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={() => setRescheduleId(null)}
+              >
+                No replacement
               </Button>
-              <Button type="submit" disabled={isReschedulePending}>
-                {isReschedulePending ? "Rescheduling..." : "Reschedule"}
+              <Button type="submit" disabled={pending}>
+                {pending ? "Scheduling…" : "Schedule replacement"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* ─── Add Class Dialog ─── */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+      <Dialog
+        open={proposal !== null}
+        onOpenChange={(v) => {
+          if (!v && !pending) setProposal(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm schedule change</DialogTitle>
+            <DialogDescription>{proposal?.event.title}</DialogDescription>
+          </DialogHeader>
+          {proposal && (
+            <>
+              <p className="text-sm">
+                New time: {fmtDateTime(proposal.start.toISOString())} (MYT)
+              </p>
+              <p className="text-sm">
+                Duration:{" "}
+                {Math.round(
+                  (proposal.end.getTime() - proposal.start.getTime()) / 60000,
+                )}{" "}
+                minutes
+              </p>
+              <p className="text-xs text-muted-foreground">
+                We check for overlapping classes before saving. Other classes
+                are unchanged.
+              </p>
+              {feedback}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  disabled={pending}
+                  onClick={() => setProposal(null)}
+                >
+                  Keep original
+                </Button>
+                <Button
+                  disabled={pending}
+                  onClick={() =>
+                    run(
+                      () =>
+                        moveClassQuick(
+                          Number(proposal.event.id),
+                          proposal.start.toISOString(),
+                          Math.round(
+                            (proposal.end.getTime() -
+                              proposal.start.getTime()) /
+                              60000,
+                          ),
+                        ),
+                      "Schedule updated",
+                      () => setProposal(null),
+                    )
+                  }
+                >
+                  {pending ? "Saving…" : "Confirm change"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!add}
+        onOpenChange={(v) => {
+          if (!v && !pending) setAdd(null);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Schedule a Class</DialogTitle>
+            <DialogTitle>Schedule a class</DialogTitle>
             <DialogDescription>
-              {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              Dates and times use Malaysia time (MYT).
             </DialogDescription>
           </DialogHeader>
-
-          <form action={handleAddSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="student_id">Student</Label>
-              <select
-                id="student_id"
-                name="student_id"
-                required
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="">Select student...</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="scheduled_at">Date &amp; Time</Label>
-                <input
-                  type="datetime-local"
-                  id="scheduled_at"
-                  name="scheduled_at"
-                  defaultValue={`${dateOnly}T09:00`}
+          {add && (
+            <form
+              key={add.date}
+              action={(f) =>
+                run(
+                  () => createClassQuick(f),
+                  "Class scheduled",
+                  () => setAdd(null),
+                )
+              }
+              className="space-y-4"
+            >
+              <div>
+                <Label htmlFor="calendar-student">Student</Label>
+                <select
+                  id="calendar-student"
+                  name="student_id"
                   required
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
+                  className={inputClass}
+                >
+                  <option value="">Select a student…</option>
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration_minutes">Duration (min)</Label>
-                <input
-                  type="number"
-                  id="duration_minutes"
-                  name="duration_minutes"
-                  defaultValue={60}
-                  min={15}
-                  step={15}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="calendar-time">Date and time</Label>
+                  <input
+                    id="calendar-time"
+                    name="scheduled_at"
+                    type="datetime-local"
+                    required
+                    defaultValue={add.date}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="calendar-duration">Minutes</Label>
+                  <input
+                    id="calendar-duration"
+                    name="duration_minutes"
+                    type="number"
+                    min={15}
+                    max={720}
+                    step={15}
+                    required
+                    defaultValue={add.duration}
+                    className={inputClass}
+                  />
+                </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
+              <div>
+                <Label htmlFor="calendar-subject">Subject</Label>
                 <input
-                  type="text"
-                  id="subject"
+                  id="calendar-subject"
                   name="subject"
-                  placeholder="e.g. Mathematics"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
+              <div>
+                <Label htmlFor="calendar-location">Location</Label>
                 <input
-                  type="text"
-                  id="location"
+                  id="calendar-location"
                   name="location"
-                  placeholder="e.g. Online"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="is_trial"
-                name="is_trial"
-                className="rounded"
-              />
-              <Label htmlFor="is_trial" className="text-sm font-normal">
-                Trial class
-              </Label>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAddDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isAddPending}>
-                {isAddPending ? "Scheduling..." : "Schedule Class"}
-              </Button>
-            </DialogFooter>
-          </form>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="is_trial" /> Trial class (free)
+              </label>
+              {feedback}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={pending}
+                  onClick={() => setAdd(null)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={pending || !students.length}>
+                  {pending ? "Scheduling…" : "Schedule class"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </>

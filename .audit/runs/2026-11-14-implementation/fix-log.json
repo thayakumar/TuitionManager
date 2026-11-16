@@ -1,0 +1,78 @@
+{
+  "authorization": "User approved all proposed repair batches and redesign; business decisions P01\u2013P16 recorded in prior run.",
+  "status": "Implemented and verified locally; not deployed",
+  "groups": [
+    {
+      "area": "Access control",
+      "change": "Server-side admin, active student, parent-token and ownership checks; hashed student sessions and deactivation invalidation.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Billing and attendance",
+      "change": "Present/Absent/Cancelled only; absences and cancellations omitted; rescheduled attended lessons billed once; trials remain free; MYT month boundaries.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Assignment history",
+      "change": "Append-only submission versions and historical feedback; only latest attempt can be graded, with stale-version and grade-range checks.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Scheduling",
+      "change": "Cross-student overlap prevention, confirmed calendar drag/resize, full-year recurrence and stop-future/preserve-history management; holiday logic removed.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Financial history",
+      "change": "Dedicated monthly chart and history page; revenue attributed to invoice billing month; cancelled invoices excluded.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Notifications",
+      "change": "Relevant student changes including edited posts notify the student; numeric unread badges and working mark-read actions.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Role interfaces",
+      "change": "Purple redesign, mobile navigation, expandable parent report table, working invoice filter, busy/error/loading states and serialized note saves.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    },
+    {
+      "area": "Performance and dependencies",
+      "change": "Versioned singleflight schema initialization, transactional migration/writes, fewer queries, Next upgrade and patched dependency tree; vendored MIT shadcn CSS.",
+      "evidence": [
+        "unit-tests.log",
+        "scenario-results.json",
+        "build.log"
+      ]
+    }
+  ]
+}

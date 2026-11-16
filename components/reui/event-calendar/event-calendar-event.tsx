@@ -45,14 +45,14 @@ import { RepeatIcon } from "lucide-react"
 const EVENT_CALENDAR_COLORS: Array<{ name: string; value: string }> = [
   { name: "Blue", value: "var(--color-blue-500)" },
   { name: "Emerald", value: "var(--color-emerald-500)" },
-  { name: "Violet", value: "var(--color-violet-500)" },
+  { name: "Violet", value: "var(--color-orange-500)" },
   { name: "Rose", value: "var(--color-rose-500)" },
   { name: "Amber", value: "var(--color-amber-500)" },
   { name: "Cyan", value: "var(--color-cyan-500)" },
   { name: "Orange", value: "var(--color-orange-500)" },
   { name: "Pink", value: "var(--color-pink-500)" },
-  { name: "Teal", value: "var(--color-teal-500)" },
-  { name: "Indigo", value: "var(--color-indigo-500)" },
+  { name: "Teal", value: "var(--color-orange-500)" },
+  { name: "Indigo", value: "var(--color-orange-500)" },
 ]
 
 /**
@@ -107,7 +107,7 @@ const EVENT_CALENDAR_SLOT_DRAFT = {
    * draft's own overflow-hidden.
    */
   label:
-    "text-primary truncate px-1 py-0.5 text-[0.6875rem] leading-none font-medium",
+    "text-primary truncate px-1 py-0.5 text-xs leading-none font-medium",
 } as const
 
 interface EventCalendarChipContextValue<TData = unknown> {

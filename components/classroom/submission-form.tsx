@@ -1,197 +1,216 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Paperclip, X, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { submitAssignment } from "@/lib/actions";
+import { submitAssignmentResult as submitAssignment } from "@/lib/actions";
+import { actionError, ActionValidationError } from "@/lib/action-errors";
+import { safeUrl } from "@/lib/domain/validation";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export function SubmissionForm({
   postId,
   studentId,
   studentName,
+  resubmission = false,
 }: {
   postId: number;
   studentId: number;
   studentName?: string;
+  resubmission?: boolean;
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState("");
   const [fileUrl, setFileUrl] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadError("");
-
-    if (file.size > MAX_FILE_SIZE) {
-      setUploadError("File too large (max 10MB)");
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const submitting = useRef(false);
+  function selectFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const next = event.target.files?.[0];
+    setError("");
+    setFile(null);
+    if (!next) return;
+    if (next.size === 0 || next.size > MAX_FILE_SIZE) {
+      setError(`Choose a nonempty image or PDF up to ${MAX_UPLOAD_LABEL}.`);
+      event.target.value = "";
       return;
     }
-
-    setSelectedFile(file);
+    if (
+      ![
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/gif",
+        "application/pdf",
+      ].includes(next.type)
+    ) {
+      setError("Use a PNG, JPG, WebP, GIF or PDF file.");
+      event.target.value = "";
+      return;
+    }
+    setFile(next);
   }
-
-  function removeFile() {
-    setSelectedFile(null);
-    setUploadError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  async function uploadFile(): Promise<string | null> {
-    if (!selectedFile) return null;
-    setUploading(true);
-    setUploadError("");
-
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current) return;
+    setError("");
+    let link: string | null;
     try {
-      const fd = new FormData();
-      fd.set("file", selectedFile);
-      fd.set("studentName", studentName || "student");
-
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-
-      if (!res.ok || !data.fileUrl) {
-        setUploadError(data.error || "Upload failed");
-        return null;
-      }
-
-      return data.fileUrl;
+      link = safeUrl(fileUrl);
     } catch {
-      setUploadError("Upload failed — try again");
-      return null;
+      setError("Enter a complete HTTPS link without embedded credentials.");
+      return;
+    }
+    if (!content.trim() && !link && !file) {
+      setError("Add your work, a file, or a valid link before turning in.");
+      return;
+    }
+    if (file && link) {
+      setError("Choose either an attached file or a link for this attempt.");
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    try {
+      if (file) {
+        const body = new FormData();
+        body.set("file", file);
+        body.set("studentName", studentName || "student");
+        const response = await fetch("/api/upload", { method: "POST", body });
+        const result = await response.json();
+        if (!response.ok || !result.fileUrl)
+          throw new ActionValidationError(
+            result.error || "Upload failed. Your work has not been submitted.",
+          );
+        link = safeUrl(result.fileUrl);
+        if (!link)
+          throw new ActionValidationError(
+            "Upload did not return a valid attachment link.",
+          );
+        // Retain the successful upload if the later submission write fails.
+        setFileUrl(link);
+        setFile(null);
+        if (inputRef.current) inputRef.current.value = "";
+      }
+      const data = new FormData();
+      data.set("post_id", String(postId));
+      data.set("student_id", String(studentId));
+      data.set("content", content.trim());
+      data.set("file_url", link ?? "");
+      const result = await submitAssignment(data);
+      if (result && !result.success)
+        throw new ActionValidationError(
+          result.error || "Could not submit this attempt.",
+        );
+      setContent("");
+      setFileUrl("");
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
+      toast.success(resubmission ? "New attempt submitted" : "Work submitted");
+      router.refresh();
+    } catch (reason) {
+      setError(
+        actionError(
+          reason,
+          "Could not submit your work. Your answer is still here; please try again.",
+        ),
+      );
     } finally {
-      setUploading(false);
+      submitting.current = false;
+      setBusy(false);
     }
   }
-
-  function handleSubmit() {
-    if (!content.trim() && !fileUrl.trim() && !selectedFile) return;
-
-    startTransition(async () => {
-      let finalFileUrl = fileUrl.trim();
-
-      if (selectedFile) {
-        const uploadedUrl = await uploadFile();
-        if (!uploadedUrl) return;
-        finalFileUrl = uploadedUrl;
-      }
-
-      const fd = new FormData();
-      fd.set("post_id", String(postId));
-      fd.set("student_id", String(studentId));
-      fd.set("content", content.trim());
-      fd.set("file_url", finalFileUrl);
-
-      await submitAssignment(fd);
-      toast.success("Work submitted");
-      router.refresh();
-    });
-  }
-
-  const isFileIcon = selectedFile?.type.startsWith("image/") ? ImageIcon : FileText;
-  const FileIcon = isFileIcon;
-
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="text-sm font-medium text-foreground">Your work</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {resubmission && (
+        <p className="text-sm text-muted-foreground">
+          This creates a new attempt awaiting a grade. Earlier work and feedback
+          stay in your history.
+        </p>
+      )}
+      <div className="space-y-1.5">
+        <label htmlFor={`work-${postId}`} className="text-sm font-medium">
+          Your work
+        </label>
         <textarea
+          id={`work-${postId}`}
+          name="content"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(event) => setContent(event.target.value)}
           rows={4}
+          maxLength={10000}
           placeholder="Type your answer or paste your work here..."
-          className="mt-1 flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          disabled={isPending || uploading}
+          disabled={busy}
+          className="w-full rounded-md border border-input bg-background p-3 text-sm"
         />
       </div>
-
-      <div>
-        <label className="text-sm font-medium text-foreground">
-          Attachment <span className="text-muted-foreground font-normal">(optional)</span>
-        </label>
-
-        {selectedFile ? (
-          <div className="mt-1 flex items-center gap-2 rounded-md border border-input px-3 py-2">
-            <FileIcon size={16} className="text-muted-foreground shrink-0" />
-            <span className="text-sm truncate flex-1">{selectedFile.name}</span>
-            <span className="text-xs text-muted-foreground shrink-0">
-              {(selectedFile.size / 1024).toFixed(0)} KB
-            </span>
-            <button
-              type="button"
-              onClick={removeFile}
-              className="text-muted-foreground hover:text-foreground shrink-0"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <div className="mt-1 flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,.pdf"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isPending || uploading}
-              className="gap-1.5"
-            >
-              <Paperclip size={14} />
-              Attach file
-            </Button>
-            <span className="text-xs text-muted-foreground self-center">
-              Images or PDF, max 10MB
-            </span>
-          </div>
-        )}
-
-        {uploadError && (
-          <p className="mt-1 text-xs text-red-500">{uploadError}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-foreground">
-          Link <span className="text-muted-foreground font-normal">(optional)</span>
+      <div className="space-y-1.5">
+        <label htmlFor={`file-${postId}`} className="text-sm font-medium">
+          Attachment (optional)
         </label>
         <input
+          ref={inputRef}
+          id={`file-${postId}`}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+          onChange={selectFile}
+          disabled={busy}
+          className="block w-full text-sm"
+        />
+        <p className="text-xs text-muted-foreground">
+          Image or PDF, up to {MAX_UPLOAD_LABEL}.
+        </p>
+        {file && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              setFile(null);
+              if (inputRef.current) inputRef.current.value = "";
+            }}
+          >
+            Remove attachment
+          </Button>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor={`link-${postId}`} className="text-sm font-medium">
+          HTTPS link (optional)
+        </label>
+        <input
+          id={`link-${postId}`}
           type="url"
-          value={fileUrl}
-          onChange={(e) => setFileUrl(e.target.value)}
+          name="file_url"
           placeholder="e.g., Google Drive link"
-          className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          disabled={isPending || uploading}
+          value={fileUrl}
+          onChange={(event) => setFileUrl(event.target.value)}
+          maxLength={2048}
+          disabled={busy}
+          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
         />
       </div>
-
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       <Button
-        onClick={handleSubmit}
-        disabled={isPending || uploading || (!content.trim() && !fileUrl.trim() && !selectedFile)}
-        className="gap-1.5"
+        type="submit"
+        disabled={busy || (!content.trim() && !fileUrl.trim() && !file)}
       >
-        {uploading ? (
-          <><Loader2 size={14} className="animate-spin" /> Uploading...</>
-        ) : isPending ? (
-          <><Loader2 size={14} className="animate-spin" /> Submitting...</>
-        ) : (
-          <><Send size={14} /> Turn in</>
-        )}
+        {busy
+          ? "Submitting..."
+          : resubmission
+            ? "Submit new attempt"
+            : "Turn in"}
       </Button>
-    </div>
+    </form>
   );
 }

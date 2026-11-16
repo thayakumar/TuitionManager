@@ -1,10 +1,25 @@
+import { ownStudentContext } from "@/lib/portal-context";
 import { notFound } from "next/navigation";
 import {
-  User, BookOpen, GraduationCap, Mail, Phone, Shield,
-  KeyRound, Calendar, UserCircle, Link2,
+  User,
+  BookOpen,
+  GraduationCap,
+  Mail,
+  Phone,
+  Shield,
+  KeyRound,
+  Calendar,
+  UserCircle,
+  Link2,
 } from "lucide-react";
 import { queryOne } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { fmtDate } from "@/lib/format";
@@ -37,21 +52,23 @@ function InfoRow({
 }
 
 export default async function StudentProfilePage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const params = await paramsPromise;
   const id = Number(params.studentId);
+  await ownStudentContext(id);
   const [student, shareTokenRow] = await Promise.all([
     queryOne<Student>(
       `SELECT id, name, subject, grade_level, phone, email, guardian_name,
               guardian_contact, username, password, active, created_at
        FROM students WHERE id = ? AND active = 1`,
-      [id]
+      [id],
     ),
     queryOne<{ token: string }>(
       "SELECT token FROM share_tokens WHERE student_id = ? AND active = 1 ORDER BY id DESC LIMIT 1",
-      [id]
+      [id],
     ),
   ]);
   if (!student) notFound();
@@ -60,7 +77,7 @@ export default async function StudentProfilePage({
     <>
       <div className="mb-6">
         <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <UserCircle size={22} className="text-indigo-500" />
+          <UserCircle size={22} className="text-orange-500" />
           My Profile
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -69,16 +86,16 @@ export default async function StudentProfilePage({
       </div>
 
       {/* Profile Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg mb-6">
-        <div className="absolute -right-8 -top-8 size-36 rounded-full bg-white/10" />
-        <div className="absolute right-20 bottom-0 size-20 rounded-full bg-white/5" />
+      <div className="profile-identity relative rounded-2xl border border-border bg-card p-6 mb-6">
+
+
         <div className="relative flex items-center gap-4">
-          <div className="flex size-16 items-center justify-center rounded-2xl bg-white/20 text-3xl font-bold">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-secondary text-primary text-3xl font-bold">
             {student.name.charAt(0).toUpperCase()}
           </div>
           <div>
             <h2 className="text-xl font-bold">{student.name}</h2>
-            <div className="flex items-center gap-2 mt-1 text-sm text-white/80">
+            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
               {student.subject && (
                 <span className="flex items-center gap-1">
                   <BookOpen size={14} /> {student.subject}
@@ -90,7 +107,7 @@ export default async function StudentProfilePage({
                 </span>
               )}
             </div>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Member since {fmtDate(student.created_at)}
             </p>
           </div>
@@ -99,29 +116,39 @@ export default async function StudentProfilePage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Info */}
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <User size={16} className="text-indigo-500" />
+              <User size={16} className="text-orange-500" />
               Personal Information
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="divide-y divide-border/50">
               <InfoRow icon={User} label="Full Name" value={student.name} />
-              <InfoRow icon={BookOpen} label="Subject" value={student.subject} />
-              <InfoRow icon={GraduationCap} label="Grade / Level" value={student.grade_level} />
+              <InfoRow
+                icon={BookOpen}
+                label="Subject"
+                value={student.subject}
+              />
+              <InfoRow
+                icon={GraduationCap}
+                label="Grade / Level"
+                value={student.grade_level}
+              />
               <InfoRow icon={Mail} label="Email" value={student.email} />
               <InfoRow icon={Phone} label="Phone" value={student.phone} />
             </div>
             {!student.email && !student.phone && !student.grade_level && (
-              <p className="text-sm text-muted-foreground py-3">No additional details on file.</p>
+              <p className="text-sm text-muted-foreground py-3">
+                No additional details on file.
+              </p>
             )}
           </CardContent>
         </Card>
 
         {/* Guardian Info */}
-        <Card className="shadow-sm border-0">
+        <Card className="border shadow-none">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Shield size={16} className="text-emerald-500" />
@@ -131,27 +158,48 @@ export default async function StudentProfilePage({
           <CardContent>
             {student.guardian_name || student.guardian_contact ? (
               <div className="divide-y divide-border/50">
-                <InfoRow icon={User} label="Guardian Name" value={student.guardian_name} />
-                <InfoRow icon={Phone} label="Guardian Contact" value={student.guardian_contact} />
+                <InfoRow
+                  icon={User}
+                  label="Guardian Name"
+                  value={student.guardian_name}
+                />
+                <InfoRow
+                  icon={Phone}
+                  label="Guardian Contact"
+                  value={student.guardian_contact}
+                />
               </div>
             ) : (
               <div className="text-center py-6">
-                <Shield size={28} className="mx-auto mb-2 text-muted-foreground/30" />
-                <p className="text-sm text-muted-foreground">No guardian information on file</p>
+                <Shield
+                  size={28}
+                  className="mx-auto mb-2 text-muted-foreground/30"
+                />
+                <p className="text-sm text-muted-foreground">
+                  No guardian information on file
+                </p>
               </div>
             )}
             {shareTokenRow && (
               <>
                 <Separator className="my-3" />
                 <div className="flex items-center gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-50 shrink-0">
-                    <Link2 size={16} className="text-indigo-500" />
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50 shrink-0">
+                    <Link2 size={16} className="text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Parent Portal Link</p>
-                    <p className="text-sm text-muted-foreground truncate">Share this with your guardian</p>
+                    <p className="text-xs text-muted-foreground">
+                      Parent Portal Link
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      Share this with your guardian
+                    </p>
                   </div>
-                  <CopyLinkButton url={`/share/${shareTokenRow.token}`} label="Copy link" relative />
+                  <CopyLinkButton
+                    url={`/share/${shareTokenRow.token}`}
+                    label="Copy link"
+                    relative
+                  />
                 </div>
               </>
             )}
@@ -160,7 +208,7 @@ export default async function StudentProfilePage({
       </div>
 
       {/* Login Credentials */}
-      <Card className="shadow-sm border-0 mt-6">
+      <Card className="border shadow-none mt-6">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <KeyRound size={16} className="text-amber-500" />

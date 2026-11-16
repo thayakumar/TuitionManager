@@ -1,142 +1,121 @@
-import { notFound } from "next/navigation";
+import { queryAll, queryOne } from "@/lib/db";
 import {
-  Check, Clock, X, TrendingUp,
-} from "lucide-react";
-import { queryOne, queryAll } from "@/lib/db";
+  requireParent,
+  PUBLIC_LESSON_COLUMNS,
+  attendanceSummary,
+  normalizedAttendance,
+} from "@/lib/portal-context";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fmtDateTime } from "@/lib/format";
 import type { ClassRow } from "@/lib/types";
-
 export const dynamic = "force-dynamic";
-
-export default async function ParentAttendancePage({ params }: { params: { token: string } }) {
-  const shareToken = await queryOne<{ student_id: number }>(
-    "SELECT student_id FROM share_tokens WHERE token = ? AND active = 1",
-    [params.token]
-  );
-  if (!shareToken) notFound();
-
-  const studentId = shareToken.student_id;
-
+export default async function ParentAttendancePage({
+  params: paramsPromise,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const params = await paramsPromise;
+  const student = await requireParent(params.token);
   const [classes, stats] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT id, student_id, scheduled_at, duration_minutes, subject, location, status, attendance, is_trial, cancel_reason, rescheduled_from, created_at FROM classes WHERE student_id = ? ORDER BY scheduled_at DESC",
-      [studentId]
+      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? ORDER BY scheduled_at DESC`,
+      [student.id],
     ),
-    queryOne<{ total: number; present: number; late: number; absent: number }>(
-      `SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN attendance = 'present' THEN 1 ELSE 0 END) as present,
-        SUM(CASE WHEN attendance = 'late' THEN 1 ELSE 0 END) as late,
-        SUM(CASE WHEN attendance = 'absent' THEN 1 ELSE 0 END) as absent
-       FROM classes WHERE student_id = ? AND status = 'completed'`,
-      [studentId]
+    queryOne<{ present: number; absent: number; cancelled: number }>(
+      `SELECT SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN status<>'canceled' AND attendance='absent' THEN 1 ELSE 0 END) AS absent,SUM(CASE WHEN status='canceled' THEN 1 ELSE 0 END) AS cancelled FROM classes WHERE student_id=?`,
+      [student.id],
     ),
   ]);
-
-  const completed = (stats?.present ?? 0) + (stats?.late ?? 0) + (stats?.absent ?? 0);
-  const rate = completed > 0
-    ? Math.round(((stats!.present + stats!.late) / completed) * 100)
-    : 0;
-
+  const summary = attendanceSummary(stats?.present ?? 0, stats?.absent ?? 0);
   return (
     <>
-      <PageHeader title="Attendance" subtitle="Track attendance across all classes" />
-
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-4 text-center">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 mx-auto mb-2">
-              <Check size={16} className="text-emerald-500" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats?.present ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Present</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-4 text-center">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 mx-auto mb-2">
-              <Clock size={16} className="text-amber-500" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats?.late ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Late</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-4 text-center">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-red-50 mx-auto mb-2">
-              <X size={16} className="text-red-500" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats?.absent ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Absent</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-0">
-          <CardContent className="p-4 text-center">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 mx-auto mb-2">
-              <TrendingUp size={16} className="text-indigo-500" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{rate}%</p>
-            <p className="text-xs text-muted-foreground">Rate</p>
-          </CardContent>
-        </Card>
+      <PageHeader
+        title="Attendance"
+        subtitle="Present and Absent count toward attendance; advance-notice cancellations do not."
+      />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          ["Present", summary.present],
+          ["Absent", summary.absent],
+          ["Cancelled", stats?.cancelled ?? 0],
+          ["Attendance", `${summary.rate}%`],
+        ].map(([label, value]) => (
+          <Card key={label}>
+            <CardContent className="p-5">
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="mt-2 text-2xl font-bold">{value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      {/* Class List */}
-      <div className="space-y-2">
-        {classes.map((c) => {
-          const attColor = c.attendance === "present"
-            ? "bg-emerald-500 hover:bg-emerald-600"
-            : c.attendance === "late"
-            ? "bg-amber-500 hover:bg-amber-600"
-            : c.attendance === "absent"
-            ? "bg-red-500 hover:bg-red-600"
-            : "";
-
-          return (
-            <Card key={c.id} className="shadow-sm border-0">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`flex size-9 items-center justify-center rounded-lg ${
-                    c.attendance === "present" ? "bg-emerald-50" :
-                    c.attendance === "late" ? "bg-amber-50" :
-                    c.attendance === "absent" ? "bg-red-50" : "bg-gray-50"
-                  }`}>
-                    {c.attendance === "present" ? <Check size={16} className="text-emerald-500" /> :
-                     c.attendance === "late" ? <Clock size={16} className="text-amber-500" /> :
-                     c.attendance === "absent" ? <X size={16} className="text-red-500" /> :
-                     <Clock size={16} className="text-gray-400" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-medium ${c.status === "canceled" ? "line-through opacity-60" : ""}`}>
-                      {fmtDateTime(c.scheduled_at)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {c.duration_minutes} min · {c.subject || "Lesson"}
-                    </div>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    {c.attendance && (
-                      <Badge className={`text-[10px] text-white capitalize ${attColor}`}>
-                        {c.attendance}
+      {classes.length ? (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-muted/40 text-xs text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">Lesson</th>
+                <th className="hidden px-4 py-3 font-medium sm:table-cell">
+                  Duration
+                </th>
+                <th className="px-4 py-3 font-medium">Attendance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classes.map((c) => {
+                const label =
+                  c.status === "canceled"
+                    ? "Cancelled"
+                    : normalizedAttendance(c.attendance) === "present"
+                      ? "Present"
+                      : c.attendance === "absent"
+                        ? "Absent"
+                        : "Not marked";
+                return (
+                  <tr key={c.id} className="border-t border-border">
+                    <td className="px-4 py-4">
+                      <p
+                        className={`font-medium ${c.status === "canceled" ? "text-muted-foreground line-through" : ""}`}
+                      >
+                        {fmtDateTime(c.scheduled_at)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground sm:hidden">
+                        {c.duration_minutes} minutes
+                      </p>
+                      {c.status === "canceled" && c.cancel_reason && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {c.cancel_reason}
+                        </p>
+                      )}
+                    </td>
+                    <td className="hidden px-4 py-4 text-muted-foreground sm:table-cell">
+                      {c.duration_minutes} min
+                    </td>
+                    <td className="px-4 py-4">
+                      <Badge
+                        variant={
+                          label === "Absent"
+                            ? "destructive"
+                            : label === "Present"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
+                        {label}
                       </Badge>
-                    )}
-                    <Badge
-                      variant={c.status === "completed" ? "default" : c.status === "canceled" ? "destructive" : "secondary"}
-                      className="text-[10px] capitalize"
-                    >
-                      {c.status}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          No lessons recorded yet
+        </div>
+      )}
     </>
   );
 }

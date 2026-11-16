@@ -1,0 +1,232 @@
+{
+  "evidence_level": "Executed",
+  "environment": "Local production build with isolated fake SQLite data; not production",
+  "unique_checks": 29,
+  "passed": 29,
+  "page_errors": [],
+  "checks": [
+    {
+      "id": "auth-real-admin-login",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "http://127.0.0.1:4611/"
+    },
+    {
+      "id": "auth-real-student-login",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "http://127.0.0.1:4611/portal/student/1"
+    },
+    {
+      "id": "auth-forged-admin-cookie-denied",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "six private routes redirect forged session"
+    },
+    {
+      "id": "auth-student-foreign-post-denied",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "foreign post not found"
+    },
+    {
+      "id": "parent-reports-collapsed-expandable-table",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "report hidden until expanded; re-collapses"
+    },
+    {
+      "id": "student-blank-work-does-not-turn-in",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "blank submission blocked"
+    },
+    {
+      "id": "student-submit-first-attempt",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "version": 1
+      }
+    },
+    {
+      "id": "teacher-grade-first-attempt-student-sees-feedback",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "80/100 and feedback visible to student"
+    },
+    {
+      "id": "student-resubmit-append-history-awaiting-new-grade",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "currentVersion": 2,
+        "priorGrade": "80"
+      }
+    },
+    {
+      "id": "teacher-stale-attempt-cannot-be-graded",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "Newer work has arrived. Reload and grade only the latest attempt."
+    },
+    {
+      "id": "teacher-latest-only-grade-history-readonly",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "latest90; previous80 work/feedback retained"
+    },
+    {
+      "id": "student-third-version-final-grade-takes-precedence",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": [
+        {
+          "version": 1,
+          "grade": "80"
+        },
+        {
+          "version": 2,
+          "grade": "90"
+        },
+        {
+          "version": 3,
+          "grade": "95"
+        }
+      ]
+    },
+    {
+      "id": "teacher-grade-above-max-blocked",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "999 rejected; grade95 unchanged"
+    },
+    {
+      "id": "edited-post-notifies-only-own-student",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "notification": "Classwork updated",
+        "recipient": 1
+      }
+    },
+    {
+      "id": "student-unread-circle-count-and-open-mark-read",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "before": 8,
+        "after": 7
+      }
+    },
+    {
+      "id": "invoicing-omits-cancel-absent-no-subject-month-correct",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "id": 1,
+        "total": 80,
+        "description": "10 Nov 2026, 10:00 (60 min)"
+      }
+    },
+    {
+      "id": "finance-billing-month-paid-unpaid-and-parent-debt",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "November invoice inNovember revenue andparentbalance"
+    },
+    {
+      "id": "ui-invoice-status-filter-real",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "unpaidinvoicehiddenbyPaidfilter"
+    },
+    {
+      "id": "ui-no-late-no-holiday-no-reminders",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "removed unsupported controls"
+    },
+    {
+      "id": "mobile-admin-nav-close-and-width",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "width": 390
+      }
+    },
+    {
+      "id": "mobile-student-nav-close-and-width",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": {
+        "width": 390
+      }
+    },
+    {
+      "id": "mobile-parent-nav-close-and-width",
+      "result": "Pass",
+      "evidence": "Executed",
+      "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/share/flow-parent-alice/invoices\"]').filter({ visible: true }).first()\u001b[22m\n\u001b[2m    - locator resolved to <a class=\"text-xs font-medium text-primary\" href=\"/share/flow-parent-alice/invoices\">\u2026</a>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 \u00d7 waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-open=\"\" aria-hidden=\"true\" role=\"presentation\" data-base-ui-inert=\"\" data-slot=\"sheet-overlay\" class=\"fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs\"></div> from <div id=\"_r_0_\" data-base-ui-portal=\"\" data-slot=\"sheet-portal\">\u2026</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 \u00d7 waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-open=\"\" aria-hidden=\"true\" role=\"presentation\" data-base-ui-inert=\"\" data-slot=\"sheet-overlay\" class=\"fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs\"></div> from <div id=\"_r_0_\" data-base-ui-portal=\"\" data-slot=\"sheet-portal\">\u2026</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 \u00d7 waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <div data-open=\"\" aria-hidden=\"true\" role=\"presentation\" data-base-ui-inert=\"\" data-slot=\"sheet-overlay\" class=\"fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs\"></div> from <div id=\"_r_0_\" data-base-ui-portal=\"\" data-slot=\"sheet-portal\">\u2026</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "actual": "drawerclosedand390px",
+      "verification_note": "Initial harness selected a dashboard link behind the open menu. Retested with the link scoped to the navigation modal; passed. Original observation retained in browser-core-original.json."
+    },
+    {
+      "id": "runtime-no-browser-page-errors",
+      "result": "Pass",
+      "evidence": "Executed",
+      "actual": "No unhandled browsererrors"
+    },
+    {
+      "id": "reschedule-request-keeps-original-booking",
+      "result": "Pass",
+      "actual": {
+        "request": 1,
+        "originalStatus": "scheduled"
+      }
+    },
+    {
+      "id": "approve-request-updates-both-role-schedules",
+      "result": "Pass",
+      "actual": {
+        "replacement": 12,
+        "time": "2026-12-18T02:00:00.000Z"
+      }
+    },
+    {
+      "id": "rescheduled-present-lesson-pulls-into-invoice-once",
+      "result": "Pass",
+      "actual": {
+        "id": 2,
+        "invoice_id": 2,
+        "class_id": 12,
+        "description": "18 Dec 2026, 10:00 (60 min)",
+        "quantity": 1,
+        "unit_amount": 80,
+        "amount": 80,
+        "total_amount": 80
+      }
+    },
+    {
+      "id": "recurring-lessons-generate-through-calendar-year",
+      "result": "Pass",
+      "actual": {
+        "through": "2027-12-31",
+        "classes": 5
+      }
+    },
+    {
+      "id": "stopping-series-preserves-rows-and-cancels-future",
+      "result": "Pass",
+      "actual": "five rows retained, all future canceled"
+    },
+    {
+      "id": "calendar-drag-confirmed-change-persists",
+      "result": "Pass",
+      "actual": {
+        "at": "2026-12-22T02:00:00.000Z",
+        "trial": 1
+      }
+    }
+  ]
+}

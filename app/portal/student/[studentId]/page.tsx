@@ -1,11 +1,24 @@
+import { ownStudentContext, normalizedAttendance } from "@/lib/portal-context";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Calendar, Clock, BookOpen, Video, GraduationCap,
-  CheckCircle2, ArrowRight, Activity,
+  Calendar,
+  Clock,
+  BookOpen,
+  Video,
+  GraduationCap,
+  CheckCircle2,
+  ArrowRight,
+  Activity,
 } from "lucide-react";
 import { queryAll, queryOne } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fmtDateTime, fmtDate } from "@/lib/format";
@@ -14,23 +27,34 @@ import type { Student, ClassRow } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function StudentDashboardPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
+  const params = await paramsPromise;
   const id = Number(params.studentId);
-  const student = await queryOne<Student>(
-    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-            guardian_contact, username, active, created_at
-     FROM students WHERE id = ? AND active = 1`,
-    [id]
-  );
-  if (!student) notFound();
+  const student = await ownStudentContext(id);
 
   const nowISO = new Date().toISOString();
   const now = new Date();
   const greeting =
-    now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening";
+    Number(
+      new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        hourCycle: "h23",
+        timeZone: "Asia/Kuala_Lumpur",
+      }).format(now),
+    ) < 12
+      ? "Good morning"
+      : Number(
+            new Intl.DateTimeFormat("en-GB", {
+              hour: "2-digit",
+              hourCycle: "h23",
+              timeZone: "Asia/Kuala_Lumpur",
+            }).format(now),
+          ) < 17
+        ? "Good afternoon"
+        : "Good evening";
 
   const [upcoming, recentCompleted, stats] = await Promise.all([
     queryAll<ClassRow>(
@@ -38,14 +62,14 @@ export default async function StudentDashboardPage({
               status, attendance, recurrence_id, is_trial, cancel_reason,
               rescheduled_from, meeting_room, created_at
        FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at LIMIT 5`,
-      [id, nowISO]
+      [id, nowISO],
     ),
     queryAll<ClassRow>(
       `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
               status, attendance, recurrence_id, is_trial, cancel_reason,
               rescheduled_from, meeting_room, created_at
        FROM classes WHERE student_id = ? AND status = 'completed' ORDER BY scheduled_at DESC LIMIT 3`,
-      [id]
+      [id],
     ),
     queryOne<{
       total_classes: number;
@@ -57,8 +81,8 @@ export default async function StudentDashboardPage({
          (SELECT COUNT(*) FROM classes WHERE student_id = ?) AS total_classes,
          (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ?) AS upcoming_count,
          (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_count,
-         (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours`,
-      [id, id, nowISO, id, id]
+         (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed' AND attendance IN ('present','late')) AS total_hours`,
+      [id, id, nowISO, id, id],
     ),
   ]);
 
@@ -67,42 +91,47 @@ export default async function StudentDashboardPage({
   return (
     <>
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 p-6 text-white shadow-lg mb-6">
+      <div className="learning-hero relative">
         <div className="absolute -right-8 -top-8 size-36 rounded-full bg-white/10" />
         <div className="absolute right-20 bottom-0 size-20 rounded-full bg-white/5" />
         <div className="relative">
-          <p className="text-sm text-white/70">{greeting}</p>
+          <p className="eyebrow">{greeting}</p>
           <h1 className="text-2xl font-bold mt-1">
             {student.name.split(" ")[0]}
           </h1>
-          <p className="text-sm text-white/80 mt-1">
-            {student.subject || "Student"}{student.grade_level ? ` · ${student.grade_level}` : ""}
+          <p className="text-sm mt-3">
+            {student.subject || "Student"}
+            {student.grade_level ? ` · ${student.grade_level}` : ""}
           </p>
         </div>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="shadow-sm border-0">
+        <Card className="metric-card">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Total Classes</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{stats?.total_classes ?? 0}</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {stats?.total_classes ?? 0}
+                </p>
               </div>
-              <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-50">
-                <BookOpen size={18} className="text-indigo-500" />
+              <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50">
+                <BookOpen size={18} className="text-orange-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-0">
+        <Card className="metric-card">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Upcoming</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{stats?.upcoming_count ?? 0}</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {stats?.upcoming_count ?? 0}
+                </p>
               </div>
               <div className="flex size-9 items-center justify-center rounded-xl bg-blue-50">
                 <Calendar size={18} className="text-blue-500" />
@@ -111,12 +140,14 @@ export default async function StudentDashboardPage({
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-0">
+        <Card className="metric-card">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{stats?.completed_count ?? 0}</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {stats?.completed_count ?? 0}
+                </p>
               </div>
               <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-50">
                 <CheckCircle2 size={18} className="text-emerald-500" />
@@ -125,7 +156,7 @@ export default async function StudentDashboardPage({
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-0">
+        <Card className="metric-card">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -134,8 +165,8 @@ export default async function StudentDashboardPage({
                   {((stats?.total_hours ?? 0) / 60).toFixed(0)}h
                 </p>
               </div>
-              <div className="flex size-9 items-center justify-center rounded-xl bg-violet-50">
-                <Activity size={18} className="text-violet-500" />
+              <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50">
+                <Activity size={18} className="text-orange-500" />
               </div>
             </div>
           </CardContent>
@@ -144,20 +175,25 @@ export default async function StudentDashboardPage({
 
       {/* Next Class Highlight */}
       {nextClass && (
-        <Card className="shadow-sm border-0 mb-6 border-l-4 border-l-indigo-500">
+        <Card className="metric-card mb-6 border-l-4 border-l-orange-500">
           <CardContent className="p-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-500 mb-1">Next Class</p>
-                <p className="text-sm font-semibold text-foreground">{fmtDateTime(nextClass.scheduled_at)}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-orange-500 mb-1">
+                  Next Class
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  {fmtDateTime(nextClass.scheduled_at)}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {nextClass.duration_minutes} min · {nextClass.subject || student.subject || "Lesson"}
+                  {nextClass.duration_minutes} min ·{" "}
+                  {nextClass.subject || student.subject || "Lesson"}
                   {nextClass.location ? ` · ${nextClass.location}` : ""}
                 </p>
               </div>
               {nextClass.meeting_room && (
                 <Link href={`/meeting/${nextClass.id}`}>
-                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <Button className="bg-primary hover:bg-primary/90 text-white">
                     <Video size={16} /> Join Meeting
                   </Button>
                 </Link>
@@ -168,11 +204,11 @@ export default async function StudentDashboardPage({
       )}
 
       {/* Upcoming Classes */}
-      <Card className="shadow-sm border-0 mb-6">
+      <Card className="metric-card mb-6">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-500" />
+              <Calendar size={18} className="text-orange-500" />
               Upcoming Classes
             </CardTitle>
             <Link href={`/portal/student/${id}/schedule`}>
@@ -181,7 +217,10 @@ export default async function StudentDashboardPage({
               </Button>
             </Link>
           </div>
-          <CardDescription>{upcoming.length} scheduled</CardDescription>
+          <CardDescription>
+            Next {upcoming.length} of {stats?.upcoming_count ?? 0} scheduled
+            lessons
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
@@ -196,13 +235,16 @@ export default async function StudentDashboardPage({
                   key={c.id}
                   className="flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors"
                 >
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-indigo-50">
-                    <Clock size={16} className="text-indigo-500" />
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
+                    <Clock size={16} className="text-orange-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">{fmtDateTime(c.scheduled_at)}</div>
+                    <div className="text-sm font-medium">
+                      {fmtDateTime(c.scheduled_at)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      {c.duration_minutes} min · {c.subject || student.subject || "Lesson"}
+                      {c.duration_minutes} min ·{" "}
+                      {c.subject || student.subject || "Lesson"}
                       {c.location ? ` · ${c.location}` : ""}
                     </div>
                   </div>
@@ -215,7 +257,9 @@ export default async function StudentDashboardPage({
                       </Link>
                     )}
                     {c.is_trial ? (
-                      <Badge variant="outline" className="text-[10px]">TRIAL</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        TRIAL
+                      </Badge>
                     ) : null}
                   </div>
                 </div>
@@ -226,7 +270,7 @@ export default async function StudentDashboardPage({
       </Card>
 
       {/* Recent Completed */}
-      <Card className="shadow-sm border-0">
+      <Card className="metric-card">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
             <CheckCircle2 size={18} className="text-emerald-500" />
@@ -250,13 +294,23 @@ export default async function StudentDashboardPage({
                     <CheckCircle2 size={16} className="text-emerald-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">{fmtDateTime(c.scheduled_at)}</div>
+                    <div className="text-sm font-medium">
+                      {fmtDateTime(c.scheduled_at)}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      {c.duration_minutes} min · {c.subject || student.subject || "Lesson"}
+                      {c.duration_minutes} min ·{" "}
+                      {c.subject || student.subject || "Lesson"}
                     </div>
                   </div>
-                  <Badge variant="default" className="text-[10px] bg-emerald-500">
-                    {c.attendance || "completed"}
+                  <Badge
+                    variant="default"
+                    className="text-xs bg-emerald-500"
+                  >
+                    {normalizedAttendance(c.attendance) === "present"
+                      ? "Present"
+                      : normalizedAttendance(c.attendance) === "absent"
+                        ? "Absent"
+                        : "Completed"}
                   </Badge>
                 </div>
               ))}

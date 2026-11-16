@@ -1,0 +1,116 @@
+[
+  {
+    "id": "root.admin.login.empty",
+    "result": "Pass",
+    "actual": 2,
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.admin.login.wrong",
+    "result": "Pass",
+    "actual": "Inline error displayed",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.dashboard.open-close.Schedule class",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.dashboard.open-close.Add student",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.dashboard.open-close.Generate invoice",
+    "result": "Pass",
+    "actual": "Dialog opened and Escape closed",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.sidebar.collapse",
+    "result": "Pass",
+    "actual": "Collapse persisted after reload and expanded",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.export./students",
+    "result": "Pass",
+    "actual": {
+      "filename": "students.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.export./invoices",
+    "result": "Pass",
+    "actual": {
+      "filename": "invoices.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.export./schedule",
+    "result": "Pass",
+    "actual": {
+      "filename": "classes.csv",
+      "failure": null
+    },
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.admin.logout",
+    "result": "Pass",
+    "actual": "Logout redirects and private route rejects no cookie",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.mobile.render./",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.mobile.render./students",
+    "result": "Fail",
+    "actual": "Horizontal document overflow {\"viewport\":390,\"layoutViewport\":394,\"visualViewport\":390,\"body\":394}",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.mobile.render./schedule",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.mobile.render./invoices",
+    "result": "Fail",
+    "actual": "Horizontal document overflow {\"viewport\":390,\"layoutViewport\":418,\"visualViewport\":390,\"body\":418}",
+    "evidence_level": "Executed"
+  },
+  {
+    "id": "root.mobile.render./settings",
+    "result": "Pass",
+    "actual": {
+      "viewport": 390,
+      "layoutViewport": 390,
+      "visualViewport": 390,
+      "body": 390
+    },
+    "evidence_level": "Executed"
+  }
+]

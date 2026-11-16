@@ -1,111 +1,93 @@
+import { NotificationReadLink } from "@/components/notification-read-link";
+import { NotificationReadAction } from "@/components/notification-actions";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { Bell, CheckCheck, CalendarClock, BookOpen, FileText, Megaphone } from "lucide-react";
-import { queryAll, queryOne } from "@/lib/db";
-import { markAllNotificationsRead } from "@/lib/actions";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Bell, CheckCheck, Check } from "lucide-react";
+import { ownStudentContext } from "@/lib/portal-context";
+import {
+  getNotificationSummary,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "@/lib/actions";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { fmtDateTime } from "@/lib/format";
-import type { Student, AppNotification } from "@/lib/types";
-
 export const dynamic = "force-dynamic";
-
-function iconForType(type: string) {
-  switch (type) {
-    case "reschedule_approved":
-    case "reschedule_rejected":
-      return <CalendarClock size={16} className="text-indigo-500" />;
-    case "new_material":
-    case "new_assignment":
-      return <BookOpen size={16} className="text-emerald-500" />;
-    case "class_scheduled":
-    case "class_cancelled":
-      return <FileText size={16} className="text-amber-500" />;
-    default:
-      return <Megaphone size={16} className="text-violet-500" />;
-  }
-}
-
 export default async function StudentNotificationsPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { studentId: string };
+  params: Promise<{ studentId: string }>;
 }) {
-  const id = Number(params.studentId);
-  const student = await queryOne<Student>(
-    `SELECT id, name FROM students WHERE id = ? AND active = 1`,
-    [id]
+  const params = await paramsPromise;
+  const student = await ownStudentContext(Number(params.studentId));
+  const { notifications, unreadCount } = await getNotificationSummary(
+    "student",
+    student.id,
   );
-  if (!student) notFound();
-
-  const notifications = await queryAll<AppNotification>(
-    `SELECT * FROM notifications WHERE recipient_type = 'student' AND recipient_id = ? ORDER BY created_at DESC LIMIT 50`,
-    [id]
-  );
-
-  const markAllRead = markAllNotificationsRead.bind(null, "student", id);
-  const unread = notifications.filter((n) => !n.read);
-
+  const markAll = markAllNotificationsRead.bind(null, "student", student.id);
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Bell size={22} className="text-indigo-500" />
-            Notifications
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {unread.length > 0 ? `${unread.length} unread` : "All caught up"}
-          </p>
-        </div>
-        {unread.length > 0 && (
-          <form action={markAllRead}>
-            <Button variant="outline" size="sm">
-              <CheckCheck size={14} /> Mark all read
-            </Button>
-          </form>
-        )}
-      </div>
-
-      {notifications.length === 0 ? (
-        <Card className="shadow-sm border-0">
-          <CardContent className="py-12 text-center">
-            <Bell size={40} className="mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No notifications yet</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
+      <PageHeader
+        title="Notifications"
+        subtitle={
+          unreadCount
+            ? `${unreadCount} unread · Updates about your lessons and classwork`
+            : "You're all caught up"
+        }
+        action={
+          unreadCount > 0 ? (
+            <NotificationReadAction recipientType="student" recipientId={student.id} />
+          ) : undefined
+        }
+      />
+      {notifications.length ? (
+        <div className="space-y-3">
           {notifications.map((n) => (
             <Card
               key={n.id}
-              className={`shadow-sm border-0 transition-colors ${!n.read ? "bg-indigo-50/30 border-l-2 border-l-indigo-500" : ""}`}
+              className={!n.read ? "border-primary/20 bg-primary/5" : ""}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-muted/50 shrink-0 mt-0.5">
-                    {iconForType(n.type)}
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Bell size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-semibold">{n.title}</h2>
+                    {!n.read && (
+                      <span
+                        className="size-2 rounded-full bg-primary"
+                        aria-label="Unread"
+                      />
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                      {!n.read && <Badge variant="secondary" className="text-[10px]">New</Badge>}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{fmtDateTime(n.created_at)}</p>
-                  </div>
-                  {n.link && (
-                    <Link href={n.link}>
-                      <Button variant="ghost" size="sm" className="shrink-0 text-xs">
-                        View
-                      </Button>
-                    </Link>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {n.message}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {fmtDateTime(n.created_at)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {n.link &&
+                    n.link.startsWith(`/portal/student/${student.id}/`) && (
+                      <NotificationReadLink id={n.id} href={n.link} />
+                    )}
+                  {!n.read && (
+                    <NotificationReadAction id={n.id} />
                   )}
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+          <Bell className="mx-auto mb-3 text-primary/50" />
+          <h2 className="font-semibold">No notifications yet</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your tutor's lesson and classwork updates will appear here.
+          </p>
         </div>
       )}
     </>

@@ -1,9 +1,18 @@
+import { requireAdminPage } from "@/lib/auth";
+import { LessonActionForm } from "@/components/lesson-action-form";
+import { fmtDateInput, fmtISODate } from "@/lib/format";
 import Link from "next/link";
 import { queryAll } from "@/lib/db";
-import { createClass } from "@/lib/actions";
+import { createClassQuick } from "@/lib/actions";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, SelectField } from "@/components/form-field";
 import type { Student } from "@/lib/types";
@@ -14,10 +23,12 @@ export const dynamic = "force-dynamic";
 export default async function NewClassPage({
   searchParams,
 }: {
-  searchParams: { student?: string };
+  searchParams: Promise<{ student?: string }>;
 }) {
+  await requireAdminPage();
+  const query = await searchParams;
   const students = await queryAll<Student>(
-    "SELECT * FROM students WHERE active = 1 ORDER BY name"
+    "SELECT id,name,subject FROM students WHERE active = 1 ORDER BY name",
   );
 
   if (students.length === 0) {
@@ -37,24 +48,35 @@ export default async function NewClassPage({
     );
   }
 
-  const defaultTime = format(new Date(Date.now() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm");
+  const defaultTime = fmtDateInput(
+    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  );
 
   return (
     <>
       <PageHeader title="Schedule a class" />
-      <form action={createClass} className="max-w-xl">
+      <LessonActionForm
+        action={createClassQuick}
+        successPath="/classes/{id}"
+        className="max-w-xl"
+      >
         <Card>
           <CardHeader>
             <CardTitle>New class</CardTitle>
-            <CardDescription>Schedule a class session for a student</CardDescription>
+            <CardDescription>
+              Schedule a class session for a student
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <SelectField
                 label="Student *"
                 name="student_id"
-                defaultValue={searchParams.student || String(students[0].id)}
-                options={students.map((s) => ({ value: String(s.id), label: s.name }))}
+                defaultValue={query.student || String(students[0].id)}
+                options={students.map((s) => ({
+                  value: String(s.id),
+                  label: s.name,
+                }))}
               />
               <Field
                 label="Date & time *"
@@ -69,10 +91,20 @@ export default async function NewClassPage({
                   name="duration_minutes"
                   type="number"
                   defaultValue={60}
+                  min={5}
+                  max={1440}
                 />
-                <Field label="Subject" name="subject" placeholder="e.g. Algebra" />
+                <Field
+                  label="Subject"
+                  name="subject"
+                  placeholder="e.g. Algebra"
+                />
               </div>
-              <Field label="Location" name="location" placeholder="e.g. Zoom / Home" />
+              <Field
+                label="Location"
+                name="location"
+                placeholder="e.g. Zoom / Home"
+              />
               <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
@@ -86,13 +118,11 @@ export default async function NewClassPage({
               <Link href="/schedule">
                 <Button variant="secondary">Cancel</Button>
               </Link>
-              <Button type="submit">
-                Schedule
-              </Button>
+              <Button type="submit">Schedule</Button>
             </div>
           </CardContent>
         </Card>
-      </form>
+      </LessonActionForm>
     </>
   );
 }
