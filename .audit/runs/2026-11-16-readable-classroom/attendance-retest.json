@@ -1,0 +1,10 @@
+{
+  "id": "parent-attendance-past-only-and-summary",
+  "result": "Pass",
+  "actual": {
+    "pastPresent": 1,
+    "pastAbsent": 1,
+    "rate": "50%"
+  },
+  "note": "Waited for streamed content readiness before assertions; initial check read the loading skeleton."
+}

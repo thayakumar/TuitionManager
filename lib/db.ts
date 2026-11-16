@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -279,7 +279,39 @@ const ADDED_COLUMNS: Record<string, Record<string, string>> = {
   recurrences: { generated_through: "TEXT" },
 };
 
-async function applyMigration(tx: Transaction) {
+async function migratePostOrder(tx: Transaction) {
+  const columns = new Set(
+    (await tx.execute("PRAGMA table_info(posts)")).rows.map((row) =>
+      String(row.name),
+    ),
+  );
+  if (!columns.has("sort_order")) {
+    await tx.execute(
+      "ALTER TABLE posts ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0",
+    );
+    await tx.execute(`WITH ranked AS (
+      SELECT id, ROW_NUMBER() OVER (PARTITION BY student_id, topic_id ORDER BY julianday(created_at) DESC, id DESC) - 1 AS position FROM posts
+    ) UPDATE posts SET sort_order=(SELECT position FROM ranked WHERE ranked.id=posts.id)`);
+  }
+  await tx.execute(
+    "CREATE INDEX IF NOT EXISTS idx_posts_classwork_order ON posts(student_id,topic_id,sort_order,id)",
+  );
+}
+
+async function writeSchemaVersion(tx: Transaction) {
+  await tx.execute({
+    sql: "INSERT INTO settings(key,value) VALUES ('app_schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+    args: [String(SCHEMA_VERSION)],
+  });
+}
+
+async function applyMigration(tx: Transaction, fromVersion = 0) {
+  // Version 2 data/history are already migrated. Do not replay their backfills.
+  if (fromVersion >= 2) {
+    await migratePostOrder(tx);
+    await writeSchemaVersion(tx);
+    return;
+  }
   await tx.executeMultiple(BASE_SCHEMA);
   // Introspect first: ignoring every ALTER error hides unavailable columns and
   // data corruption. Column definitions are fixed application constants.
@@ -411,17 +443,19 @@ async function applyMigration(tx: Transaction) {
     INSERT OR IGNORE INTO settings(key,value) VALUES ('admin_password','admin123');
     DELETE FROM settings WHERE key LIKE 'student_session_%';
   `);
-  await tx.execute({
-    sql: "INSERT INTO settings(key,value) VALUES ('app_schema_version',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-    args: [String(SCHEMA_VERSION)],
-  });
+  await migratePostOrder(tx);
+  await writeSchemaVersion(tx);
 }
 
 // Turso permits schema introspection but rejects writes to PRAGMA user_version.
 // Store the reviewed version in ordinary transactional application data instead.
-async function readSchemaVersion(database: Pick<Client, "execute">): Promise<number> {
+async function readSchemaVersion(
+  database: Pick<Client, "execute">,
+): Promise<number> {
   try {
-    const result = await database.execute("SELECT value FROM settings WHERE key='app_schema_version'");
+    const result = await database.execute(
+      "SELECT value FROM settings WHERE key='app_schema_version'",
+    );
     const value = result.rows[0]?.value;
     if (value === undefined) return 0;
     const version = Number(value);
@@ -431,7 +465,11 @@ async function readSchemaVersion(database: Pick<Client, "execute">): Promise<num
   } catch (error) {
     // A genuinely fresh database has no settings table. Network, authorization,
     // and every other SQL failure must propagate rather than masquerade as new.
-    if (error instanceof Error && /no such table: (?:main\.)?settings\b/i.test(error.message)) return 0;
+    if (
+      error instanceof Error &&
+      /no such table: (?:main\.)?settings\b/i.test(error.message)
+    )
+      return 0;
     throw error;
   }
 }
@@ -446,7 +484,7 @@ async function initialize() {
   try {
     // Another deployment instance may have migrated while we waited for its lock.
     const lockedVersion = await readSchemaVersion(tx);
-    if (lockedVersion < SCHEMA_VERSION) await applyMigration(tx);
+    if (lockedVersion < SCHEMA_VERSION) await applyMigration(tx, lockedVersion);
     else if (lockedVersion > SCHEMA_VERSION)
       throw new Error("Database schema is newer than this application release");
     await tx.commit();

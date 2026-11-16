@@ -1,19 +1,12 @@
-import {
-  requireParent,
-  PUBLIC_LESSON_COLUMNS,
-  normalizedAttendance,
-} from "@/lib/portal-context";
-import { notFound } from "next/navigation";
-import { Calendar, Clock, CheckCircle2, XCircle, MapPin } from "lucide-react";
-import { queryOne, queryAll } from "@/lib/db";
+import { requireParent, PUBLIC_LESSON_COLUMNS } from "@/lib/portal-context";
+import { Calendar, Clock } from "lucide-react";
+import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { lessonStatus } from "@/lib/lesson-status";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { fmtDateTime } from "@/lib/format";
-import type { ClassRow, Student } from "@/lib/types";
+import type { ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +21,10 @@ export default async function ParentSchedulePage({
 
   const now = new Date().toISOString();
 
-  const [upcoming, past] = await Promise.all([
-    queryAll<ClassRow>(
-      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id = ? AND scheduled_at >= ? AND status = 'scheduled' ORDER BY scheduled_at`,
-      [studentId, now],
-    ),
-    queryAll<ClassRow>(
-      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id = ? AND (scheduled_at < ? OR status != 'scheduled') ORDER BY scheduled_at DESC`,
-      [studentId, now],
-    ),
-  ]);
+  const upcoming = await queryAll<ClassRow>(
+    `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id = ? AND julianday(scheduled_at) >= julianday(?) AND status = 'scheduled' ORDER BY julianday(scheduled_at)`,
+    [studentId, now],
+  );
 
   return (
     <>
@@ -58,7 +45,10 @@ export default async function ParentSchedulePage({
           {upcoming.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground">
               <Calendar size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No upcoming classes</p>
+              <p className="text-sm">No upcoming lessons scheduled</p>
+              <p className="mt-2 text-sm">
+                Your tutor’s next scheduled lessons will appear here.
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -86,59 +76,10 @@ export default async function ParentSchedulePage({
                         TRIAL
                       </Badge>
                     ) : null}
-                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Past */}
-      <Card className="border shadow-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle2 size={18} className="text-emerald-500" />
-            Past Classes ({past.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {past.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground">
-              <p className="text-sm">No past classes</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {past.map((c) => (
-                <div
-                  key={c.id}
-                  className={`flex items-center gap-3 rounded-lg border border-border/50 p-3 ${c.status === "canceled" ? "opacity-60" : ""}`}
-                >
-                  <div
-                    className={`flex size-9 items-center justify-center rounded-lg ${
-                      lessonStatus(c.status, c.attendance).iconClassName
-                    }`}
-                  >
-                    {c.status === "completed" ? (
-                      <CheckCircle2 size={16} />
-                    ) : (
-                      <XCircle size={16} />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className={`text-sm font-medium ${c.status === "canceled" ? "line-through" : ""}`}
-                    >
-                      {fmtDateTime(c.scheduled_at)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {c.duration_minutes} min ·{" "}
-                      {c.subject || student.subject || "Lesson"}
-                    </div>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
+                    <LessonStatusBadge
+                      status={c.status}
+                      attendance={c.attendance}
+                    />
                   </div>
                 </div>
               ))}

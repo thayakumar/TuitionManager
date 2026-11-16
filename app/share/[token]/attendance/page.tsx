@@ -19,14 +19,15 @@ export default async function ParentAttendancePage({
 }) {
   const params = await paramsPromise;
   const student = await requireParent(params.token);
+  const now = new Date().toISOString();
   const [classes, stats] = await Promise.all([
     queryAll<ClassRow>(
-      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? ORDER BY scheduled_at DESC`,
-      [student.id],
+      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? AND julianday(scheduled_at) <= julianday(?) ORDER BY julianday(scheduled_at) DESC`,
+      [student.id, now],
     ),
     queryOne<{ present: number; absent: number; cancelled: number }>(
-      `SELECT SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN status<>'canceled' AND attendance='absent' THEN 1 ELSE 0 END) AS absent,SUM(CASE WHEN status='canceled' THEN 1 ELSE 0 END) AS cancelled FROM classes WHERE student_id=?`,
-      [student.id],
+      `SELECT SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN status<>'canceled' AND attendance='absent' THEN 1 ELSE 0 END) AS absent,SUM(CASE WHEN status='canceled' THEN 1 ELSE 0 END) AS cancelled FROM classes WHERE student_id=? AND julianday(scheduled_at) <= julianday(?)`,
+      [student.id, now],
     ),
   ]);
   const summary = attendanceSummary(stats?.present ?? 0, stats?.absent ?? 0);
@@ -94,7 +95,14 @@ export default async function ParentAttendancePage({
                       {c.duration_minutes} min
                     </td>
                     <td className="px-4 py-4">
-                      <Badge variant="outline" className={lessonStatus(c.status, c.attendance).className}>{label}</Badge>
+                      <Badge
+                        variant="outline"
+                        className={
+                          lessonStatus(c.status, c.attendance).className
+                        }
+                      >
+                        {label}
+                      </Badge>
                     </td>
                   </tr>
                 );
@@ -104,7 +112,8 @@ export default async function ParentAttendancePage({
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          No lessons recorded yet
+          No past lessons yet. Attendance will appear here after a lesson
+          starts.
         </div>
       )}
     </>

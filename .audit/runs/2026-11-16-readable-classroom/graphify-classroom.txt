@@ -1,0 +1,21 @@
+Node: ClassroomTabs()
+  ID:        components_classroom_classroom_tabs_classroomtabs
+  Source:    components/classroom/classroom-tabs.tsx L73
+  Type:      code
+  Community: 
+  Degree:    13
+
+Connections (13):
+  <-- classroom-tabs.tsx [contains] [EXTRACTED] components/classroom/classroom-tabs.tsx:L73
+  <-- classroom/[studentId]/page.tsx [imports] [EXTRACTED] app/classroom/[studentId]/page.tsx:L8
+  <-- [studentId]/classroom/page.tsx [imports] [EXTRACTED] app/portal/student/[studentId]/classroom/page.tsx:L5
+  --> fmtShortDate() [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L91
+  --> ClassroomActions() [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L98
+  --> ClassworkTab() [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L112
+  --> GradesTab() [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L113
+  <-- StudentClassroomPage() [calls] [EXTRACTED] app/classroom/[studentId]/page.tsx:L67
+  --> TabsList [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L82
+  --> TabsTrigger [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L83
+  --> TabsContent [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L87
+  <-- StudentClassroomPage() [calls] [EXTRACTED] app/portal/student/[studentId]/classroom/page.tsx:L52
+  --> PostStatus() [calls] [EXTRACTED] components/classroom/classroom-tabs.tsx:L107

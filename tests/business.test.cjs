@@ -663,3 +663,32 @@ test("recurrences materialize through year end with usable rooms, no holiday ski
     f.close();
   }
 });
+
+test("classwork moves preserve work/history, enforce classroom boundaries and persist order", async () => {
+  const f = fixture();
+  try {
+    await f.seed();
+    await f.db.execute("INSERT INTO topics(id,student_id,name) VALUES(1,1,'Algebra'),(2,1,'Revision'),(3,2,'Private')");
+    await f.db.execute("INSERT INTO posts(id,type,title,student_id,topic_id,sort_order,max_points) VALUES(1,'assignment','First',1,1,0,100),(2,'material','Second',1,1,1,NULL),(3,'material','Third',1,2,0,NULL),(4,'material','Foreign',2,3,0,NULL)");
+    await f.db.execute("INSERT INTO submissions(id,post_id,student_id,content,grade,feedback,version) VALUES(1,1,1,'Work','85','Feedback',1)");
+    await f.db.execute("INSERT INTO submission_versions(submission_id,version,content,grade,feedback,submitted_at) VALUES(1,1,'Work','85','Feedback','2026-01-01 00:00:00')");
+    await f.db.execute("INSERT INTO post_attachments(post_id,file_name,file_url) VALUES(1,'work.pdf','https://example.com/work.pdf')");
+    assert.deepEqual(await f.actions.moveClassworkPost(2,1,1,1),{success:true});
+    assert.deepEqual((await f.db.queryAll('SELECT id FROM posts WHERE topic_id=1 ORDER BY sort_order,id DESC')).map(r=>r.id),[2,1]);
+    assert.deepEqual(await f.actions.moveClassworkPost(1,1,2,3),{success:true});
+    assert.deepEqual((await f.db.queryAll('SELECT id FROM posts WHERE topic_id=2 ORDER BY sort_order,id DESC')).map(r=>r.id),[1,3]);
+    assert.equal((await f.db.queryOne('SELECT grade FROM submissions WHERE id=1')).grade,'85');
+    assert.equal((await f.db.queryOne('SELECT content FROM submission_versions WHERE submission_id=1')).content,'Work');
+    assert.equal((await f.db.queryOne('SELECT file_name FROM post_attachments WHERE post_id=1')).file_name,'work.pdf');
+    assert.equal((await f.actions.moveClassworkPost(1,1,3,null)).success,false);
+    assert.equal((await f.actions.moveClassworkPost(1,1,2,4)).success,false);
+    assert.equal((await f.actions.moveClassworkPost(4,1,null,null)).success,false);
+    await f.actions.moveClassworkPost(1,1,null,null);
+    assert.equal((await f.db.queryOne('SELECT topic_id FROM posts WHERE id=1')).topic_id,null);
+    const noticeCount=(await f.db.queryOne('SELECT COUNT(*) AS n FROM notifications')).n;
+    await f.actions.moveClassworkPost(1,1,null,null);
+    assert.equal((await f.db.queryOne('SELECT COUNT(*) AS n FROM notifications')).n,noticeCount);
+    f.as('student',1);
+    await assert.rejects(()=>f.actions.moveClassworkPost(1,1,1,null),/Unauthorized/);
+  } finally { f.close(); }
+});

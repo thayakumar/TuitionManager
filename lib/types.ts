@@ -135,6 +135,7 @@ export type Topic = {
 };
 
 export type Post = {
+  sort_order: number;
   id: number;
   type: PostType;
   title: string;

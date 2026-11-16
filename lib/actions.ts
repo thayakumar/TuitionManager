@@ -1145,8 +1145,18 @@ export async function createPostAction(
       await activeStudent(tx, sid);
       await topicOwner(tx, topicId, sid);
       const result = await tx.execute({
-        sql: "INSERT INTO posts(type,title,body,student_id,due_at,topic_id,max_points) VALUES(?,?,?,?,?,?,?)",
-        args: [kind, heading, content, sid, due, topicId, maximum],
+        sql: "INSERT INTO posts(type,title,body,student_id,due_at,topic_id,max_points,sort_order) VALUES(?,?,?,?,?,?,?,(SELECT COALESCE(MIN(sort_order),0)-1 FROM posts WHERE student_id=? AND topic_id IS ?))",
+        args: [
+          kind,
+          heading,
+          content,
+          sid,
+          due,
+          topicId,
+          maximum,
+          sid,
+          topicId,
+        ],
       });
       const pid = Number(result.lastInsertRowid);
       await studentNotice(
@@ -2026,6 +2036,83 @@ export async function gradeSubmissionResult(
       studentId,
       expectedVersion,
     );
+    return { success: true };
+  } catch (reason) {
+    return { success: false, error: publicMessage(reason) };
+  }
+}
+
+/** Move within one classroom; preserve the post, work, grades and attachments. */
+export async function moveClassworkPost(
+  postId: number,
+  studentId: number,
+  topicId: number | null,
+  beforePostId: number | null = null,
+): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
+  try {
+    const sid = id(studentId),
+      pid = id(postId),
+      destination = topicId === null ? null : id(topicId);
+    const didMove = await withTransaction(async (tx) => {
+      const current = await ownPost(tx, pid, sid);
+      await topicOwner(tx, destination, sid);
+      const target = (
+        await tx.execute({
+          sql: "SELECT id FROM posts WHERE student_id=? AND topic_id IS ? ORDER BY sort_order,id DESC",
+          args: [sid, destination],
+        })
+      ).rows.map((p) => Number(p.id));
+      const reordered = target.filter((p) => p !== pid);
+      const before = beforePostId === null ? null : id(beforePostId);
+      if (before === pid) return false;
+      const index =
+        before === null ? reordered.length : reordered.indexOf(before);
+      if (index < 0)
+        throw new ActionValidationError(
+          "The destination changed. Reload and try again.",
+        );
+      reordered.splice(index, 0, pid);
+      if (
+        current.topic_id === destination &&
+        target.every((p, i) => p === reordered[i])
+      )
+        return false;
+      const source =
+        current.topic_id === destination
+          ? []
+          : (
+              await tx.execute({
+                sql: "SELECT id FROM posts WHERE student_id=? AND topic_id IS ? AND id<>? ORDER BY sort_order,id DESC",
+                args: [sid, current.topic_id, pid],
+              })
+            ).rows.map((p) => Number(p.id));
+      await tx.batch([
+        {
+          sql: "UPDATE posts SET topic_id=?,updated_at=datetime('now') WHERE id=? AND student_id=?",
+          args: [destination, pid, sid],
+        },
+        ...reordered.map((p, position) => ({
+          sql: "UPDATE posts SET sort_order=? WHERE id=? AND student_id=?",
+          args: [position, p, sid],
+        })),
+        ...source.map((p, position) => ({
+          sql: "UPDATE posts SET sort_order=? WHERE id=? AND student_id=?",
+          args: [position, p, sid],
+        })),
+      ]);
+      await studentNotice(
+        tx,
+        sid,
+        "classwork_organized",
+        "Classwork updated",
+        "Your tutor reorganised your classroom posts.",
+        randomUUID(),
+        `/portal/student/${sid}/classroom`,
+      );
+      return true;
+    });
+    if (didMove) refresh(sid);
     return { success: true };
   } catch (reason) {
     return { success: false, error: publicMessage(reason) };

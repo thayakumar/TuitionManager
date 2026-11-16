@@ -1,4 +1,6 @@
-import { BookOpen, ChevronDown, Star } from "lucide-react";
+import { BookOpen, ChevronDown } from "lucide-react";
+import { ReportDetails } from "@/components/report-details";
+import { RatingBadge } from "@/components/rating-badge";
 import { fmtDateTime } from "@/lib/format";
 
 export type ParentReport = {
@@ -56,24 +58,16 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
                       </span>
                       <span className="mt-1 block text-xs text-muted-foreground sm:hidden">
                         {report.duration_minutes} minutes
-                        {report.rating != null ? ` · ${report.rating}/5` : ""}
+                      </span>
+                      <span className="mt-2 inline-flex sm:hidden">
+                        <RatingBadge rating={report.rating} />
                       </span>
                     </span>
                     <span className="hidden text-muted-foreground sm:block">
                       {report.duration_minutes} min
                     </span>
                     <span className="hidden items-center gap-1 sm:flex">
-                      {report.rating != null ? (
-                        <>
-                          <Star
-                            size={13}
-                            className="fill-amber-400 text-amber-400"
-                          />
-                          {report.rating}/5
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                      <RatingBadge rating={report.rating} />
                     </span>
                     <span className="flex items-center justify-end gap-1 text-xs font-medium text-primary">
                       <span className="group-open:hidden">Read report</span>
@@ -86,31 +80,8 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
                       />
                     </span>
                   </summary>
-                  <div className="grid gap-4 border-t border-border bg-muted/10 p-4 sm:grid-cols-2">
-                    {(
-                      [
-                        ["Topics covered", report.topics_covered],
-                        ["Homework", report.homework],
-                        ["Performance", report.performance],
-                        ["Strengths", report.strengths],
-                        ["Areas to improve", report.areas_to_improve],
-                        ["Next focus", report.next_focus],
-                      ] as const
-                    )
-                      .filter(([, value]) => value)
-                      .map(([label, value]) => (
-                        <section
-                          key={label}
-                          className="rounded-xl border border-border bg-card p-4"
-                        >
-                          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">
-                            {label}
-                          </h3>
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                            {value}
-                          </p>
-                        </section>
-                      ))}
+                  <div className="border-t border-border bg-white p-4">
+                    <ReportDetails report={report} />
                   </div>
                 </details>
               </td>

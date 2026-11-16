@@ -1,0 +1,51 @@
+
+> tuition-manager@0.1.0 test
+> node --test tests/*.test.cjs
+
+✔ MYT scheduling round-trips, global overlap rejects, and failed composite change rolls back (455.405301ms)
+✔ invoices omit absence/cancellation, preserve trial price, use billing month and subject-free descriptions (264.423974ms)
+✔ concurrent invoice generations cannot claim one lesson twice (104.11087ms)
+✔ reschedule owns pending requests, preserves trial, prevents duplicate resolution and notifies correct student (181.706908ms)
+✔ a conflicting reschedule does not cancel the original or resolve its request (115.28464ms)
+✔ assignment lineage keeps work and grades; only newest attempt can be graded (178.258106ms)
+✔ post edits notify its student once, no-op save is silent, inbox count is uncapped and scoped (129.59532ms)
+✔ recurrences materialize through year end with usable rooms, no holiday skip and safe history-preserving stop (108.049226ms)
+✔ classwork moves preserve work/history, enforce classroom boundaries and persist order (128.642421ms)
+✔ student route denies a foreign post before reading its files or submission history (169.438641ms)
+✔ student authentication occurs before database reads (72.134511ms)
+✔ admin authentication occurs before database reads (144.720209ms)
+✔ student sees latest pending work plus read-only original graded and superseded history (71.126752ms)
+✔ admin grade control targets only latest version and old work remains visible as history (68.149521ms)
+✔ historical score keeps the original rubric maximum when current points change (54.060249ms)
+✔ October invoice paid in November remains October revenue with paid/unpaid separated (3.132369ms)
+✔ canceled invoices never increase revenue or outstanding, but remain countable history (0.408103ms)
+✔ time series includes empty intervening months and preserves year boundaries (9.443717ms)
+✔ MYT midnight billing bounds use the business month, not previous UTC date (0.318892ms)
+✔ old acknowledgement cannot mark newer notes saved; leave waits for latest write (4.904718ms)
+✔ failed save preserves dirty draft and retry writes latest text (0.956474ms)
+✔ parent attendance and schedule enforce elapsed/upcoming roles with isolated real SQL (451.927275ms)
+✔ fresh concurrent initialization applies one migration and creates actual constraints (170.489865ms)
+✔ a cold process with a prepared schema uses one version read and zero DDL or write transactions (59.628623ms)
+✔ legacy schema preserves all duplicate work and grades as version history (216.404449ms)
+✔ expired, forged, deactivated and legacy student sessions are denied; logout targets only caller token (73.792591ms)
+✔ transaction rollback leaves no partial domain rows (37.291145ms)
+✔ upload denies anonymous/malformed requests and derives student identity before the connector (71.813617ms)
+✔ CSV export neutralizes formula cells while preserving ordinary row data (47.699949ms)
+✔ JaaS token grants only its authorized room (88.109151ms)
+✔ independent concurrent writers are serialized and a failed write does not poison the queue (38.724779ms)
+✔ legacy migration attributes MYT midnight invoice/recurrence bounds to the local calendar month/day (43.001659ms)
+✔ Turso-style PRAGMA write restrictions allow fresh migration, login data reads, and cold reuse (31.897563ms)
+✔ version-2 upgrade adds stable classwork order without replaying history backfills (47.109325ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2280.360166
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

@@ -1,0 +1,113 @@
+{
+  "environment": "Isolated fake data, local production build, Chromium",
+  "checks": 18,
+  "passed": 18,
+  "results": [
+    {
+      "id": "parent-attendance-past-only-and-summary",
+      "result": "Pass",
+      "actual": {
+        "pastPresent": 1,
+        "pastAbsent": 1,
+        "rate": "50%"
+      },
+      "note": "Waited for streamed content readiness before assertions; initial check read the loading skeleton."
+    },
+    {
+      "id": "parent-schedule-upcoming-only",
+      "result": "Pass"
+    },
+    {
+      "id": "parent-dashboard-attendance-agrees",
+      "result": "Pass"
+    },
+    {
+      "id": "parent-report-label-value-hierarchy-and-rating-pill",
+      "result": "Pass",
+      "actual": {
+        "label": "14.875px",
+        "value": "19.125px",
+        "labelColor": "rgb(113, 107, 101)",
+        "valueColor": "rgb(36, 34, 31)"
+      }
+    },
+    {
+      "id": "admin-report-rating-and-detail-hierarchy",
+      "result": "Pass"
+    },
+    {
+      "id": "admin-stream-search-title-body-topic-and-empty",
+      "result": "Pass"
+    },
+    {
+      "id": "student-stream-search-title-body-topic-and-empty",
+      "result": "Pass"
+    },
+    {
+      "id": "move-dialog-between-topics-and-preserve-work",
+      "result": "Pass"
+    },
+    {
+      "id": "native-drag-reorders-within-topic",
+      "result": "Pass"
+    },
+    {
+      "id": "native-drag-moves-graded-post-across-topics",
+      "result": "Pass"
+    },
+    {
+      "id": "move-to-no-topic-and-reload-persists",
+      "result": "Pass"
+    },
+    {
+      "id": "move-dialog-cancel-and-search-recovery",
+      "result": "Pass"
+    },
+    {
+      "id": "student-dashboard-density-and-readable-values",
+      "result": "Pass",
+      "actual": [
+        {
+          "height": 110.6875,
+          "label": "18.0625px"
+        },
+        {
+          "height": 110.6875,
+          "label": "18.0625px"
+        },
+        {
+          "height": 110.6875,
+          "label": "18.0625px"
+        },
+        {
+          "height": 110.6875,
+          "label": "18.0625px"
+        }
+      ]
+    },
+    {
+      "id": "admin-mobile-layout",
+      "result": "Pass"
+    },
+    {
+      "id": "student-mobile-layout",
+      "result": "Pass"
+    },
+    {
+      "id": "parent-mobile-layout",
+      "result": "Pass"
+    },
+    {
+      "id": "student-dashboard-mobile",
+      "result": "Pass"
+    },
+    {
+      "id": "no-unhandled-browser-errors",
+      "result": "Pass",
+      "actual": {
+        "pageErrors": 0
+      }
+    }
+  ],
+  "pageErrors": []
+}

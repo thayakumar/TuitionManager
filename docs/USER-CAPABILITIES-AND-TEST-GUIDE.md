@@ -372,6 +372,20 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Evidence:** Implemented; live integration/manual check remains.
 
+#### 1.11.6. As an Admin, I can search Stream and Classwork by title, content, type or topic → only matching posts appear in the current classroom.
+
+**Manual check:** Search body text and a topic; switch tabs; search is retained. Clear an empty result to restore the list.
+
+**Evidence:** Browser verified with isolated fake data.
+
+#### 1.11.7. As an Admin, I can drag a post or use Move post → its topic/order changes while its work, grades and attachments remain attached.
+
+**Reflects in:** Admin/student Classwork after refresh; student notification.
+
+**Manual check:** Reorder within a topic, move across topics and into No topic; cancel a move; verify earlier submissions and grades remain. Another student's topic or post cannot be used as the destination.
+
+**Evidence:** Real SQL/action regression and native browser drag verified.
+
 ### 1.12. Submission grading and history
 
 #### 1.12.1. As an Admin, I can open Student Work for an assignment → the latest attempt and expandable earlier work/feedback appear.
@@ -518,6 +532,12 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Evidence:** Browser verified with isolated fake data.
 
+#### 2.3.2. As a Student, I can search Stream and Classwork → I find matching posts assigned to me without gaining organisation controls.
+
+**Manual check:** Search title/content/topic; clear empty results; another student's material never appears. Admin post moves become visible after refresh.
+
+**Evidence:** Browser verified with isolated fake data.
+
 ### 2.4. Assignments
 
 #### 2.4.1. As a Student, I can turn in text or an attachment/link → one meaningful new attempt is recorded and the tutor can review it.
@@ -606,13 +626,19 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 ### 3.2. Schedule and attendance
 
-#### 3.2.1. As a Parent, I can view lesson dates, attendance and reschedule history → I see canceled originals and confirmed replacements after tutor actions.
+#### 3.2.1. As a Parent, I can open Attendance → I see elapsed lessons and a rate based only on elapsed Present/Absent marks.
 
-**Reflects in:** Tutor/student schedules; attendance rate.
+**Reflects in:** Attendance rows, counters and dashboard attendance summary.
 
-**Manual check:** I cannot cancel/reschedule or mark attendance; a pending request alone changes nothing.
+**Manual check:** Future lessons, including accidentally pre-marked ones, do not appear or affect the rate. Past cancellations remain visible and do not enter the denominator.
 
-**Evidence:** Browser verified with isolated fake data.
+**Evidence:** Real SQL route regression and browser verified.
+
+#### 3.2.2. As a Parent, I can open Schedule → I see only upcoming scheduled lessons from now, in chronological order.
+
+**Manual check:** Past lessons, future cancelled lessons and future completed records are absent. An empty schedule explains that no upcoming lessons are scheduled.
+
+**Evidence:** Real SQL route regression and browser verified.
 
 ### 3.3. Class reports
 
@@ -676,3 +702,5 @@ The November 16 visual overhaul supersedes the earlier purple styling. See the [
 The latest [bright red/orange classroom revision](../.audit/runs/2026-11-16-bright-classroom/REVIEW.md) supersedes the earlier Studio colours. Classrooms now open to Stream; Classwork contains topic filters and Create, and Grades/My grades shows current results. The history and latest-version grading rules are unchanged.
 
 The [composer and popup review](../.audit/runs/2026-11-16-composer-review/REPORT.md) records the rebuilt forms and actual pointer/date/time tests. New lesson and recurring planners omit Subject and Location and offer only 1 hour / 1.5 hours / 2 hours. Lesson colours are Scheduled blue, Absent red and Cancelled grey (Present remains green).
+
+The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/REPORT.md) documents oval ratings, report label/value hierarchy, shared classroom search, persistent post movement and the past-attendance/upcoming-schedule split.

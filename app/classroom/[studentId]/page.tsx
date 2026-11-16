@@ -27,7 +27,7 @@ export default async function StudentClassroomPage({
 
   const [posts, topics, submissions] = await Promise.all([
     queryAll<Post>(
-      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE student_id = ? ORDER BY created_at DESC",
+      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at, sort_order FROM posts WHERE student_id = ? ORDER BY julianday(created_at) DESC, id DESC",
       [studentId],
     ),
     queryAll<Topic>(

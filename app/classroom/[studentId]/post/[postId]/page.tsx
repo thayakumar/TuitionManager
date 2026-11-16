@@ -91,7 +91,7 @@ export default async function PostDetailPage({
       [studentId],
     ),
     queryOne<Post>(
-      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at FROM posts WHERE id = ? AND student_id = ?",
+      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at, sort_order FROM posts WHERE id = ? AND student_id = ?",
       [postId, studentId],
     ),
   ]);

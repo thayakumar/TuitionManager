@@ -32,7 +32,7 @@ export default async function ParentDashboard({
     base = `/share/${params.token}`;
   const [upcoming, stats, invoices, settings] = await Promise.all([
     queryAll<ClassRow>(
-      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? AND status='scheduled' AND scheduled_at>=? ORDER BY scheduled_at LIMIT 5`,
+      `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id=? AND status='scheduled' AND julianday(scheduled_at)>=julianday(?) ORDER BY scheduled_at LIMIT 5`,
       [student.id, now],
     ),
     queryOne<{
@@ -42,7 +42,7 @@ export default async function ParentDashboard({
       upcoming: number;
       outstanding: number;
     }>(
-      `SELECT COUNT(*) AS total, SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') THEN 1 ELSE 0 END) AS present, SUM(CASE WHEN status<>'canceled' AND attendance='absent' THEN 1 ELSE 0 END) AS absent, SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming, (SELECT COALESCE(SUM(total_amount),0) FROM invoices WHERE student_id=? AND status NOT IN ('paid','canceled')) AS outstanding FROM classes WHERE student_id=?`,
+      `SELECT COUNT(*) AS total, SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS present, SUM(CASE WHEN status<>'canceled' AND attendance='absent' AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS absent, SUM(CASE WHEN status='scheduled' AND julianday(scheduled_at)>=julianday(?) THEN 1 ELSE 0 END) AS upcoming, (SELECT COALESCE(SUM(total_amount),0) FROM invoices WHERE student_id=? AND status NOT IN ('paid','canceled')) AS outstanding FROM classes WHERE student_id=?`,
       [now, student.id, student.id],
     ),
     queryAll<Invoice>(
@@ -123,7 +123,10 @@ export default async function ParentDashboard({
                         {c.location ? ` · ${c.location}` : ""}
                       </p>
                     </div>
-                    <LessonStatusBadge status={c.status} attendance={c.attendance} />
+                    <LessonStatusBadge
+                      status={c.status}
+                      attendance={c.attendance}
+                    />
                   </div>
                 ))}
               </div>

@@ -513,3 +513,21 @@ test("Turso-style PRAGMA write restrictions allow fresh migration, login data re
     assert.equal((await cold.queryOne("SELECT value FROM settings WHERE key='admin_username'")).value, "custom-login");
   } finally { cold?.getClient().close(); f.close(); }
 });
+
+test("version-2 upgrade adds stable classwork order without replaying history backfills", async () => {
+  const f=fixture(); let cold;
+  try {
+    await f.db.ensureMigrated();
+    await f.db.execute("INSERT INTO students(id,name) VALUES(1,'Legacy')");
+    await f.db.execute("INSERT INTO posts(id,type,title,student_id,max_points,created_at) VALUES(1,'assignment','Older',1,99,'2026-01-01 00:00:00'),(2,'material','Newer',1,NULL,'2026-02-01 00:00:00')");
+    await f.db.execute("INSERT INTO submissions(id,post_id,student_id,content) VALUES(1,1,1,'Historic')");
+    await f.db.execute("INSERT INTO submission_versions(submission_id,version,content,max_points,submitted_at) VALUES(1,1,'Historic',NULL,'2026-01-01 00:00:00')");
+    await f.db.execute('DROP INDEX idx_posts_classwork_order');
+    await f.db.execute('ALTER TABLE posts DROP COLUMN sort_order');
+    await f.db.execute("UPDATE settings SET value='2' WHERE key='app_schema_version'");
+    cold=load('lib/db.ts'); await cold.ensureMigrated();
+    assert.deepEqual((await cold.queryAll('SELECT id FROM posts ORDER BY sort_order,id DESC')).map(r=>r.id),[2,1]);
+    assert.equal((await cold.queryOne('SELECT max_points FROM submission_versions WHERE submission_id=1')).max_points,null);
+    assert.equal((await cold.queryOne("SELECT value FROM settings WHERE key='app_schema_version'")).value,String(cold.SCHEMA_VERSION));
+  } finally { cold?.getClient().close(); f.close(); }
+});

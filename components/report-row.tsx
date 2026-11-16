@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { ReportDetails } from "@/components/report-details";
+import { RatingBadge } from "@/components/rating-badge";
 import { fmtDateTime } from "@/lib/format";
 
 type ReportData = {
@@ -47,19 +49,14 @@ export function ReportRow({
           {r.topics_covered || "—"}
         </td>
         <td className="py-4 px-5 text-center">
-          {r.rating != null ? (
-            <span className="inline-flex items-center gap-0.5 text-amber-500 font-medium">
-              {r.rating}/5
-            </span>
-          ) : (
-            "—"
-          )}
+          <RatingBadge rating={r.rating} />
         </td>
         <td className="py-4 px-5 text-center">
           <button
             type="button"
             className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg hover:bg-primary/10"
             aria-expanded={open}
+            aria-controls={`report-details-${r.id}`}
             aria-label={`${open ? "Collapse" : "Expand"} report for ${fmtDateTime(r.scheduled_at)}`}
             onClick={(event) => {
               event.stopPropagation();
@@ -75,32 +72,15 @@ export function ReportRow({
         </td>
       </tr>
       {open && (
-        <tr className="border-b border-border/50 bg-primary/5">
+        <tr
+          id={`report-details-${r.id}`}
+          className="border-b border-border/50 bg-white"
+        >
           <td colSpan={4} className="px-5 py-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-              <DetailItem label="Subject" value={r.subject || defaultSubject} />
-              <DetailItem label="Topics Covered" value={r.topics_covered} />
-              <DetailItem label="Homework" value={r.homework} />
-              <DetailItem label="Performance" value={r.performance} />
-              <DetailItem label="Strengths" value={r.strengths} />
-              <DetailItem label="Areas to Improve" value={r.areas_to_improve} />
-              <DetailItem label="Next Focus" value={r.next_focus} />
-            </div>
+            <ReportDetails report={r} subject={r.subject || defaultSubject} />
           </td>
         </tr>
       )}
     </>
-  );
-}
-
-function DetailItem({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
-  return (
-    <div className="rounded-xl border border-border/60 bg-card p-4">
-      <p className="text-sm font-semibold text-muted-foreground tracking-wide mb-2">
-        {label}
-      </p>
-      <p className="text-foreground whitespace-pre-line">{value}</p>
-    </div>
   );
 }

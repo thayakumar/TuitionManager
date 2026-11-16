@@ -117,8 +117,8 @@ export default async function StudentDetailPage({
       [id, new Date().toISOString()],
     ),
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status != 'scheduled' ORDER BY scheduled_at DESC",
-      [id],
+      "SELECT * FROM classes WHERE student_id = ? AND julianday(scheduled_at) <= julianday(?) ORDER BY julianday(scheduled_at) DESC",
+      [id, new Date().toISOString()],
     ),
     queryAll<Invoice>(
       "SELECT * FROM invoices WHERE student_id = ? ORDER BY issued_at DESC",
@@ -176,11 +176,11 @@ export default async function StudentDetailPage({
     }>(
       `SELECT
         (SELECT COUNT(*) FROM classes WHERE student_id = ?) AS total_classes,
-        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed') AS completed_classes,
-        (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed') AS total_hours,
+        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status = 'completed' AND julianday(scheduled_at)<=julianday('now')) AS completed_classes,
+        (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed' AND julianday(scheduled_at)<=julianday('now')) AS total_hours,
         (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE student_id = ? AND status <> 'canceled') AS total_revenue,
-        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late')) AS present_count,
-        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND attendance IN ('present','late','absent')) AS completed_for_attendance`,
+        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND julianday(scheduled_at)<=julianday('now') AND attendance IN ('present','late')) AS present_count,
+        (SELECT COUNT(*) FROM classes WHERE student_id = ? AND status != 'canceled' AND julianday(scheduled_at)<=julianday('now') AND attendance IN ('present','late','absent')) AS completed_for_attendance`,
       [id, id, id, id, id, id],
     ),
   ]);
@@ -416,7 +416,7 @@ export default async function StudentDetailPage({
       </div>
 
       {/* Upcoming + Past Classes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 items-start lg:grid-cols-2 gap-6 mb-6">
         <Card className="border shadow-none">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -516,9 +516,7 @@ export default async function StudentDetailPage({
                         }`}
                       >
                         {c.status === "completed" ? (
-                          <CheckCircle2
-                            size={16}
-                          />
+                          <CheckCircle2 size={16} />
                         ) : (
                           <XCircle size={16} />
                         )}
@@ -539,7 +537,10 @@ export default async function StudentDetailPage({
                             TRIAL
                           </Badge>
                         ) : null}
-                        <LessonStatusBadge status={c.status} attendance={c.attendance} />
+                        <LessonStatusBadge
+                          status={c.status}
+                          attendance={c.attendance}
+                        />
                       </div>
                     </div>
                   </Link>
