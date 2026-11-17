@@ -119,7 +119,7 @@ export default async function StudentSchedulePage({
                           {statusIcon(c.status, c.attendance)}
                         </div>
 
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1 basis-[180px]">
                           <div
                             className={`text-sm font-medium ${c.status === "canceled" ? "line-through" : ""}`}
                           >
@@ -132,7 +132,7 @@ export default async function StudentSchedulePage({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                        <div className="flex min-w-0 w-full items-center gap-2 flex-wrap sm:w-auto sm:justify-end">
                           <LessonStatusBadge status={c.status} attendance={c.attendance} />
                           {c.status === "scheduled" && (
                             <>
@@ -168,8 +168,8 @@ export default async function StudentSchedulePage({
                       ) : null}
 
                       {c.cancel_reason && (
-                        <div className="mt-2 ml-12 text-xs text-muted-foreground flex items-center gap-1">
-                          <AlertCircle size={12} /> {c.cancel_reason}
+                        <div className="mt-2 text-sm text-muted-foreground flex items-start gap-2 break-words sm:ml-12">
+                          <AlertCircle size={12} /> <span className="min-w-0 break-words">{c.cancel_reason}</span>
                         </div>
                       )}
                     </CardContent>

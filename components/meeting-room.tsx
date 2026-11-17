@@ -1,7 +1,9 @@
 "use client";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft,
   Copy,
@@ -11,6 +13,7 @@ import {
   PanelRightOpen,
   Save,
   StickyNote,
+  PencilRuler,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JitsiMeeting } from "@/components/jitsi-meeting";
@@ -204,6 +207,17 @@ export function MeetingRoom({
             )}
           </Button>
 
+          <Button asChild variant="outline" size="sm">
+            <Link
+              href={`/meeting/${classId}/whiteboard`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open lesson whiteboard in a new tab"
+            >
+              <PencilRuler size={17} />
+              <span className="hidden sm:inline">Whiteboard</span>
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -284,16 +298,17 @@ export function MeetingRoom({
                 {saveError}
               </p>
             )}
-            <textarea
+            <RichTextEditor
+              label="Meeting notes"
               value={notes}
               disabled={leaving}
-              onChange={(e) => handleNotesChange(e.target.value)}
+              onChange={handleNotesChange}
               placeholder={
                 isAdmin
                   ? "Take notes during the class..."
                   : "Jot down your own notes..."
               }
-              className="flex-1 w-full resize-none border-0 bg-transparent px-3 py-3 text-sm focus:outline-none placeholder:text-muted-foreground/50"
+              className="min-h-0 flex-1 overflow-y-auto p-3"
             />
           </div>
         )}

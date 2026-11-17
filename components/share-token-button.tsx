@@ -61,7 +61,7 @@ export function ShareTokenButton({
   }
 
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       <div className="flex flex-wrap gap-2">
         {token ? (
           <>
@@ -72,6 +72,8 @@ export function ShareTokenButton({
             <Button
               variant="ghost"
               disabled={busy}
+              className="!flex-none shrink-0"
+              size="icon"
               title="Revoke link"
               aria-label="Revoke parent link"
               onClick={() => {

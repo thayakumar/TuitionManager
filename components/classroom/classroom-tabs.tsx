@@ -1,4 +1,6 @@
 "use client";
+import { TableExplorer } from "@/components/table-explorer";
+import { richTextPlainText } from "@/lib/rich-text";
 import { useState, type DragEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -110,7 +112,7 @@ export function ClassroomTabs({
       normalise(
         [
           post.title,
-          post.body,
+          richTextPlainText(post.body),
           POST_TYPE_CONFIG[post.type]?.label,
           topics.find((t) => t.id === post.topic_id)?.name,
         ]
@@ -258,7 +260,7 @@ export function ClassroomTabs({
                     </div>
                     {post.body && (
                       <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-base leading-relaxed text-foreground">
-                        {post.body}
+                        {richTextPlainText(post.body)}
                       </p>
                     )}
                   </Link>
@@ -451,9 +453,7 @@ function ClassworkPanel({
     )
     .filter(
       (g) =>
-        g.id !== null ||
-        visible.some((p) => p.topic_id === null) ||
-        isAdmin,
+        g.id !== null || visible.some((p) => p.topic_id === null) || isAdmin,
     )
     .filter(
       (group) =>
@@ -841,83 +841,85 @@ function GradesTab({
   return (
     <Card className="border shadow-none overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/30">
-              <th className="text-left p-3 font-medium text-muted-foreground">
-                Assignment
-              </th>
-              <th className="text-left p-3 font-medium text-muted-foreground">
-                Due
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground">
-                Points
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground">
-                Score
-              </th>
-              <th className="text-center p-3 font-medium text-muted-foreground">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {gradable.map((post) => {
-              const sub = submissionMap.get(post.id);
-              let status: string;
-              let statusClass: string;
+        <TableExplorer label="Gradebook">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left p-3 font-medium text-muted-foreground">
+                  Assignment
+                </th>
+                <th className="text-left p-3 font-medium text-muted-foreground">
+                  Due
+                </th>
+                <th className="text-center p-3 font-medium text-muted-foreground">
+                  Points
+                </th>
+                <th className="text-center p-3 font-medium text-muted-foreground">
+                  Score
+                </th>
+                <th className="text-center p-3 font-medium text-muted-foreground">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {gradable.map((post) => {
+                const sub = submissionMap.get(post.id);
+                let status: string;
+                let statusClass: string;
 
-              if (sub?.graded_at) {
-                status = "Graded";
-                statusClass = "text-emerald-700 bg-emerald-50";
-              } else if (sub) {
-                status = "Awaiting grading";
-                statusClass = "text-blue-700 bg-blue-50";
-              } else if (post.due_at && new Date(post.due_at) < new Date()) {
-                status = "Missing";
-                statusClass = "text-red-700 bg-red-50";
-              } else {
-                status = "Assigned";
-                statusClass = "text-muted-foreground bg-muted/50";
-              }
+                if (sub?.graded_at) {
+                  status = "Graded";
+                  statusClass = "text-emerald-700 bg-emerald-50";
+                } else if (sub) {
+                  status = "Awaiting grading";
+                  statusClass = "text-blue-700 bg-blue-50";
+                } else if (post.due_at && new Date(post.due_at) < new Date()) {
+                  status = "Missing";
+                  statusClass = "text-red-700 bg-red-50";
+                } else {
+                  status = "Assigned";
+                  statusClass = "text-muted-foreground bg-muted/50";
+                }
 
-              return (
-                <tr
-                  key={post.id}
-                  className="border-b last:border-0 hover:bg-muted/20"
-                >
-                  <td className="p-3">
-                    <Link
-                      href={`${basePath}/post/${post.id}`}
-                      className="font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {post.title}
-                    </Link>
-                  </td>
-                  <td className="p-3 text-muted-foreground">
-                    {post.due_at ? fmtShortDate(post.due_at) : "—"}
-                  </td>
-                  <td className="p-3 text-center text-muted-foreground">
-                    {post.max_points ?? "—"}
-                  </td>
-                  <td className="p-3 text-center font-medium">
-                    {sub?.graded_at && sub.grade !== null
-                      ? `${sub.grade}${post.max_points !== null ? `/${post.max_points}` : ""}`
-                      : "—"}
-                  </td>
-                  <td className="p-3 text-center">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs px-2.5 py-0.5 ${statusClass}`}
-                    >
-                      {status}
-                    </Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr
+                    key={post.id}
+                    className="border-b last:border-0 hover:bg-muted/20"
+                  >
+                    <td className="p-3">
+                      <Link
+                        href={`${basePath}/post/${post.id}`}
+                        className="font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {post.title}
+                      </Link>
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {post.due_at ? fmtShortDate(post.due_at) : "—"}
+                    </td>
+                    <td className="p-3 text-center text-muted-foreground">
+                      {post.max_points ?? "—"}
+                    </td>
+                    <td className="p-3 text-center font-medium">
+                      {sub?.graded_at && sub.grade !== null
+                        ? `${sub.grade}${post.max_points !== null ? `/${post.max_points}` : ""}`
+                        : "—"}
+                    </td>
+                    <td className="p-3 text-center">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs px-2.5 py-0.5 ${statusClass}`}
+                      >
+                        {status}
+                      </Badge>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </TableExplorer>
       </div>
     </Card>
   );

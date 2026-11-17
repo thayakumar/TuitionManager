@@ -33,7 +33,7 @@ export default async function ParentInvoicesPage({
   const currencySymbol = await getSetting("currency");
 
   const invoices = await queryAll<Invoice>(
-    `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id = ? ORDER BY issued_at DESC,id DESC`,
+    `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id = ? AND status<>'draft' ORDER BY issued_at DESC,id DESC`,
     [studentId],
   );
 

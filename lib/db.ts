@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -305,10 +305,21 @@ async function writeSchemaVersion(tx: Transaction) {
   });
 }
 
+async function migrateWhiteboards(tx: Transaction) {
+  await tx.execute(`CREATE TABLE IF NOT EXISTS whiteboards (
+    board_key TEXT PRIMARY KEY,
+    class_id INTEGER UNIQUE REFERENCES classes(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    revision INTEGER NOT NULL CHECK(revision > 0),
+    updated_at TEXT NOT NULL
+  )`);
+}
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
-  // Version 2 data/history are already migrated. Do not replay their backfills.
+  // Prepared versions already have their history backfills. Never replay them.
   if (fromVersion >= 2) {
-    await migratePostOrder(tx);
+    if (fromVersion < 3) await migratePostOrder(tx);
+    await migrateWhiteboards(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -444,6 +455,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
     DELETE FROM settings WHERE key LIKE 'student_session_%';
   `);
   await migratePostOrder(tx);
+  await migrateWhiteboards(tx);
   await writeSchemaVersion(tx);
 }
 

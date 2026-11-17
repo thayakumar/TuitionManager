@@ -1,3 +1,4 @@
+import { TableExplorer } from "@/components/table-explorer";
 import { lessonStatus } from "@/lib/lesson-status";
 import { queryAll, queryOne } from "@/lib/db";
 import {
@@ -54,7 +55,7 @@ export default async function ParentAttendancePage({
       </div>
       {classes.length ? (
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <table className="w-full text-left text-sm">
+          <TableExplorer><table className="w-full text-left text-sm">
             <thead className="bg-muted/40 text-xs text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Lesson</th>
@@ -108,7 +109,7 @@ export default async function ParentAttendancePage({
                 );
               })}
             </tbody>
-          </table>
+          </table></TableExplorer>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">

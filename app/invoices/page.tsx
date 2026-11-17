@@ -1,3 +1,4 @@
+import { TableExplorer } from "@/components/table-explorer";
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/auth";
 import { queryAll, getSettings } from "@/lib/db";
@@ -130,7 +131,7 @@ export default async function InvoicesPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <TableExplorer><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Invoice</th>
@@ -178,7 +179,7 @@ export default async function InvoicesPage({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></TableExplorer>
             {!visible.length && (
               <p className="py-12 text-center text-sm text-muted-foreground">
                 {status

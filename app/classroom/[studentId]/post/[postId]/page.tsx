@@ -1,3 +1,4 @@
+import { RichText } from "@/components/rich-text";
 import { requireAdminPage } from "@/lib/auth";
 import {
   SubmissionHistory,
@@ -226,9 +227,10 @@ function PostContent({
 
         {/* Body */}
         {post.body && (
-          <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-            {post.body}
-          </div>
+          <RichText
+            content={post.body}
+            className="text-sm text-foreground whitespace-pre-line leading-relaxed"
+          />
         )}
 
         {/* Attachments */}
@@ -349,9 +351,10 @@ function AssignmentDetail({
           <Card className="border shadow-none">
             <CardContent className="p-6">
               {post.body ? (
-                <div className="text-sm text-foreground whitespace-pre-line leading-relaxed">
-                  {post.body}
-                </div>
+                <RichText
+                  content={post.body}
+                  className="text-sm text-foreground whitespace-pre-line leading-relaxed"
+                />
               ) : (
                 <p className="text-sm text-muted-foreground italic">
                   No instructions provided.
@@ -456,9 +459,7 @@ function AttachmentsList({ attachments }: { attachments: PostAttachment[] }) {
                 {att.file_name}
               </p>
               {att.file_type && (
-                <p className="text-xs text-muted-foreground">
-                  {att.file_type}
-                </p>
+                <p className="text-xs text-muted-foreground">{att.file_type}</p>
               )}
             </div>
             <ExternalLink

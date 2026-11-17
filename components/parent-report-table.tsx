@@ -1,3 +1,4 @@
+import { TableExplorer } from "@/components/table-explorer";
 import { BookOpen, ChevronDown } from "lucide-react";
 import { ReportDetails } from "@/components/report-details";
 import { RatingBadge } from "@/components/rating-badge";
@@ -30,7 +31,7 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
     );
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <table className="w-full text-left text-sm">
+      <TableExplorer><table className="w-full text-left text-sm">
         <caption className="sr-only">
           Class reports. Expand a lesson to read its full report.
         </caption>
@@ -48,7 +49,9 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
         </thead>
         <tbody>
           {reports.map((report) => (
-            <tr key={report.id} className="border-t border-border">
+            <tr key={report.id} className="border-t border-border"
+              data-table-search={[report.scheduled_at,fmtDateTime(report.scheduled_at),report.duration_minutes,report.rating,report.topics_covered,report.homework,report.performance,report.strengths,report.areas_to_improve,report.next_focus].join(" ")}
+              data-table-columns={JSON.stringify([fmtDateTime(report.scheduled_at),`${report.duration_minutes} min`,report.rating ? `${report.rating}/5` : "Not rated",[report.topics_covered,report.homework,report.performance,report.strengths,report.areas_to_improve,report.next_focus].join(" ")])}>
               <td colSpan={4} className="p-0">
                 <details className="group">
                   <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-3 px-4 py-4 hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[minmax(0,1fr)_100px_90px_100px]">
@@ -88,7 +91,7 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></TableExplorer>
     </div>
   );
 }

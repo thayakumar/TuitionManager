@@ -42,11 +42,11 @@ export default async function ParentDashboard({
       upcoming: number;
       outstanding: number;
     }>(
-      `SELECT COUNT(*) AS total, SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS present, SUM(CASE WHEN status<>'canceled' AND attendance='absent' AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS absent, SUM(CASE WHEN status='scheduled' AND julianday(scheduled_at)>=julianday(?) THEN 1 ELSE 0 END) AS upcoming, (SELECT COALESCE(SUM(total_amount),0) FROM invoices WHERE student_id=? AND status NOT IN ('paid','canceled')) AS outstanding FROM classes WHERE student_id=?`,
+      `SELECT COUNT(*) AS total, SUM(CASE WHEN status<>'canceled' AND attendance IN ('present','late') AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS present, SUM(CASE WHEN status<>'canceled' AND attendance='absent' AND julianday(scheduled_at)<=julianday('now') THEN 1 ELSE 0 END) AS absent, SUM(CASE WHEN status='scheduled' AND julianday(scheduled_at)>=julianday(?) THEN 1 ELSE 0 END) AS upcoming, (SELECT COALESCE(SUM(total_amount),0) FROM invoices WHERE student_id=? AND status NOT IN ('paid','canceled','draft')) AS outstanding FROM classes WHERE student_id=?`,
       [now, student.id, student.id],
     ),
     queryAll<Invoice>(
-      `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id=? ORDER BY issued_at DESC,id DESC LIMIT 5`,
+      `SELECT ${PUBLIC_INVOICE_COLUMNS} FROM invoices WHERE student_id=? AND status<>'draft' ORDER BY issued_at DESC,id DESC LIMIT 5`,
       [student.id],
     ),
     getSettings(["currency"]),
@@ -81,7 +81,7 @@ export default async function ParentDashboard({
           {
             label: "Outstanding",
             value: currency(Number(stats?.outstanding ?? 0), settings.currency),
-            detail: "Excludes canceled invoices",
+            detail: "Excludes draft and canceled invoices",
             icon: Receipt,
           },
         ].map((m) => (

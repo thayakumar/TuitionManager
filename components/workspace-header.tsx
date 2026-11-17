@@ -9,7 +9,7 @@ const labels: Record<string, string> = {
   "financial-history": "Financial history", classroom: "Classroom", requests: "Requests",
   notifications: "Notifications", settings: "Settings", classes: "Lesson details",
   attendance: "Attendance", reports: "Class reports", notes: "My notes", profile: "My profile",
-  recurring: "Recurring lessons",
+  recurring: "Recurring lessons", whiteboard: "Whiteboard",
 };
 
 export function WorkspaceHeader({ role = "Admin", name }: { role?: "Admin" | "Student" | "Parent"; name?: string }) {

@@ -1,3 +1,4 @@
+import { RichText } from "@/components/rich-text";
 import { LessonActionForm } from "@/components/lesson-action-form";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -297,6 +298,11 @@ export default async function ClassDetailPage({
         </Card>
       </div>
 
+      <div className="mb-6 rounded-xl border border-border bg-card p-5">
+        <h2 className="font-semibold">Lesson whiteboard</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Shared with this student and saved with this lesson.</p>
+        <Button asChild variant="outline" className="mt-3"><Link href={`/meeting/${id}/whiteboard`} target="_blank" rel="noopener noreferrer">Open whiteboard ↗</Link></Button>
+      </div>
       {/* Teacher Notes */}
       {teacherNote?.content && (
         <Card className="mb-6 border shadow-none">
@@ -310,9 +316,7 @@ export default async function ClassDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-foreground whitespace-pre-wrap">
-              {teacherNote.content}
-            </div>
+            <RichText content={teacherNote.content} className="rounded-lg bg-amber-50 px-4 py-3 text-base text-foreground" />
           </CardContent>
         </Card>
       )}

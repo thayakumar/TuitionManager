@@ -700,3 +700,98 @@ test("saving a lesson report records unmarked attendance as Present without over
  const invoice=await f.actions.generateInvoiceQuick(form({student_id:1,period_start:'2026-10-01',period_end:'2026-10-31'}));assert.equal((await f.db.queryOne('SELECT total_amount FROM invoices WHERE id=?',[invoice])).total_amount,80);assert.deepEqual((await f.db.queryAll('SELECT class_id FROM invoice_items WHERE invoice_id=?',[invoice])).map(r=>r.class_id),[unmarked]);
  }finally{f.close()}
 });
+
+test("parent reschedule credentials scope requests, revoke immediately and allow tutor's own time", async () => {
+  const f = fixture();
+  try {
+    await f.seed();
+    await f.db.execute("INSERT INTO share_tokens(student_id,token) VALUES(1,'parent-alice'),(2,'parent-bob')");
+    const cid = await insertLesson(f,{at:"2027-02-10T02:00:00Z",status:"scheduled",attendance:null,trial:1});
+    const data = form({class_id:cid,student_id:2,preferred_time_1:"2027-02-11T10:00",reason:"Family appointment"});
+    f.as("anonymous");
+    assert.match((await f.actions.createParentRescheduleRequest("missing",data)).error,/link/);
+    assert.match((await f.actions.createParentRescheduleRequest("parent-bob",data)).error,/belong/);
+    assert.equal((await f.actions.createParentRescheduleRequest("parent-alice",data)).success,true);
+    assert.match((await f.actions.createParentRescheduleRequest("parent-alice",data)).error,/pending/);
+    assert.equal((await f.db.queryOne("SELECT status FROM classes WHERE id=?",[cid])).status,"scheduled");
+    const req=await f.db.queryOne("SELECT id,student_id FROM reschedule_requests WHERE class_id=?",[cid]);
+    assert.equal(req.student_id,1);
+    assert.match((await f.db.queryOne("SELECT message FROM notifications WHERE type='reschedule_request'")).message,/parent/);
+    f.as("admin");
+    assert.equal((await f.actions.approveRescheduleRequest(req.id,"2027-02-12T15:30","Tutor-selected slot")).success,true);
+    const replacement=await f.db.queryOne("SELECT student_id,is_trial,scheduled_at FROM classes WHERE rescheduled_from=?",[cid]);
+    assert.equal(replacement.student_id,1);assert.equal(replacement.is_trial,1);assert.equal(replacement.scheduled_at,"2027-02-12T07:30:00.000Z");
+    assert.equal((await f.db.queryOne("SELECT status FROM classes WHERE id=?",[cid])).status,"canceled");
+    const next=await insertLesson(f,{at:"2027-02-20T02:00:00Z",status:"scheduled",attendance:null});
+    await f.db.execute("UPDATE share_tokens SET active=0 WHERE token='parent-alice'");
+    f.as("anonymous");
+    assert.match((await f.actions.createParentRescheduleRequest("parent-alice",form({class_id:next,preferred_time_1:"2027-02-21T10:00"}))).error,/link/);
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM reschedule_requests WHERE class_id=?",[next])).n,0);
+  } finally {f.close();}
+});
+
+test("draft invoice generation stays private until a visible status is applied",async()=>{
+ const f=fixture();
+ try{
+  await f.seed();await insertLesson(f);
+  const inv=await f.actions.generateInvoiceQuick(form({student_id:1,period_start:"2026-10-01",period_end:"2026-10-31"}));
+  assert.equal((await f.db.queryOne("SELECT status FROM invoices WHERE id=?",[inv])).status,"draft");
+  assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM notifications WHERE type IN ('invoice_created','invoice_updated')")).n,0);
+  await f.actions.setInvoiceStatus(inv,"sent");
+  assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM notifications WHERE type='invoice_updated'")).n,1);
+  await f.actions.setInvoiceStatus(inv,"draft");
+  assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM notifications WHERE type='invoice_updated'")).n,1);
+ }finally{f.close();}
+});
+
+test("post files save atomically with all post kinds and attachment-only edits notify without losing content", async () => {
+  const f=fixture();
+  try {
+    await f.seed();
+    for(const kind of ["material","assignment","announcement"]) {
+      const result=await f.actions.createPostAction(1,kind,"File "+kind,"Read this",null,null,null,[{fileName:"worksheet.docx",fileUrl:"https://drive.google.com/file/d/examplefileid/view",fileType:"application/msword"}]);
+      assert.equal(result.success,true);
+    }
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) AS n FROM post_attachments")).n,3);
+    const p=await f.db.queryOne("SELECT * FROM posts WHERE type='material'");
+    await f.actions.updatePost(form({id:p.id,title:p.title,body:p.body,attachments:JSON.stringify([{fileName:"second.pdf",fileUrl:"https://example.com/second.pdf",fileType:"application/pdf"}])}));
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) AS n FROM post_attachments WHERE post_id=?",[p.id])).n,2);
+    const bad=await f.actions.createPostAction(1,"material","Do not create","Body",null,null,null,[{fileName:"bad",fileUrl:"javascript:bad()",fileType:""}]);
+    assert.equal(bad.success,false);
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) AS n FROM posts WHERE title='Do not create'")).n,0);
+  } finally {f.close();}
+});
+
+test("rich assignment work rejects visually empty HTML and preserves safe formatting across versions", async () => {
+  const f=fixture();
+  try {
+    await f.seed();
+    await f.db.execute("INSERT INTO posts(id,type,title,student_id,max_points) VALUES(1,'assignment','Rich work',1,100)");
+    f.as('student',1);
+    for(const content of ['<p><br></p>','<p>&nbsp;</p>','<script>alert(1)</script>']) {
+      await assert.rejects(()=>f.actions.submitAssignment(form({post_id:1,student_id:1,content})),/Add your work/);
+    }
+    await f.actions.submitAssignment(form({post_id:1,student_id:1,content:'<p><strong>Answer</strong> <a href="https://example.com" onclick="alert(1)">source</a></p><script>alert(1)</script>'}));
+    const attempt=await f.db.queryOne('SELECT content FROM submissions WHERE post_id=1');
+    assert.match(attempt.content,/<strong>Answer<\/strong>/);
+    assert.match(attempt.content,/href="https:\/\/example.com"/);
+    assert.doesNotMatch(attempt.content,/onclick|<script|alert\(1\)/);
+    await f.actions.submitAssignment(form({post_id:1,student_id:1,content:'<ul><li><p><u>Improved</u></p></li></ul>'}));
+    const versions=await f.db.queryAll('SELECT content FROM submission_versions ORDER BY version');
+    assert.equal(versions.length,2);
+    assert.equal(versions[0].content,attempt.content);
+    assert.match(versions[1].content,/<ul><li><p><u>Improved/);
+  } finally { f.close(); }
+});
+
+test("clearing rich meeting notes stores an empty note rather than an invisible HTML row", async () => {
+  const f=fixture();
+  try {
+    await f.seed();
+    const classId=await insertLesson(f);
+    await f.actions.saveClassNotes(classId,'teacher','<p><strong>Notes</strong></p>');
+    assert.match((await f.db.queryOne('SELECT content FROM class_notes WHERE class_id=?',[classId])).content,/<strong>Notes/);
+    await f.actions.saveClassNotes(classId,'teacher','<p><br></p>');
+    assert.equal((await f.db.queryOne('SELECT content FROM class_notes WHERE class_id=?',[classId])).content,'');
+  } finally { f.close(); }
+});

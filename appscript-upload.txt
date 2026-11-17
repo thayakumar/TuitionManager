@@ -30,6 +30,7 @@ function doPost(e) {
       JSON.stringify({
         success: true,
         fileUrl: file.getUrl(),
+        fileId: file.getId(),
         fileName: file.getName(),
       })
     ).setMimeType(ContentService.MimeType.JSON);

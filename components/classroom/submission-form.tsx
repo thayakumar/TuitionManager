@@ -2,21 +2,21 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import {
-  UploadCloud,
-  FileText,
-  Link2,
-  Send,
-  CheckCircle2,
-  X,
-} from "lucide-react";
+import { Paperclip, FileText, Send, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { submitAssignmentResult as submitAssignment } from "@/lib/actions";
 import { actionError, ActionValidationError } from "@/lib/action-errors";
 import { safeUrl } from "@/lib/domain/validation";
 
-import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_LABEL,
+  isSupportedUpload,
+  SUPPORTED_UPLOAD_ACCEPT,
+} from "@/lib/upload-limits";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import { hasRichTextContent } from "@/lib/rich-text";
 const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export function SubmissionForm({
@@ -44,23 +44,16 @@ export function SubmissionForm({
     setFile(null);
     if (!next) return;
     if (next.size === 0 || next.size > MAX_FILE_SIZE) {
-      setError(`Choose a nonempty image or PDF up to ${MAX_UPLOAD_LABEL}.`);
+      setError(`Choose a nonempty file up to ${MAX_UPLOAD_LABEL}.`);
       event.target.value = "";
       return;
     }
-    if (
-      ![
-        "image/png",
-        "image/jpeg",
-        "image/webp",
-        "image/gif",
-        "application/pdf",
-      ].includes(next.type)
-    ) {
-      setError("Use a PNG, JPG, WebP, GIF or PDF file.");
+    if (!isSupportedUpload(next)) {
+      setError("Choose a supported document, image, audio, video or archive.");
       event.target.value = "";
       return;
     }
+    setFileUrl("");
     setFile(next);
   }
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -74,12 +67,8 @@ export function SubmissionForm({
       setError("Enter a complete HTTPS link without embedded credentials.");
       return;
     }
-    if (!content.trim() && !link && !file) {
-      setError("Add your work, a file, or a valid link before turning in.");
-      return;
-    }
-    if (file && link) {
-      setError("Choose either an attached file or a link for this attempt.");
+    if (!hasRichTextContent(content) && !link && !file) {
+      setError("Add your work or a file before turning in.");
       return;
     }
     submitting.current = true;
@@ -143,40 +132,32 @@ export function SubmissionForm({
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {resubmission
             ? "Your earlier work and feedback stay in history. This new attempt will wait for a new grade."
-            : "Write an answer, attach a file or share a link. You can submit a new attempt later."}
+            : "Write an answer, include links in your work or attach a file. You can submit a new attempt later."}
         </p>
       </div>
       <fieldset disabled={busy} className="min-w-0 space-y-5">
         <section className="form-section space-y-3">
-          <label
-            htmlFor={`work-${postId}`}
-            className="form-section-title block"
-          >
-            Your work
-          </label>
-          <textarea
-            id={`work-${postId}`}
+          <RichTextEditor
+            label="Your work"
             name="content"
             value={content}
-            onChange={(event) => setContent(event.target.value)}
-            rows={6}
-            maxLength={10000}
+            onChange={setContent}
+            disabled={busy}
             placeholder="Type your answer or paste your work here…"
-            className="w-full rounded-xl border border-input bg-card p-4 text-base leading-relaxed"
           />
         </section>
         <section className="form-section space-y-4">
           <h3 className="form-section-title">Add supporting work</h3>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Choose a file or a link for this attempt.
+            Attach supporting work. Add any links directly in your answer.
           </p>
           <label
             htmlFor={`file-${postId}`}
             className="flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/30 px-4 py-6 text-center transition-colors hover:border-primary hover:bg-orange-50 focus-within:ring-2 focus-within:ring-ring"
           >
-            <UploadCloud size={28} className="mb-3 text-primary" />
+            <Paperclip size={28} className="mb-3 text-primary" />
             <span className="font-medium">
-              {file ? file.name : "Choose an image or PDF"}
+              {file ? file.name : "Attach a file"}
             </span>
             <span className="mt-1 text-sm text-muted-foreground">
               Up to {MAX_UPLOAD_LABEL}
@@ -185,7 +166,7 @@ export function SubmissionForm({
               ref={inputRef}
               id={`file-${postId}`}
               type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+              accept={SUPPORTED_UPLOAD_ACCEPT}
               onChange={selectFile}
               className="sr-only"
             />
@@ -210,33 +191,11 @@ export function SubmissionForm({
               </Button>
             </div>
           )}
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            or add a link
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <label
-            htmlFor={`link-${postId}`}
-            className="block text-sm font-medium"
-          >
-            HTTPS link (optional)
-          </label>
-          <div className="relative">
-            <Link2
-              size={19}
-              className="pointer-events-none absolute left-4 top-4 text-muted-foreground"
-            />
-            <input
-              id={`link-${postId}`}
-              type="url"
-              name="file_url"
-              placeholder="https://…"
-              value={fileUrl}
-              onChange={(event) => setFileUrl(event.target.value)}
-              maxLength={2048}
-              className="min-h-12 w-full rounded-xl border border-input bg-card py-3 pl-11 pr-4 text-base"
-            />
-          </div>
+          {fileUrl && !file && (
+            <p className="text-sm text-muted-foreground">
+              Your attachment is uploaded and ready to submit.
+            </p>
+          )}
         </section>
       </fieldset>
       {error && (
@@ -251,7 +210,9 @@ export function SubmissionForm({
         <Button
           type="submit"
           className="w-full"
-          disabled={busy || (!content.trim() && !fileUrl.trim() && !file)}
+          disabled={
+            busy || (!hasRichTextContent(content) && !fileUrl.trim() && !file)
+          }
         >
           <Send size={19} />
           {busy

@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "Autosave persists native workspace and does not save repeatedly without changes",
+      "status": "Pass"
+    },
+    {
+      "name": "Clean student board receives tutor changes through conditional polling",
+      "status": "Pass"
+    },
+    {
+      "name": "Simultaneous changes preserve local work and show conflict instead of overwriting",
+      "status": "Pass"
+    },
+    {
+      "name": "Loading the saved version resolves conflict explicitly and retains server version",
+      "status": "Pass"
+    },
+    {
+      "name": "Failed saves recover a tab-scoped draft after reload and retry succeeds",
+      "status": "Pass"
+    },
+    {
+      "name": "Saving my version after a conflict explicitly replaces the saved workspace",
+      "status": "Pass"
+    },
+    {
+      "name": "No whiteboard runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

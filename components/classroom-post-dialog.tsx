@@ -22,13 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Field, TextAreaField } from "@/components/form-field";
+import { Field } from "@/components/form-field";
 import { toast } from "sonner";
 import {
   createPostAction,
@@ -38,6 +32,11 @@ import {
 } from "@/lib/actions";
 import { actionError, ActionValidationError } from "@/lib/action-errors";
 import { fmtDateInput } from "@/lib/format";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import {
+  PostAttachmentsInput,
+  type PendingAttachment,
+} from "@/components/post-attachments-input";
 import type { Post, PostType, Topic } from "@/lib/types";
 
 const POST_TYPES = [
@@ -59,28 +58,47 @@ export function ClassroomActions({
   topics?: Topic[];
 }) {
   const [type, setType] = useState<PostType | null>(null);
+  const [choosing, setChoosing] = useState(false);
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" className="gap-1.5">
-            <Plus size={14} />
-            Create
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {POST_TYPES.map((item) => (
-            <DropdownMenuItem
-              key={item.value}
-              onClick={() => setType(item.value)}
-              className="gap-2"
-            >
-              <item.icon size={14} className="text-primary" />
-              Post {item.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button onClick={() => setChoosing(true)}>
+        <Plus size={18} /> Create
+      </Button>
+      <Dialog open={choosing} onOpenChange={setChoosing}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Create a post</DialogTitle>
+            <DialogDescription>What would you like to share?</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            {POST_TYPES.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                className="flex items-center gap-4 rounded-2xl border border-border p-5 text-left transition-colors hover:border-primary hover:bg-secondary"
+                onClick={() => {
+                  setChoosing(false);
+                  setType(item.value);
+                }}
+              >
+                <span className="rounded-xl bg-secondary p-3 text-primary">
+                  <item.icon size={25} />
+                </span>
+                <span>
+                  <strong className="block text-lg">{item.label}</strong>
+                  <span className="text-sm text-muted-foreground">
+                    {item.value === "assignment"
+                      ? "Set work to submit and grade"
+                      : item.value === "material"
+                        ? "Share resources and learning materials"
+                        : "Share an update with your student"}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
       {type && (
         <PostDialog
           open
@@ -113,14 +131,17 @@ function PostDialog({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const [error, setError] = useState("");
   const submitting = useRef(false);
   const config =
     POST_TYPES.find((item) => item.value === postType) ?? POST_TYPES[0];
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || uploading) return;
     const form = new FormData(event.currentTarget);
+    form.set("attachments", JSON.stringify(attachments));
     const title = String(form.get("title") ?? "").trim();
     if (!title) {
       setError("Enter a title.");
@@ -145,6 +166,7 @@ function PostDialog({
           String(form.get("due_at") ?? "") || null,
           form.get("topic_id") ? Number(form.get("topic_id")) : null,
           points ? Number(points) : null,
+          attachments,
         );
         if (!result.success)
           throw new ActionValidationError(
@@ -169,7 +191,7 @@ function PostDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!busy) onOpenChange(next);
+        if (!busy && !uploading) onOpenChange(next);
       }}
     >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-4xl">
@@ -209,16 +231,22 @@ function PostDialog({
                 defaultValue={editPost?.title ?? ""}
                 placeholder="Give this classwork a clear title"
               />
-              <TextAreaField
+              <RichTextEditor
+                disabled={busy || uploading}
                 label={postType === "assignment" ? "Instructions" : "Content"}
                 name="body"
-                rows={8}
                 defaultValue={editPost?.body ?? ""}
                 placeholder={
                   postType === "assignment"
                     ? "Explain what to do, what to include and how the work will be assessed…"
                     : "Add details, learning notes or an update…"
                 }
+              />
+              <PostAttachmentsInput
+                value={attachments}
+                onChange={setAttachments}
+                onBusyChange={setUploading}
+                disabled={busy}
               />
             </section>
             <div className="min-w-0 space-y-5">
@@ -275,12 +303,12 @@ function PostDialog({
             <Button
               type="button"
               variant="outline"
-              disabled={busy}
+              disabled={busy || uploading}
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" disabled={busy || uploading}>
               {busy ? "Saving..." : editPost ? "Save Changes" : "Post"}
             </Button>
           </DialogFooter>

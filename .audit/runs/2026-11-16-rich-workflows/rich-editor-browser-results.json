@@ -1,0 +1,41 @@
+{
+  "results": [
+    {
+      "name": "create popup offers Material Assignment Announcement and no dropdown",
+      "status": "Pass"
+    },
+    {
+      "name": "create formatted Material and view clickable link in both roles",
+      "status": "Pass"
+    },
+    {
+      "name": "create formatted Assignment and view clickable link in both roles",
+      "status": "Pass"
+    },
+    {
+      "name": "create formatted Announcement and view clickable link in both roles",
+      "status": "Pass"
+    },
+    {
+      "name": "student formatted work removes separate link field, rejects blank, preserves two attempts",
+      "status": "Pass"
+    },
+    {
+      "name": "legacy plain post URLs render clickable without HTML markup",
+      "status": "Pass"
+    },
+    {
+      "name": "meeting rich notes save reload and remain role-private",
+      "status": "Pass"
+    },
+    {
+      "name": "rich editor mobile toolbar fits width",
+      "status": "Pass"
+    },
+    {
+      "name": "no unhandled browser errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

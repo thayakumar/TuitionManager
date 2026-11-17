@@ -548,3 +548,63 @@ aside nav a { min-height: 50px; font-size: 1rem; }
 .compact-trial-option { display: flex; align-items: center; gap: 12px; padding: 4px; font-size: 1rem; cursor: pointer; }
 .compact-trial-option input { width: 21px; height: 21px; accent-color: var(--primary); }
 .schedule-composer .duration-option span { display: none; }
+/* Rich learning content keeps formatting readable without widening mobile panels. */
+.rich-editor { min-width: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--card); }
+.rich-editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 8px; border-bottom: 1px solid var(--border); background: var(--secondary); }
+.rich-editor-toolbar button { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 7px; }
+.rich-editor-toolbar button:hover, .rich-editor-toolbar button[aria-pressed=true] { background: var(--card); color: var(--primary); }
+.rich-editor-toolbar button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.rich-editor-toolbar select { max-width: 140px; padding: 6px; background: transparent; font-size: .875rem; }
+.rich-text-editor-content { min-height: 180px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.7; overflow-wrap: anywhere; }
+.rich-text-editor-content p.is-editor-empty:first-child:before { content: attr(data-placeholder); color: var(--muted-foreground); pointer-events: none; float: left; height: 0; }
+.rich-editor-link { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: var(--secondary); }
+.rich-editor-link input { min-width: 120px; flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
+.rich-editor-link button { padding: 8px; font-weight: 600; }
+.rich-editor-link p { flex-basis: 100%; color: var(--destructive); }
+.rich-text { overflow-wrap: anywhere; line-height: 1.7; }
+.rich-text p + p { margin-top: .7em; }
+.rich-text h1 { font-size: 1.8em; font-weight: 750; margin: .8em 0 .4em; }
+.rich-text h2 { font-size: 1.5em; font-weight: 700; margin: .8em 0 .4em; }
+.rich-text h3 { font-size: 1.25em; font-weight: 700; margin: .8em 0 .4em; }
+.rich-text ul { list-style: disc; padding-left: 1.6em; margin: .6em 0; }
+.rich-text ol { list-style: decimal; padding-left: 1.6em; margin: .6em 0; }
+.rich-text li > p { margin: 0; }
+.rich-text a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.rich-text blockquote { border-left: 3px solid var(--primary); padding-left: 1em; margin: .8em 0; color: var(--muted-foreground); }
+.rich-text pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--secondary); border-radius: 8px; padding: 12px; margin: .8em 0; }
+.rich-text code { font-family: monospace; background: var(--secondary); padding: 1px 4px; border-radius: 3px; }
+.rich-text hr { margin: 1em 0; border-color: var(--border); }
+.rich-text mark { background: #fff19e; padding: 1px 3px; }
+.rich-text strong, .rich-text b { font-weight: 750; }
+.rich-text em, .rich-text i { font-style: italic; }
+.rich-text s, .rich-text del { text-decoration: line-through; }
+.rich-text u { text-decoration: underline; }
+
+/* Tables retain full desktop columns and become labelled records on phones. */
+.table-explorer { width: 100%; }
+.table-explorer .table-filter-hidden { display: none !important; }
+.table-explorer td { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .table-explorer-body, .table-explorer [data-slot=table-container] { overflow: visible; }
+  .table-explorer table, .table-explorer tbody { display: block; width: 100%; min-width: 0; }
+  .table-explorer thead { display: none; }
+  .table-explorer tbody > tr { display: grid; min-width: 0; gap: 10px; margin-bottom: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+  .table-explorer tbody > tr > td { display: block !important; width: auto !important; min-width: 0; max-width: 100% !important; padding: 0 !important; text-align: left !important; white-space: normal !important; }
+  .table-explorer tbody > tr > td[data-column-label]::before { content: attr(data-column-label); display: block; margin-bottom: 4px; color: var(--muted-foreground); font-size: .8rem; font-weight: 600; }
+  .table-explorer tbody > tr > td[colspan] { grid-column: 1 / -1; }
+  .table-explorer .table-filter-hidden { display: none !important; }
+}
+@media print {
+  .table-explorer-controls { display: none !important; }
+  .table-explorer .table-filter-hidden { display: table-row !important; }
+  .table-explorer table { display: table !important; }
+  .table-explorer thead { display: table-header-group !important; }
+  .table-explorer tbody { display: table-row-group !important; }
+  .table-explorer tbody > tr { display: table-row !important; padding: 0; border-radius: 0; }
+  .table-explorer tbody > tr > td { display: table-cell !important; padding: 8px !important; }
+  .table-explorer tbody > tr > td::before { display: none !important; }
+}
+@media (max-width: 640px) {
+  .student-profile-stats [data-slot=card-content] > div { flex-direction: column-reverse; gap: 12px; }
+  .student-profile-stats [data-slot=card-content] > div > div:first-child { min-width: 0; width: 100%; }
+}

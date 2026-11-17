@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, X, CalendarClock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,9 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { actionError } from "@/lib/action-errors";
-import { fmtDateTime } from "@/lib/format";
+import { fmtDateTime, fmtDateInput } from "@/lib/format";
+
+import { DateTimeField } from "@/components/scheduling-fields";
 
 export function RescheduleActions({
   requestId,
@@ -29,6 +31,7 @@ export function RescheduleActions({
   requestId: number;
   preferredTimes: string[];
 }) {
+  const customTimeRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<"idle" | "approve" | "reject">("idle");
   const [selectedTime, setSelectedTime] = useState(preferredTimes[0]);
   const [note, setNote] = useState("");
@@ -42,7 +45,15 @@ export function RescheduleActions({
     setError(null);
     try {
       const result = approved
-        ? await approveRescheduleRequest(requestId, selectedTime, note || null)
+        ? await approveRescheduleRequest(
+            requestId,
+            selectedTime === "__custom"
+              ? (customTimeRef.current?.querySelector<HTMLInputElement>(
+                  'input[name="approved_custom_time"]',
+                )?.value ?? "")
+              : selectedTime,
+            note || null,
+          )
         : await rejectRescheduleRequest(requestId, note || null);
       if (!result?.success) {
         setError(result?.error || "The request could not be resolved.");
@@ -107,15 +118,13 @@ export function RescheduleActions({
             </DialogTitle>
             <DialogDescription>
               {mode === "approve"
-                ? "Approve one suggestion. The original becomes cancelled and a replacement is booked."
+                ? "Choose a suggestion or set your own time. The original becomes cancelled and a replacement is booked."
                 : "The original lesson stays scheduled. You can include a short note to explain your decision."}
             </DialogDescription>
           </DialogHeader>
           {mode === "approve" && (
             <section className="form-section">
-              <p className="form-section-title mb-4">
-                Student’s suggestions · MYT
-              </p>
+              <p className="form-section-title mb-4">Requested times · MYT</p>
               <div className="space-y-3">
                 {preferredTimes.map((time, index) => (
                   <button
@@ -147,6 +156,29 @@ export function RescheduleActions({
                   </button>
                 ))}
               </div>
+              <button
+                type="button"
+                disabled={isPending}
+                aria-pressed={selectedTime === "__custom"}
+                onClick={() => setSelectedTime("__custom")}
+                className={`mt-3 flex min-h-16 w-full items-center gap-3 rounded-xl border p-4 text-left font-semibold ${selectedTime === "__custom" ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-secondary"}`}
+              >
+                <CalendarClock size={22} /> Choose another date and time
+              </button>
+              {selectedTime === "__custom" && (
+                <div ref={customTimeRef} className="mt-4">
+                  <DateTimeField
+                    name="approved_custom_time"
+                    label="New lesson date"
+                    defaultValue={fmtDateInput(
+                      preferredTimes[0] ||
+                        new Date(Date.now() + 86400000).toISOString(),
+                    )}
+                    required
+                    disabled={isPending}
+                  />
+                </div>
+              )}
             </section>
           )}
           <section className="form-section">

@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Popup chooser and multi-file creation accept legacy storage response",
+    "status": "Pass"
+  },
+  {
+    "name": "Editing a post can attach another file without replacing existing files",
+    "status": "Pass"
+  },
+  {
+    "name": "Post creation mobile dialog fits screen",
+    "status": "Pass"
+  },
+  {
+    "name": "No runtime errors in attachment flows",
+    "status": "Pass"
+  }
+]

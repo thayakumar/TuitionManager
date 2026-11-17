@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "name": "Parent requests through scoped schedule dialog; pending state preserves original",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor chooses own date/time; atomic replacement preserves free trial and informs student",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent invoice list/dashboard/direct URL exclude drafts and retain every other status",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent reschedule mobile controls fit viewport",
+      "status": "Pass"
+    },
+    {
+      "name": "No browser runtime exceptions",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

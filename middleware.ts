@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/portal",
   "/share/",
   "/_next/",
+  "/vendor/excaliflow/",
   "/favicon.ico",
   "/manifest.json",
   "/icon-192.svg",

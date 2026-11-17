@@ -33,6 +33,8 @@ export function ReportRow({
   return (
     <>
       <tr
+        data-table-search={[r.scheduled_at, fmtDateTime(r.scheduled_at), r.topics_covered, r.homework, r.performance, r.strengths, r.areas_to_improve, r.next_focus, r.rating].join(" ")}
+        data-table-columns={JSON.stringify([fmtDateTime(r.scheduled_at), r.topics_covered || "", r.rating ? `${r.rating}/5` : "Not rated", [r.homework,r.performance,r.strengths,r.areas_to_improve,r.next_focus].join(" ")])}
         className="border-b border-border/50 hover:bg-primary/5 transition-colors cursor-pointer"
         onClick={() => setOpen(!open)}
       >
@@ -73,6 +75,7 @@ export function ReportRow({
       </tr>
       {open && (
         <tr
+          data-table-detail
           id={`report-details-${r.id}`}
           className="border-b border-border/50 bg-white"
         >

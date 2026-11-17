@@ -1,0 +1,48 @@
+[
+  {
+    "status": "Pass",
+    "metrics": {
+      "width": 354,
+      "overflow": false,
+      "collapsed": true,
+      "controls": [
+        {
+          "selector": "#bottomToolDock [data-tool=rectangle]",
+          "left": 120.5,
+          "right": 150.5,
+          "top": 58,
+          "bottom": 90
+        },
+        {
+          "selector": "#exportMenuBtn",
+          "left": 307,
+          "right": 341,
+          "top": 171,
+          "bottom": 203
+        },
+        {
+          "selector": "#btnSavePng",
+          "left": 13,
+          "right": 102.34375,
+          "top": 171,
+          "bottom": 203
+        },
+        {
+          "selector": "#sidebarToggleBtn",
+          "left": 13,
+          "right": 51,
+          "top": 11,
+          "bottom": 43
+        },
+        {
+          "selector": "#canvasSwitcherBtn",
+          "left": 100,
+          "right": 230.109375,
+          "top": 11,
+          "bottom": 43
+        }
+      ]
+    },
+    "name": "Whiteboard mobile controls remain accessible, exports open and style panel starts collapsed"
+  }
+]

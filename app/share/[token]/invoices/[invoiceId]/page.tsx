@@ -48,7 +48,7 @@ export default async function ParentInvoiceDetailPage({
   const invoiceId = Number(params.invoiceId);
   if (!Number.isSafeInteger(invoiceId) || invoiceId < 1) notFound();
   const inv = await queryOne<Invoice>(
-    "SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes, billing_month FROM invoices WHERE id = ? AND student_id = ?",
+    "SELECT id, student_id, invoice_number, period_start, period_end, total_amount, status, issued_at, paid_at, notes, billing_month FROM invoices WHERE id = ? AND student_id = ? AND status<>'draft'",
     [invoiceId, parentStudent.id],
   );
   if (!inv) notFound();

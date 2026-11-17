@@ -97,6 +97,9 @@ function fixture({
     const original = mod.require.bind(mod);
     mod.require = (name) => {
       if (name === "@/lib/db") return db;
+      if (name === "@/components/rich-text")
+        return load("components/rich-text.tsx");
+      if (name === "@/lib/rich-text") return load("lib/rich-text.ts");
       if (name === "@/lib/auth") return auth;
       if (name === "next/navigation")
         return {
@@ -104,7 +107,7 @@ function fixture({
             throw Error("NOT_FOUND");
           },
         };
-      if (name === "next/link") return { default: leaf };
+      if (name === "next/link") return { __esModule: true, default: leaf };
       if (name === "lucide-react") return new Proxy({}, { get: () => leaf });
       if (name === "@/lib/format")
         return {
@@ -147,6 +150,7 @@ function fixture({
           module: ts.ModuleKind.CommonJS,
           target: ts.ScriptTarget.ES2022,
           jsx: ts.JsxEmit.ReactJSX,
+          esModuleInterop: true,
         },
       }).outputText,
       full,

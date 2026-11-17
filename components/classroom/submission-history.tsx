@@ -1,3 +1,4 @@
+import { RichText } from "@/components/rich-text";
 import { fmtDateTime } from "@/lib/format";
 import { safeUrl } from "@/lib/domain/validation";
 
@@ -38,9 +39,10 @@ export function AttemptWork({
         Submitted {fmtDateTime(attempt.submitted_at)}
       </p>
       {attempt.content && (
-        <p className="whitespace-pre-wrap rounded-lg border border-border p-3 text-sm">
-          {attempt.content}
-        </p>
+        <RichText
+          content={attempt.content}
+          className="rounded-lg border border-border p-3 text-base"
+        />
       )}
       {href ? (
         <a

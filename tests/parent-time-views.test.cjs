@@ -75,6 +75,8 @@ test("parent attendance and schedule enforce elapsed/upcoming roles with isolate
           CardTitle: Pass,
         },
         "@/components/ui/badge": { Badge: Pass },
+        "@/components/table-explorer": { TableExplorer: Pass },
+        "@/components/reschedule-request-dialog": { RescheduleRequestDialog: Pass },
         "@/components/lesson-status-badge": {
           LessonStatusBadge: ({ status }) =>
             React.createElement("span", null, status),

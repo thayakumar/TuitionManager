@@ -280,6 +280,7 @@ test("upload denies anonymous/malformed requests and derives student identity be
       },
       "@/lib/db": f.db,
       "@/lib/upload-limits": load("lib/upload-limits.ts"),
+      "@/lib/storage-response": load("lib/storage-response.ts"),
       "next/server": { NextResponse: Response },
     });
     const request = (file) => {
@@ -327,6 +328,14 @@ test("upload denies anonymous/malformed requests and derives student identity be
     assert.equal(response.status, 200);
     assert.equal(sent.studentName, "Alice");
     assert.notEqual(sent.studentName, "Spoofed Bob");
+    global.fetch = async () => Response.json({url:"https://drive.google.com/file/d/examplefileid/view"});
+    const alternate = await route.POST(request(new File(["PK mock document"], "worksheet.docx", {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"})));
+    assert.equal(alternate.status,200);
+    assert.equal((await alternate.json()).fileUrl,"https://drive.google.com/file/d/examplefileid/view");
+    global.fetch = async () => Response.json({success:false,error:"Sharing permission denied"});
+    const shareFailure = await route.POST(request(new File(["notes"],"notes.txt",{type:"text/plain"})));
+    assert.equal(shareFailure.status,502);
+    assert.match((await shareFailure.json()).error,/Drive received the file but could not share it/);
     global.fetch = async () =>
       Response.json({ success: true, fileUrl: "javascript:bad()" });
     assert.equal(
@@ -530,4 +539,20 @@ test("version-2 upgrade adds stable classwork order without replaying history ba
     assert.equal((await cold.queryOne('SELECT max_points FROM submission_versions WHERE submission_id=1')).max_points,null);
     assert.equal((await cold.queryOne("SELECT value FROM settings WHERE key='app_schema_version'")).value,String(cold.SCHEMA_VERSION));
   } finally { cold?.getClient().close(); f.close(); }
+});
+
+test("storage response normalization accepts deployed connector variants and rejects unsafe or failed uploads", () => {
+  const {storageFile}=load("lib/storage-response.ts");
+  for(const data of [
+    {success:true,fileUrl:"https://drive.google.com/file/d/examplefileid/view"},
+    {url:"https://drive.google.com/file/d/examplefileid/view"},
+    {data:{webViewLink:"https://drive.google.com/file/d/examplefileid/view"}},
+    {fileId:"examplefileid"}
+  ]) assert.equal(storageFile(data).fileUrl,"https://drive.google.com/file/d/examplefileid/view");
+  for(const data of [
+    {success:false,fileUrl:"https://example.com/a"},
+    {fileUrl:"javascript:alert(1)"},
+    {fileUrl:"https://name:password@example.com/a"}, {}
+  ]) assert.throws(()=>storageFile(data));
+  assert.throws(()=>storageFile({success:false,error:"Sharing permission denied"}),/Drive received the file but could not share it/);
 });

@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStudentSession, verifyAdminSession } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
+import { storageFile } from "@/lib/storage-response";
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_LABEL,
+  uploadMime,
+} from "@/lib/upload-limits";
 
 const MAX_SIZE = MAX_UPLOAD_BYTES;
-const ALLOWED_TYPES = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-]);
-
 function matchesType(bytes: Buffer, mime: string): boolean {
   if (mime === "application/pdf")
     return bytes.subarray(0, 5).toString() === "%PDF-";
@@ -28,7 +25,7 @@ function matchesType(bytes: Buffer, mime: string): boolean {
       bytes.subarray(0, 4).toString() === "RIFF" &&
       bytes.subarray(8, 12).toString() === "WEBP"
     );
-  return false;
+  return true;
 }
 
 export async function POST(request: NextRequest) {
@@ -86,9 +83,13 @@ export async function POST(request: NextRequest) {
         { error: `File too large (max ${MAX_UPLOAD_LABEL})` },
         { status: 400 },
       );
-    if (!ALLOWED_TYPES.has(file.type))
+    const mime = uploadMime(file);
+    if (!mime)
       return NextResponse.json(
-        { error: "Choose a PDF, PNG, JPG, GIF or WebP file" },
+        {
+          error:
+            "Choose a document, image, spreadsheet, presentation, audio, video or archive",
+        },
         { status: 400 },
       );
 
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       name = student.name;
     }
     const buffer = Buffer.from(await file.arrayBuffer());
-    if (!matchesType(buffer, file.type))
+    if (!matchesType(buffer, mime))
       return NextResponse.json(
         { error: "The file contents do not match the selected file type" },
         { status: 400 },
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         fileBase64: buffer.toString("base64"),
         fileName: file.name.slice(0, 255),
-        fileMimeType: file.type,
+        fileMimeType: mime,
         studentName: name,
       }),
       signal: AbortSignal.timeout(30_000),
@@ -132,34 +133,25 @@ export async function POST(request: NextRequest) {
         },
         { status: 502 },
       );
-    const data: unknown = await response.json();
-    if (
-      !data ||
-      typeof data !== "object" ||
-      !("success" in data) ||
-      data.success !== true ||
-      !("fileUrl" in data) ||
-      typeof data.fileUrl !== "string"
-    ) {
+    let result;
+    try {
+      result = storageFile(await response.json());
+    } catch (error) {
       return NextResponse.json(
         {
-          error: "The storage service did not return a file. Please try again.",
+          error:
+            error instanceof SyntaxError
+              ? "Drive returned an unreadable response. Check the upload connector web-app deployment."
+              : error instanceof Error
+                ? error.message
+                : "The storage response was invalid.",
         },
         { status: 502 },
       );
     }
-    const returnedUrl = new URL(data.fileUrl);
-    if (returnedUrl.protocol !== "https:" && returnedUrl.protocol !== "http:")
-      return NextResponse.json(
-        { error: "The storage service returned an invalid link" },
-        { status: 502 },
-      );
     return NextResponse.json({
-      fileUrl: returnedUrl.toString(),
-      fileName:
-        "fileName" in data && typeof data.fileName === "string"
-          ? data.fileName
-          : file.name,
+      ...result,
+      fileName: result.fileName || file.name,
     });
   } catch (error) {
     if (error instanceof TypeError)

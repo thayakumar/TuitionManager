@@ -1,3 +1,4 @@
+import { TableExplorer } from "@/components/table-explorer";
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/auth";
 import { queryAll, getSettings } from "@/lib/db";
@@ -194,7 +195,7 @@ export default async function FinancialHistoryPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <TableExplorer><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Month</th>
@@ -219,7 +220,7 @@ export default async function FinancialHistoryPage({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></TableExplorer>
             {!months.length && (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 No active revenue in this selection.
@@ -238,7 +239,7 @@ export default async function FinancialHistoryPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <TableExplorer><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Invoice</th>
@@ -278,7 +279,7 @@ export default async function FinancialHistoryPage({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></TableExplorer>
             {!filtered.length && (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 No invoices match these filters.

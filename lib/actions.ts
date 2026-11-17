@@ -1,5 +1,6 @@
 "use server";
 import { ActionValidationError } from "./action-errors";
+import { sanitizeRichText, hasRichTextContent } from "./rich-text";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
@@ -699,15 +700,6 @@ export async function generateInvoiceQuick(f: FormData): Promise<number> {
           ],
         })),
       );
-      await studentNotice(
-        tx,
-        sid,
-        "invoice_created",
-        "Monthly invoice available",
-        `Your ${month} invoice is available.`,
-        `invoice:${invoiceId}`,
-        `/portal/student/${sid}/profile`,
-      );
     }
     return ids;
   });
@@ -741,15 +733,16 @@ export async function setInvoiceStatus(
         sql: "UPDATE invoices SET status=?,paid_at=CASE WHEN ?='paid' THEN COALESCE(paid_at,?) ELSE NULL END WHERE id=?",
         args: [valid, valid, new Date().toISOString(), invoiceId],
       });
-      await studentNotice(
-        tx,
-        inv.student_id,
-        "invoice_updated",
-        "Invoice updated",
-        `Your invoice status is now ${valid}.`,
-        randomUUID(),
-        `/portal/student/${inv.student_id}/profile`,
-      );
+      if (valid !== "draft")
+        await studentNotice(
+          tx,
+          inv.student_id,
+          "invoice_updated",
+          "Invoice updated",
+          `Your invoice status is now ${valid}.`,
+          randomUUID(),
+          `/portal/student/${inv.student_id}/profile`,
+        );
     }
     return inv.student_id;
   });
@@ -972,7 +965,8 @@ export async function deleteHoliday(_holidayId: number) {
 export async function addStudentNote(studentId: number, f: FormData) {
   await requireAdmin();
   const sid = id(studentId),
-    content = text(f.get("content"), "Note", 20000, true);
+    content = sanitizeRichText(text(f.get("content"), "Note", 50000, true));
+  if (!hasRichTextContent(content)) throw new ActionValidationError("Enter a note before saving");
   await withTransaction(async (tx) => {
     if (!(await row(tx, "SELECT id FROM students WHERE id=?", [sid])))
       throw new ActionValidationError("Student not found");
@@ -1120,6 +1114,29 @@ function points(value: unknown) {
     ? null
     : numberIn(value, 1, 100000, "Maximum points");
 }
+type PostFile = { fileName: string; fileUrl: string; fileType: string };
+function postFiles(value: unknown): PostFile[] {
+  if (!Array.isArray(value) || value.length > 10)
+    throw new ActionValidationError("Attach up to 10 files per post");
+  return value.map((file) => {
+    if (!file || typeof file !== "object")
+      throw new ActionValidationError("Invalid attachment");
+    const url = safeUrl(file.fileUrl);
+    if (!url) throw new ActionValidationError("Attachment link is required");
+    return {
+      fileName: text(file.fileName, "File name", 500, true),
+      fileUrl: url,
+      fileType: text(file.fileType, "File type", 200),
+    };
+  });
+}
+async function attachFiles(tx: Transaction, postId: number, files: PostFile[]) {
+  for (const file of files)
+    await tx.execute({
+      sql: "INSERT INTO post_attachments(post_id,file_name,file_url,file_type) VALUES(?,?,?,?)",
+      args: [postId, file.fileName, file.fileUrl, file.fileType],
+    });
+}
 export async function createPostAction(
   studentId: number,
   type: string,
@@ -1128,6 +1145,7 @@ export async function createPostAction(
   dueAt: string | null,
   topicId: number | null = null,
   maxPoints: number | null = null,
+  attachments: PostFile[] = [],
 ): Promise<{
   success: boolean;
   error?: string;
@@ -1140,8 +1158,9 @@ export async function createPostAction(
         ["material", "assignment", "quiz", "announcement"] as const,
         "Post type",
       );
+    const files = postFiles(attachments);
     const heading = text(title, "Title", 500, true),
-      content = text(body, "Content", 50000) || null,
+      content = sanitizeRichText(text(body, "Content", 50000)) || null,
       due = dueAt ? businessDateTime(dueAt) : null,
       maximum =
         kind === "assignment" || kind === "quiz" ? points(maxPoints) : null;
@@ -1163,6 +1182,7 @@ export async function createPostAction(
         ],
       });
       const pid = Number(result.lastInsertRowid);
+      await attachFiles(tx, pid, files);
       await studentNotice(
         tx,
         sid,
@@ -1186,16 +1206,24 @@ export async function createPostAction(
 export async function updatePost(f: FormData) {
   await requireAdmin();
   const pid = id(f.get("id"));
+  let rawFiles: unknown = [];
+  try {
+    rawFiles = JSON.parse(String(f.get("attachments") || "[]"));
+  } catch {
+    throw new ActionValidationError("Invalid attachments");
+  }
+  const files = postFiles(rawFiles);
   const sid = await withTransaction(async (tx) => {
     const old = await post(tx, pid),
       sid = old.student_id!;
     const title = text(f.get("title"), "Title", 500, true),
-      body = text(f.get("body"), "Content", 50000) || null;
+      body = sanitizeRichText(text(f.get("body"), "Content", 50000)) || null;
     const due = f.get("due_at") ? businessDateTime(f.get("due_at")) : null,
       topic = f.get("topic_id") ? id(f.get("topic_id")) : null,
       maximum = points(f.get("max_points"));
     await topicOwner(tx, topic, sid);
     if (
+      files.length === 0 &&
       [title, body, due, topic, maximum].every(
         (value, index) =>
           !changed(
@@ -1223,6 +1251,7 @@ export async function updatePost(f: FormData) {
       sql: "UPDATE posts SET title=?,body=?,due_at=?,topic_id=?,max_points=?,updated_at=? WHERE id=?",
       args: [title, body, due, topic, maximum, new Date().toISOString(), pid],
     });
+    await attachFiles(tx, pid, files);
     await studentNotice(
       tx,
       sid,
@@ -1279,9 +1308,10 @@ export async function submitAssignment(f: FormData) {
       f.has("student_id") ? id(f.get("student_id")) : undefined,
     ),
     pid = id(f.get("post_id"));
-  const content = text(f.get("content"), "Your work", 10000) || null,
+  const content =
+      sanitizeRichText(text(f.get("content"), "Your work", 50000)) || null,
     link = safeUrl(f.get("file_url"));
-  if (!content && !link)
+  if (!hasRichTextContent(content) && !link)
     throw new ActionValidationError(
       "Add your work or an attachment before turning in",
     );
@@ -1678,7 +1708,8 @@ async function upsertNote(
   content: string,
 ) {
   const cid = id(classId),
-    value = text(content, "Notes", 50000);
+    sanitized = sanitizeRichText(text(content, "Notes", 50000)),
+    value = hasRichTextContent(sanitized) ? sanitized : "";
   if (scope === "teacher") await requireAdmin();
   const sid = scope === "student" ? await studentSession() : null;
   await withTransaction(async (tx) => {
@@ -1715,13 +1746,15 @@ export async function saveClassNotes(
 export async function saveMeetingNotes(classId: number, notes: string) {
   await saveTeacherNotes(classId, notes);
 }
-export async function createRescheduleRequest(f: FormData): Promise<{
+async function submitRescheduleRequest(
+  f: FormData,
+  studentId: number | null,
+  parentToken?: string,
+): Promise<{
   success?: boolean;
   error?: string;
 }> {
-  const sid = await studentSession(
-    f.has("student_id") ? id(f.get("student_id")) : undefined,
-  );
+  let sid = studentId;
   try {
     const classId = id(f.get("class_id")),
       reason = text(f.get("reason"), "Reason", 2000) || null;
@@ -1738,6 +1771,19 @@ export async function createRescheduleRequest(f: FormData): Promise<{
     if (new Set(supplied).size !== supplied.length)
       throw new ActionValidationError("Choose different preferred times");
     await withTransaction(async (tx) => {
+      if (parentToken !== undefined) {
+        const parent = await row<{ student_id: number }>(
+          tx,
+          "SELECT t.student_id FROM share_tokens t JOIN students s ON s.id=t.student_id WHERE t.token=? AND t.active=1 AND s.active=1",
+          [text(parentToken, "Parent link", 512)],
+        );
+        if (!parent)
+          throw new ActionValidationError(
+            "This parent link is no longer available",
+          );
+        sid = parent.student_id;
+      }
+      if (!sid) throw new ActionValidationError("Unauthorized");
       const c = await lesson(tx, classId);
       if (c.student_id !== sid)
         throw new ActionValidationError("This lesson does not belong to you");
@@ -1765,7 +1811,9 @@ export async function createRescheduleRequest(f: FormData): Promise<{
         null,
         "reschedule_request",
         "Reschedule request",
-        "A student requested a new lesson time.",
+        parentToken !== undefined
+          ? "A parent requested a new lesson time."
+          : "A student requested a new lesson time.",
         `request:${requestId}:created`,
         "/requests",
       );
@@ -1779,11 +1827,25 @@ export async function createRescheduleRequest(f: FormData): Promise<{
         `/portal/student/${sid}/schedule`,
       );
     });
-    refresh(sid);
+    refresh(sid ?? undefined);
     return { success: true };
   } catch (reason) {
     return { error: publicMessage(reason) };
   }
+}
+export async function createRescheduleRequest(
+  f: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  const sid = await studentSession(
+    f.has("student_id") ? id(f.get("student_id")) : undefined,
+  );
+  return submitRescheduleRequest(f, sid);
+}
+export async function createParentRescheduleRequest(
+  token: string,
+  f: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  return submitRescheduleRequest(f, null, token);
 }
 type ScheduleRequest = {
   id: number;

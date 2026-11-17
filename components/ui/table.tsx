@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import { cn } from "cn"
+import { TableExplorer } from "@/components/table-explorer"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
+    <TableExplorer>
     <div
       data-slot="table-container"
       className="relative w-full overflow-x-auto"
@@ -15,6 +17,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
         {...props}
       />
     </div>
+    </TableExplorer>
   )
 }
 

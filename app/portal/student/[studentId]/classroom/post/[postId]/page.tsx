@@ -1,3 +1,4 @@
+import { RichText } from "@/components/rich-text";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -84,130 +85,140 @@ export default async function StudentPostDetailPage({
           My Class
         </Button>
       </Link>
-      <div className={post.type === "assignment" ? "classroom-assignment-layout" : ""}>
-      <Card>
-        <CardContent className="p-5 sm:p-6">
-          <div className="flex items-start gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Icon size={22} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-primary">{config.label}</p>
-              <h1 className="break-words text-3xl font-medium text-primary">
-                {post.title}
-              </h1>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Tutor · {fmtShortDate(post.created_at)}
-                {post.updated_at
-                  ? ` · Edited ${fmtShortDate(post.updated_at)}`
-                  : ""}
-              </p>
-            </div>
-          </div>
-          {post.type === "assignment" && (
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              {post.max_points !== null && (
-                <Badge variant="outline">{post.max_points} points</Badge>
-              )}
-              {post.due_at && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar size={12} />
-                  Due {fmtDateTime(post.due_at)}
-                </span>
-              )}
-              <SubmissionStatus submission={submission} dueAt={post.due_at} />
-            </div>
-          )}
-          <Separator className="my-4" />
-          {post.body ? (
-            <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-              {post.body}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No additional instructions.
-            </p>
-          )}
-          {attachments.length > 0 && (
-            <div className="mt-5 space-y-2">
-              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Attachments
-              </h2>
-              {attachments.map((attachment) => {
-                const href = safeSubmissionHref(attachment.file_url);
-                return href ? (
-                  <a
-                    key={attachment.id}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted/40"
-                  >
-                    <FileText size={17} className="shrink-0 text-primary" />
-                    <span className="min-w-0 flex-1 break-words">
-                      {attachment.file_name}
-                    </span>
-                    <ExternalLink size={14} className="shrink-0" />
-                  </a>
-                ) : (
-                  <p
-                    key={attachment.id}
-                    className="text-sm text-muted-foreground"
-                  >
-                    {attachment.file_name}: attachment unavailable.
-                  </p>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      {post.type === "assignment" && (
+      <div
+        className={
+          post.type === "assignment" ? "classroom-assignment-layout" : ""
+        }
+      >
         <Card>
-          <CardContent className="space-y-5 p-5 sm:p-6">
-            <h2 className="font-semibold">Your work</h2>
-            {submission ? (
-              <>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-medium">
-                    Latest attempt · {submission.version}
-                  </h3>
-                  <Badge
-                    variant={submission.graded_at ? "default" : "secondary"}
-                  >
-                    {submission.graded_at ? "Graded" : "Awaiting grading"}
-                  </Badge>
-                </div>
-                <AttemptWork attempt={submission} maxPoints={post.max_points} />
-                <details className="rounded-xl border border-border p-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-primary">
-                    Submit a new attempt
-                  </summary>
-                  <div className="mt-4">
-                    <SubmissionForm
-                      postId={postId}
-                      studentId={studentId}
-                      studentName={student.name}
-                      resubmission
-                    />
-                  </div>
-                </details>
-                <SubmissionHistory
-                  attempts={attempts}
-                  latestVersion={submission.version}
-                  maxPoints={post.max_points}
-                />
-              </>
-            ) : (
-              <SubmissionForm
-                postId={postId}
-                studentId={studentId}
-                studentName={student.name}
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Icon size={22} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-primary">
+                  {config.label}
+                </p>
+                <h1 className="break-words text-3xl font-medium text-primary">
+                  {post.title}
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Tutor · {fmtShortDate(post.created_at)}
+                  {post.updated_at
+                    ? ` · Edited ${fmtShortDate(post.updated_at)}`
+                    : ""}
+                </p>
+              </div>
+            </div>
+            {post.type === "assignment" && (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {post.max_points !== null && (
+                  <Badge variant="outline">{post.max_points} points</Badge>
+                )}
+                {post.due_at && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar size={12} />
+                    Due {fmtDateTime(post.due_at)}
+                  </span>
+                )}
+                <SubmissionStatus submission={submission} dueAt={post.due_at} />
+              </div>
+            )}
+            <Separator className="my-4" />
+            {post.body ? (
+              <RichText
+                content={post.body}
+                className="whitespace-pre-wrap break-words text-sm leading-relaxed"
               />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No additional instructions.
+              </p>
+            )}
+            {attachments.length > 0 && (
+              <div className="mt-5 space-y-2">
+                <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Attachments
+                </h2>
+                {attachments.map((attachment) => {
+                  const href = safeSubmissionHref(attachment.file_url);
+                  return href ? (
+                    <a
+                      key={attachment.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted/40"
+                    >
+                      <FileText size={17} className="shrink-0 text-primary" />
+                      <span className="min-w-0 flex-1 break-words">
+                        {attachment.file_name}
+                      </span>
+                      <ExternalLink size={14} className="shrink-0" />
+                    </a>
+                  ) : (
+                    <p
+                      key={attachment.id}
+                      className="text-sm text-muted-foreground"
+                    >
+                      {attachment.file_name}: attachment unavailable.
+                    </p>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>
-      )}
+        {post.type === "assignment" && (
+          <Card>
+            <CardContent className="space-y-5 p-5 sm:p-6">
+              <h2 className="font-semibold">Your work</h2>
+              {submission ? (
+                <>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-medium">
+                      Latest attempt · {submission.version}
+                    </h3>
+                    <Badge
+                      variant={submission.graded_at ? "default" : "secondary"}
+                    >
+                      {submission.graded_at ? "Graded" : "Awaiting grading"}
+                    </Badge>
+                  </div>
+                  <AttemptWork
+                    attempt={submission}
+                    maxPoints={post.max_points}
+                  />
+                  <details className="rounded-xl border border-border p-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-primary">
+                      Submit a new attempt
+                    </summary>
+                    <div className="mt-4">
+                      <SubmissionForm
+                        postId={postId}
+                        studentId={studentId}
+                        studentName={student.name}
+                        resubmission
+                      />
+                    </div>
+                  </details>
+                  <SubmissionHistory
+                    attempts={attempts}
+                    latestVersion={submission.version}
+                    maxPoints={post.max_points}
+                  />
+                </>
+              ) : (
+                <SubmissionForm
+                  postId={postId}
+                  studentId={studentId}
+                  studentName={student.name}
+                />
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

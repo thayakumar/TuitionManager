@@ -18,7 +18,7 @@ Each numbered case is **As a role I can action → result**, followed by depende
 
 ## Role boundaries
 
-Admin manages the business. Students use their own schedule/classwork/notes/inbox/profile and request new times; they do not directly cancel or approve lessons. Parents have a read-only bearer-link view of their child’s schedule/attendance/reports/invoices, without a separate account or classwork submission interface. There is no online payment/refund ledger, background push reminder or quiz authoring interface.
+Admin manages the business. Students use their own schedule/classwork/notes/inbox/profile and request new times; they do not directly cancel or approve lessons. Parents use a scoped bearer link to view their child’s schedule/attendance/reports/non-draft invoices and request a new lesson time; they cannot directly change attendance, approve requests or submit classwork. There is no online payment/refund ledger, background push reminder or quiz authoring interface.
 
 ## 1. Admin
 
@@ -352,7 +352,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Posts; topic group; student inbox; assignment state.
 
-**Manual check:** No other student can open or submit to the post. Quiz authoring is not a current screen.
+**Manual check:** Create opens a popup with Material, Assignment and Announcement options. Format the description with headings, bold/underline, lists and a hyperlink; student and admin detail views retain formatting and clickable links. Legacy plain-text URLs also remain clickable. No other student can open or submit to the post. Quiz authoring is not a current screen.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -414,7 +414,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 ### 1.13. Reschedule Requests
 
-#### 1.13.1. As an Admin, I can review a pending student request → preferences/reason appear while the original lesson stays scheduled.
+#### 1.13.1. As an Admin, I can review a pending student or parent request → preferences/reason appear while the original lesson stays scheduled.
 
 **Reflects in:** Request row; admin inbox; original class.
 
@@ -422,11 +422,11 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Evidence:** Browser verified with isolated fake data.
 
-#### 1.13.2. As an Admin, I can approve one preferred time → original canceled and exactly one replacement created, followed by notification.
+#### 1.13.2. As an Admin, I can approve a preferred time or choose my own future date and time → original canceled and exactly one replacement created, followed by notification.
 
 **Reflects in:** Request resolution; owner/trial/duration; all role schedules.
 
-**Manual check:** Replayed approval/rejection cannot create another replacement or contradict the resolved state.
+**Manual check:** Select a suggested slot or Choose another date and time. A conflicting slot leaves both original and request unchanged. Successful approval preserves duration, ownership and free-trial status. Replayed approval/rejection cannot create another replacement.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -472,7 +472,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Meeting owner/session; private class_notes; draft/save queue.
 
-**Manual check:** Save latest text before leaving; old acknowledgment cannot mark new edits saved. Live video provider verification is separate.
+**Manual check:** Format notes with the shared rich-text toolbar, save and reload; formatting remains private to the teacher. Clearing formatted content saves an empty note without a blank visible entry. Save latest text before leaving; old acknowledgment cannot mark new edits saved. Live video provider verification is separate.
 
 **Evidence:** Automated real-module/SQLite regression; UI details also implemented.
 
@@ -540,11 +540,11 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 ### 2.4. Assignments
 
-#### 2.4.1. As a Student, I can turn in text or an attachment/link → one meaningful new attempt is recorded and the tutor can review it.
+#### 2.4.1. As a Student, I can turn in formatted work or an attachment → one meaningful new attempt is recorded and the tutor can review it.
 
 **Reflects in:** Current submission; history; classwork state; tutor notification.
 
-**Manual check:** Blank/whitespace alone cannot turn in. Only supported4MB image/PDF or safe HTTPS link; failed upload does not create false submission.
+**Manual check:** Use rich-text headings, bold/underline, lists and links directly in the answer. There is no separate link field. Empty paragraphs, whitespace and formatting alone cannot turn in. Attach supported documents/images/audio/video/archives up to 4 MB; failed upload does not create a false submission. Unsafe HTML and executable links are removed.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -552,7 +552,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Version history and latest state; tutor inbox.
 
-**Manual check:** Third attempt does not erase first/second. Old attempts are not open for grading.
+**Manual check:** Each attempt keeps its own formatted answer and feedback. Third attempt does not erase first/second. Old attempts are not open for grading.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -570,7 +570,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Owned class and scoped note record.
 
-**Manual check:** Teacher private notes never appear here; draft recovery and save-before-leave protect recent typing.
+**Manual check:** Use the shared rich-text toolbar during a meeting, save and reload; headings/lists/links/formatting survive. Teacher private notes never appear here; draft recovery and save-before-leave protect recent typing.
 
 **Evidence:** Automated real-module/SQLite regression; UI details also implemented.
 
@@ -608,7 +608,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 ### 3.1. Shared dashboard and access
 
-#### 3.1.1. As a Parent, I can open my child’s active share link → I receive read-only access to that child’s shared information.
+#### 3.1.1. As a Parent, I can open my child’s active share link → I receive scoped access to that child’s shared information and can request a new time for their upcoming lessons.
 
 **Reflects in:** Scoped bearer token; dashboard and child records.
 
@@ -640,6 +640,14 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Evidence:** Real SQL route regression and browser verified.
 
+#### 3.2.3. As a Parent, I can request a new time for an upcoming scheduled lesson → my tutor receives the request while the original booking stays in place.
+
+**Reflects in:** Admin request queue/inbox; student notification; parent pending indicator; shared schedule after approval.
+
+**Manual check:** Suggest up to three future MYT times and an optional reason. A pending request cannot be duplicated by a parent or student. The tutor may approve a suggestion or their own available time. Declining leaves the booking intact and shows the tutor's note. Revoked links, inactive students and another child's lesson cannot create requests.
+
+**Evidence:** Executed real-module/SQLite regression for scoped credentials, forged student ID, revoked link, duplicate request and tutor-selected replacement preserving trial status. Browser verified the parent-to-tutor custom-slot journey and mobile dialog with isolated fake data.
+
 ### 3.3. Class reports
 
 #### 3.3.1. As a Parent, I can scan the compact report table and expand one row → only the selected report’s detail opens.
@@ -656,7 +664,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Invoice status; Paid/Outstanding; billing month.
 
-**Manual check:** Canceled invoice documents can remain in history but never count as debt; canceled/absent lessons are omitted from generated lines.
+**Manual check:** Draft invoices are absent from lists, dashboard balance and direct invoice URLs. Sent/paid/overdue/canceled remain visible; canceled invoices never count as debt. Draft generation sends no invoice-available notification; changing to a visible status does. Canceled/absent lessons are omitted from generated lines.
 
 **Evidence:** Browser verified with isolated fake data.
 
@@ -722,3 +730,39 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 #### 4.4. As a Student or Parent, I can glance at my dashboard → recent/upcoming lesson and invoice previews contain at most five entries.
 
 **Manual check:** Use the schedule/invoice links for full records. Upcoming and past records follow their respective date rules; summaries are not limited to the preview.
+
+## 5. Attachments, tables and whiteboards
+
+### 5.1. Classroom posts
+
+#### 5.1.1. As an Admin, I can choose Material, Assignment or Announcement in a popup → the matching post composer opens.
+
+**Manual check:** Open Create, close it without posting, reopen and choose each type.
+
+#### 5.1.2. As an Admin, I can attach learning materials using the paperclip → each uploaded file is saved with the post and visible to its student.
+
+**Reflects in:** Admin and student post details; update notification; existing submission history stays intact.
+
+**Manual check:** Attach multiple documents, save, reload and open them. Edit the post and add another file; original attachments remain. Uploading disables publishing until it finishes. Removing a pending file excludes it from the saved post. Supported files are limited to 4 MB each, up to ten newly attached files per save.
+
+### 5.2. Searchable records
+
+#### 5.2.1. As an Admin, Student or Parent, I can search a table across all columns or one selected column → only matching rows are shown and pagination follows the filtered result.
+
+**Manual check:** Search a date, content and status; choose a column; clear the query; try no matches and Next/Previous. Student My Notes searches class date, notes and updated date. Phone tables show labelled fields. Printing includes all table records despite the current search/page. Admin full student history supports searching older records before server pagination. Overview previews intentionally contain only five entries; use View all for full records.
+
+### 5.3. Whiteboards
+
+#### 5.3.1. As an Admin, I can open Whiteboard in navigation → my personal Excaliflow canvas saves separately from lesson boards.
+
+**Manual check:** Draw, wait for Saved, reload and confirm the drawing. Lesson whiteboards must not replace this personal canvas.
+
+#### 5.3.2. As an Admin or Student, I can open a lesson whiteboard from a meeting → a new tab opens the shared canvas for that lesson.
+
+**Reflects in:** Saved lesson board; class notes; student My Notes and admin class notes; the current meeting stays open.
+
+**Manual check:** Draw and save, reload, and open the same board as the other lesson participant. Saved updates appear through periodic synchronization. Other students, parent links and signed-out visitors cannot access the board.
+
+#### 5.3.3. As an Admin or Student, I can recover from concurrent board edits → my unsaved work is preserved instead of silently overwriting another saved version.
+
+**Manual check:** Make edits in two sessions before saving. The stale session must show a conflict, permit downloading its work, and offer loading the saved board or explicitly saving its own version. A failed save retains the local working copy. This uses saved-version synchronization, without live multiplayer cursors.

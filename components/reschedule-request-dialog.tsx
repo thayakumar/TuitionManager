@@ -14,7 +14,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DateTimeField } from "@/components/scheduling-fields";
-import { createRescheduleRequest } from "@/lib/actions";
+import {
+  createRescheduleRequest,
+  createParentRescheduleRequest,
+} from "@/lib/actions";
 import { actionError } from "@/lib/action-errors";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -22,9 +25,11 @@ import { useRouter } from "next/navigation";
 export function RescheduleRequestDialog({
   classId,
   studentId,
+  parentToken,
 }: {
   classId: number;
   studentId: number;
+  parentToken?: string;
 }) {
   const prefix = useId();
   const [open, setOpen] = useState(false);
@@ -41,7 +46,9 @@ export function RescheduleRequestDialog({
     setSaving(true);
     setError(null);
     try {
-      const result = await createRescheduleRequest(data);
+      const result = parentToken
+        ? await createParentRescheduleRequest(parentToken, data)
+        : await createRescheduleRequest(data);
       if (!result?.success) {
         setError(result?.error || "The request could not be sent.");
         return;
@@ -83,8 +90,8 @@ export function RescheduleRequestDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6" aria-busy={saving}>
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-base leading-relaxed text-blue-900">
-            Your current lesson remains booked. Your tutor will choose one of
-            the times you suggest and confirm the change.
+            Your current lesson remains booked. Your tutor will choose a
+            suggested time or confirm another available slot.
           </div>
           {[1, 2, 3].map((index) => (
             <section key={index} className="form-section">

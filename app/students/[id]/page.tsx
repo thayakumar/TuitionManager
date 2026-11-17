@@ -1,3 +1,5 @@
+import { RichText } from "@/components/rich-text";
+import { TableExplorer } from "@/components/table-explorer";
 import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -133,10 +135,12 @@ export default async function StudentDetailPage({
       scheduled_at: string;
       subject: string | null;
       content: string;
+      has_whiteboard: number;
     }>(
-      `SELECT c.id, c.scheduled_at, c.subject, cn.content FROM classes c
-       JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'
-       WHERE c.student_id = ? AND cn.content != ''
+      `SELECT c.id, c.scheduled_at, c.subject, cn.content, CASE WHEN w.class_id IS NOT NULL THEN 1 ELSE 0 END AS has_whiteboard FROM classes c
+       LEFT JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'
+       LEFT JOIN whiteboards w ON w.class_id=c.id
+       WHERE c.student_id = ? AND (TRIM(COALESCE(cn.content,'')) != '' OR w.class_id IS NOT NULL)
        ORDER BY c.scheduled_at DESC LIMIT 5`,
       [id],
     ),
@@ -266,7 +270,7 @@ export default async function StudentDetailPage({
                 <h2 className="text-xl font-bold text-foreground">
                   {student.name}
                 </h2>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex flex-wrap items-center gap-2 mt-1">
                   {student.subject && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                       <BookOpen size={12} />
@@ -351,16 +355,16 @@ export default async function StudentDetailPage({
           {(student.username || student.password) && (
             <>
               <Separator className="my-4" />
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4 min-w-0">
                 <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
                   <KeyRound size={16} className="text-orange-500" />
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:flex sm:flex-wrap sm:items-center sm:gap-6">
                   <div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">
                       Username
                     </div>
-                    <div className="text-sm font-mono font-medium">
+                    <div className="text-sm font-mono font-medium break-all">
                       {student.username || "—"}
                     </div>
                   </div>
@@ -368,7 +372,7 @@ export default async function StudentDetailPage({
                     <div className="text-xs text-muted-foreground uppercase tracking-wider">
                       Password
                     </div>
-                    <div className="text-sm font-mono font-medium">
+                    <div className="text-sm font-mono font-medium break-all">
                       {student.password || "—"}
                     </div>
                   </div>
@@ -393,7 +397,7 @@ export default async function StudentDetailPage({
       </Card>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="student-profile-stats grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statCards.map((card) => (
           <Card key={card.label} className="border shadow-none">
             <CardContent className="p-5">
@@ -667,44 +671,56 @@ export default async function StudentDetailPage({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48">
-                      Date
-                    </th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-36">
-                      Subject
-                    </th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Notes
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classNotes.map((cn) => (
-                    <tr
-                      key={cn.id}
-                      className="border-b border-border/50 hover:bg-amber-50/30 transition-colors"
-                    >
-                      <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
-                        <Link
-                          href={`/classes/${cn.id}`}
-                          className="hover:text-orange-600 hover:underline"
-                        >
-                          {fmtDateTime(cn.scheduled_at)}
-                        </Link>
-                      </td>
-                      <td className="py-2.5 px-3 text-foreground">
-                        {cn.subject || student.subject || "Lesson"}
-                      </td>
-                      <td className="py-2.5 px-3 text-foreground whitespace-pre-line">
-                        {cn.content}
-                      </td>
+              <TableExplorer>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-48">
+                        Date
+                      </th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-36">
+                        Subject
+                      </th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Notes
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {classNotes.map((cn) => (
+                      <tr
+                        key={cn.id}
+                        className="border-b border-border/50 hover:bg-amber-50/30 transition-colors"
+                      >
+                        <td className="py-2.5 px-3 text-muted-foreground whitespace-nowrap">
+                          <Link
+                            href={`/classes/${cn.id}`}
+                            className="hover:text-orange-600 hover:underline"
+                          >
+                            {fmtDateTime(cn.scheduled_at)}
+                          </Link>
+                        </td>
+                        <td className="py-2.5 px-3 text-foreground">
+                          {cn.subject || student.subject || "Lesson"}
+                        </td>
+                        <td className="py-2.5 px-3 text-foreground whitespace-pre-line">
+                          <RichText content={cn.content} />
+                          {cn.has_whiteboard === 1 && (
+                            <Link
+                              href={"/meeting/" + cn.id + "/whiteboard"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 inline-block font-medium text-primary"
+                            >
+                              Open lesson whiteboard ↗
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableExplorer>
             </div>
           )}
         </CardContent>
@@ -731,31 +747,33 @@ export default async function StudentDetailPage({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-                      Date
-                    </th>
-                    <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Topics
-                    </th>
-                    <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Rating
-                    </th>
-                    <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classReports.map((r) => (
-                    <ReportRow
-                      key={r.id}
-                      report={r}
-                      defaultSubject={student.subject || "Lesson"}
-                    />
-                  ))}
-                </tbody>
-              </table>
+              <TableExplorer>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                        Date
+                      </th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Topics
+                      </th>
+                      <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Rating
+                      </th>
+                      <th className="text-center py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {classReports.map((r) => (
+                      <ReportRow
+                        key={r.id}
+                        report={r}
+                        defaultSubject={student.subject || "Lesson"}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </TableExplorer>
             </div>
           )}
         </CardContent>

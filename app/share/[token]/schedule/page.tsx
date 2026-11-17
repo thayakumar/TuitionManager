@@ -1,4 +1,5 @@
 import { requireParent, PUBLIC_LESSON_COLUMNS } from "@/lib/portal-context";
+import { RescheduleRequestDialog } from "@/components/reschedule-request-dialog";
 import { Calendar, Clock } from "lucide-react";
 import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
@@ -25,6 +26,19 @@ export default async function ParentSchedulePage({
     `SELECT ${PUBLIC_LESSON_COLUMNS} FROM classes WHERE student_id = ? AND julianday(scheduled_at) >= julianday(?) AND status = 'scheduled' ORDER BY julianday(scheduled_at)`,
     [studentId, now],
   );
+
+  const requests = await queryAll<{
+    class_id: number;
+    status: string;
+    admin_note: string | null;
+  }>(
+    "SELECT class_id,status,admin_note FROM reschedule_requests WHERE student_id=? ORDER BY id DESC",
+    [studentId],
+  );
+  const latestRequest = new Map<number, (typeof requests)[number]>();
+  for (const request of requests)
+    if (!latestRequest.has(request.class_id))
+      latestRequest.set(request.class_id, request);
 
   return (
     <>
@@ -55,12 +69,12 @@ export default async function ParentSchedulePage({
               {upcoming.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center gap-3 rounded-lg border border-border/50 p-3"
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 p-3"
                 >
                   <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
                     <Clock size={16} className="text-orange-500" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 basis-40 flex-1">
                     <div className="text-sm font-medium">
                       {fmtDateTime(c.scheduled_at)}
                     </div>
@@ -70,7 +84,7 @@ export default async function ParentSchedulePage({
                       {c.location ? ` · ${c.location}` : ""}
                     </div>
                   </div>
-                  <div className="flex gap-1.5 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     {c.is_trial ? (
                       <Badge variant="outline" className="text-xs">
                         TRIAL
@@ -80,7 +94,24 @@ export default async function ParentSchedulePage({
                       status={c.status}
                       attendance={c.attendance}
                     />
+                    {latestRequest.get(c.id)?.status === "pending" ? (
+                      <Badge variant="outline">Reschedule pending</Badge>
+                    ) : (
+                      <RescheduleRequestDialog
+                        classId={c.id}
+                        studentId={studentId}
+                        parentToken={params.token}
+                      />
+                    )}
                   </div>
+                  {latestRequest.get(c.id)?.status === "rejected" && (
+                    <p className="w-full break-words text-sm text-muted-foreground">
+                      Previous request declined
+                      {latestRequest.get(c.id)?.admin_note
+                        ? `: ${latestRequest.get(c.id)?.admin_note}`
+                        : ". Your original time remains scheduled."}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

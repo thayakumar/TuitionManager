@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "name": "main menu and both meeting roles open whiteboards in new tabs",
+      "status": "Pass",
+      "actual": {
+        "menu": true,
+        "adminMeetingPopup": true,
+        "studentMeetingPopup": true,
+        "classDetailsLink": true
+      }
+    },
+    {
+      "name": "admin personal board native freehand saves and survives reload",
+      "status": "Pass",
+      "actual": {
+        "elementsBefore": 1,
+        "elementsAfter": 2
+      }
+    },
+    {
+      "name": "lesson native drawing persists and reaches student through polling",
+      "status": "Pass",
+      "actual": {
+        "elements": 3
+      }
+    },
+    {
+      "name": "student native drawing saves and reaches tutor without reload",
+      "status": "Pass",
+      "actual": {
+        "elements": 4
+      }
+    },
+    {
+      "name": "student notes expose saved lesson board but student cannot open tutor personal or foreign board",
+      "status": "Pass",
+      "actual": {
+        "notesLink": true,
+        "personalStatus": 403,
+        "foreignApiStatus": 404,
+        "foreignPageNotFound": true,
+        "foreignPageHttpStatus": 200
+      }
+    },
+    {
+      "name": "whiteboard mobile page fits viewport",
+      "status": "Pass",
+      "actual": {
+        "controlsReachable": true,
+        "exportMenuOpens": true
+      }
+    },
+    {
+      "name": "no unhandled whiteboard browser errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

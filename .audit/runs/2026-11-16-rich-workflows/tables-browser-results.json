@@ -1,0 +1,57 @@
+{
+  "results": [
+    {
+      "name": "Student notes table paginates all private notes and searches rendered content",
+      "status": "Pass"
+    },
+    {
+      "name": "Student note column filter searches class date rather than content",
+      "status": "Pass"
+    },
+    {
+      "name": "Student notes print includes all records despite active filter and pagination",
+      "status": "Pass"
+    },
+    {
+      "name": "Student My Schedule fits phone width",
+      "status": "Pass"
+    },
+    {
+      "name": "Student notes phone table is labelled and fits width",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent reports search full collapsed content and rating column with pagination",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent attendance and reports phone tables fit width",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin student list phone table exposes labelled columns and fits width",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin invoice phone table fits width",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin profile notes reports and credentials fit phone width",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin report expansion remains attached to filtered main row",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin full-history search finds older records before pagination",
+      "status": "Pass"
+    },
+    {
+      "name": "No table-related runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}
