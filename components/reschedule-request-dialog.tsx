@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 
 import { useId, useState } from "react";
 import { CalendarClock } from "lucide-react";
@@ -34,6 +35,7 @@ export function RescheduleRequestDialog({
   const prefix = useId();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  useActionBusy(saving, "Sending reschedule request…");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 

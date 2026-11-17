@@ -34,7 +34,7 @@ function StudentNavigation({
   const links = [
     { path: "", label: "Dashboard", icon: LayoutDashboard },
     { path: "/schedule", label: "My Schedule", icon: CalendarDays },
-    { path: "/classroom", label: "My Class", icon: BookOpen },
+    { path: "/classroom", label: "My Classroom", icon: BookOpen },
     { path: "/notes", label: "My Notes", icon: StickyNote },
     { path: "/notifications", label: "Notifications", icon: Bell },
     { path: "/profile", label: "My Profile", icon: UserCircle },

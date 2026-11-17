@@ -281,6 +281,9 @@ test("upload denies anonymous/malformed requests and derives student identity be
       "@/lib/db": f.db,
       "@/lib/upload-limits": load("lib/upload-limits.ts"),
       "@/lib/storage-response": load("lib/storage-response.ts"),
+      "@/lib/storage-config": {getStorageSecret:async()=>""},
+      "@/lib/attachment-url": load("lib/attachment-url.ts"),
+      "@/lib/upload-authority": load("lib/upload-authority.ts"),
       "next/server": { NextResponse: Response },
     });
     const request = (file) => {

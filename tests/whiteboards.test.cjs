@@ -384,7 +384,7 @@ test("whiteboard API rejects foreign origins, malformed JSON, invalid revisions 
   }
 });
 
-test("version-three upgrade only adds whiteboards and preserves existing history and classwork ordering", async () => {
+test("version-three upgrade adds current tables and preserves existing history and classwork ordering", async () => {
   const f = fixture();
   let cold;
   try {
@@ -418,14 +418,14 @@ test("version-three upgrade only adds whiteboards and preserves existing history
     );
     cold = m.exports;
     await cold.ensureMigrated();
-    assert.equal(cold.SCHEMA_VERSION, 4);
+    assert.equal(cold.SCHEMA_VERSION, 5);
     assert.equal(
       (
         await cold.queryOne(
           "SELECT value FROM settings WHERE key='app_schema_version'",
         )
       ).value,
-      "4",
+      String(cold.SCHEMA_VERSION),
     );
     assert.equal(
       (await cold.queryOne("SELECT count(*) n FROM whiteboards")).n,

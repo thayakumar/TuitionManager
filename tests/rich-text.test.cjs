@@ -45,3 +45,49 @@ test("legacy plain text stays literal, gets safe clickable URLs, and formatted e
     "Hello World",
   );
 });
+
+test("pasted bare URLs inside formatted HTML become clickable without nested links or changed code", () => {
+  const html = rich.richTextHtml(
+    '<p><strong>Read:</strong> https://drive.google.com/file/d/example123/view</p><ul><li>www.example.com/lesson?a=1&amp;b=2.</li></ul><p><a href="https://example.com/original"><u>https://example.com/label</u></a></p><pre><code>https://example.com/code</code></pre>',
+  );
+  assert.match(
+    html,
+    /href="https:\/\/drive.google.com\/file\/d\/example123\/view"/,
+  );
+  assert.match(html, /href="https:\/\/www.example.com\/lesson\?a=1&amp;b=2"/);
+  assert.equal((html.match(/<a\b/g) || []).length, 3);
+  assert.match(html, /<code>https:\/\/example.com\/code<\/code>/);
+  assert.doesNotMatch(html, /<a[^>]*>[^<]*<a/);
+  assert.doesNotMatch(
+    rich.richTextHtml("<p>https://user:password@example.com/path</p>"),
+    /<a/,
+  );
+});
+test("inline images retain safe file references, reject embedded data and make image-only work nonempty", () => {
+  const inline =
+    '<p><img src="/api/files/drive_file_123?inline=1" alt="Sketch" onerror="bad()"></p>';
+  const html = rich.sanitizeRichText(inline);
+  assert.match(html, /src="\/api\/files\/drive_file_123\?inline=1"/);
+  assert.doesNotMatch(html, /onerror/);
+  assert.equal(rich.hasRichTextContent(inline), true);
+  assert.equal(
+    rich.hasRichTextContent(
+      '<p><img src="data:image/png;base64,anything"></p>',
+    ),
+    false,
+  );
+  assert.equal(rich.hasRichTextContent('<img src="javascript:bad()">'), false);
+  assert.equal(
+    rich.hasRichTextContent('<img src="//foreign.test/a.png">'),
+    false,
+  );
+  assert.equal(rich.safeInlineImage("/api/files/../../secrets?inline=1"), null);
+  assert.equal(
+    rich.safeInlineImage("https://user:pass@example.com/a.png"),
+    null,
+  );
+  assert.equal(
+    rich.safeInlineImage("https://example.com/a.png"),
+    "https://example.com/a.png",
+  );
+});

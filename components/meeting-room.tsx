@@ -52,6 +52,8 @@ export function MeetingRoom({
   const [saved, setSaved] = useState(true);
   const [isPending, setPending] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestText = useRef(initialNotes);
@@ -145,7 +147,7 @@ export function MeetingRoom({
     }
   }
   async function handleLeave() {
-    if (leaving) return;
+    if (leaving || imageUploading || imageUploadError) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setLeaving(true);
     try {
@@ -172,7 +174,7 @@ export function MeetingRoom({
             variant="ghost"
             size="icon-sm"
             onClick={() => void handleLeave()}
-            disabled={leaving}
+            disabled={leaving || imageUploading || imageUploadError}
             title="Back to class"
           >
             <ArrowLeft size={16} />
@@ -236,7 +238,7 @@ export function MeetingRoom({
             variant="destructive"
             size="sm"
             onClick={() => void handleLeave()}
-            disabled={leaving}
+            disabled={leaving || imageUploading || imageUploadError}
           >
             <PhoneOff size={14} />
             <span className="hidden sm:inline">Leave</span>
@@ -300,8 +302,10 @@ export function MeetingRoom({
             )}
             <RichTextEditor
               label="Meeting notes"
+              onBusyChange={setImageUploading}
+              onUploadErrorChange={setImageUploadError}
               value={notes}
-              disabled={leaving}
+              disabled={leaving || imageUploading}
               onChange={handleNotesChange}
               placeholder={
                 isAdmin

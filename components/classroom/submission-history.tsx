@@ -1,3 +1,5 @@
+import { Paperclip, ExternalLink } from "lucide-react";
+import { attachmentHref } from "@/lib/attachment-url";
 import { RichText } from "@/components/rich-text";
 import { fmtDateTime } from "@/lib/format";
 import { safeUrl } from "@/lib/domain/validation";
@@ -15,7 +17,8 @@ export type SubmissionAttempt = {
 
 export function safeSubmissionHref(value: string | null): string | null {
   try {
-    return safeUrl(value);
+    const url = safeUrl(value);
+    return url ? attachmentHref(url) : null;
   } catch {
     return null;
   }
@@ -49,9 +52,14 @@ export function AttemptWork({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="block break-all text-sm text-primary underline"
+          className="flex min-h-16 items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-blue-900 hover:bg-blue-50"
         >
-          View submitted attachment or link
+          <Paperclip size={22} className="shrink-0" />
+          <span className="min-w-0 flex-1">
+            <strong className="block">Submitted attachment</strong>
+            <span className="text-sm underline">Open attached work</span>
+          </span>
+          <ExternalLink size={18} className="shrink-0" />
         </a>
       ) : attempt.file_url ? (
         <p className="text-sm text-muted-foreground">
@@ -59,7 +67,7 @@ export function AttemptWork({
         </p>
       ) : null}
       {attempt.graded_at ? (
-        <div className="rounded-lg bg-primary/5 p-3 text-sm">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
           <p className="font-semibold">
             Grade: {attempt.grade ?? "—"}
             {recordedMaximum !== null ? `/${recordedMaximum}` : ""}

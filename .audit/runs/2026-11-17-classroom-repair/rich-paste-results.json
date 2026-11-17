@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "name": "Pasting an image uploads a file and keeps a persistent image reference in the post",
+      "status": "Pass"
+    },
+    {
+      "name": "Student sees the pasted picture and a bare posted URL is clickable",
+      "status": "Pass"
+    },
+    {
+      "name": "Image-only student work saves and stays visible in submitted work history",
+      "status": "Pass"
+    },
+    {
+      "name": "No runtime errors during pasted-image flows",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

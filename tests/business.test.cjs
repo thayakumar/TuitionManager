@@ -795,3 +795,59 @@ test("clearing rich meeting notes stores an empty note rather than an invisible 
     assert.equal((await f.db.queryOne('SELECT content FROM class_notes WHERE class_id=?',[classId])).content,'');
   } finally { f.close(); }
 });
+
+test("image-only submitted work persists a safe inline reference and remains in attempt history", async () => {
+  const f=fixture();
+  try {
+    await f.seed();
+    await f.db.execute("INSERT INTO posts(id,type,title,student_id,max_points) VALUES(1,'assignment','Sketch work',1,100)");
+    f.as('student',1);
+    await f.actions.submitAssignment(form({post_id:1,student_id:1,content:'<p><img src="/api/files/example_file_123?inline=1" alt="My diagram"></p>'}));
+    const work=await f.db.queryOne('SELECT content FROM submissions WHERE post_id=1');
+    assert.match(work.content,/src="\/api\/files\/example_file_123\?inline=1"/);
+    assert.equal((await f.db.queryAll('SELECT content FROM submission_versions')).length,1);
+    await assert.rejects(()=>f.actions.submitAssignment(form({post_id:1,student_id:1,content:'<img src="data:image/png;base64,not-real">'})),/Add your work/);
+  } finally {f.close();}
+});
+
+test("class comments keep author ownership, notify the other role and preserve classroom isolation",async()=>{
+  const f=fixture();
+  try{
+    await f.seed();await f.actions.createPostAction(1,"announcement","Discussion","Class update",null);
+    const p=await f.db.queryOne("SELECT id FROM posts WHERE student_id=1");
+    await f.actions.savePostComment(p.id,"<p>Tutor <b>comment</b></p>");
+    const first=await f.db.queryOne("SELECT * FROM post_comments WHERE post_id=?",[p.id]);
+    assert.equal(first.author_role,"admin");
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM notifications WHERE recipient_type='student' AND type='post_comment'")).n,1);
+    f.as("student",1);
+    await f.actions.savePostComment(p.id,"<p>Student answer</p>");
+    const second=await f.db.queryOne("SELECT * FROM post_comments WHERE author_role='student'");
+    await assert.rejects(()=>f.actions.savePostComment(p.id,"Changed tutor text",first.id),/own comments/);
+    await f.actions.savePostComment(p.id,"Updated answer",second.id);
+    assert.equal((await f.db.queryOne("SELECT body FROM post_comments WHERE id=?",[second.id])).body,"Updated answer");
+    await assert.rejects(()=>f.actions.deletePostComment(p.id,first.id),/own comments/);
+    await assert.rejects(()=>f.actions.savePostComment(p.id,"<p>&nbsp;</p>"),/comment/);
+    f.as("student",2);
+    await assert.rejects(()=>f.actions.savePostComment(p.id,"Foreign"),/not assigned/);
+    await assert.rejects(()=>f.actions.deletePostComment(p.id,second.id),/not assigned/);
+    f.as("admin");
+    await f.actions.deletePostComment(p.id,second.id);
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM post_comments WHERE id=?",[second.id])).n,0);
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM notifications WHERE recipient_type='admin' AND type='post_comment'")).n,1);
+  }finally{f.close()}
+});
+
+test("attachment removal and replacement are atomic and reject another post's files",async()=>{
+  const f=fixture();
+  try{
+    await f.seed();
+    for(const name of ["One","Two"])await f.actions.createPostAction(1,"material",name,"Body",null,null,null,[{fileName:name+".pdf",fileUrl:"https://example.com/"+name+".pdf",fileType:"application/pdf"}]);
+    const posts=await f.db.queryAll("SELECT * FROM posts ORDER BY id"),files=await f.db.queryAll("SELECT * FROM post_attachments ORDER BY id");
+    await assert.rejects(()=>f.actions.updatePost(form({id:posts[0].id,title:"Do not update",body:"Body",removed_attachment_ids:JSON.stringify([files[1].id])})),/does not belong/);
+    assert.equal((await f.db.queryOne("SELECT title FROM posts WHERE id=?",[posts[0].id])).title,"One");
+    await f.actions.updatePost(form({id:posts[0].id,title:"One",body:"Body",removed_attachment_ids:JSON.stringify([files[0].id]),attachments:JSON.stringify([{fileName:"replacement.pdf",fileUrl:"https://example.com/replacement.pdf",fileType:"application/pdf"}])}));
+    const replacement=await f.db.queryAll("SELECT * FROM post_attachments WHERE post_id=?",[posts[0].id]);
+    assert.equal(replacement.length,1);assert.equal(replacement[0].file_name,"replacement.pdf");
+    assert.equal((await f.db.queryOne("SELECT COUNT(*) n FROM post_attachments WHERE id=?",[files[1].id])).n,1);
+  }finally{f.close()}
+});

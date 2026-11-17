@@ -25,32 +25,29 @@ export default async function LessonWhiteboard({
   );
   if (!lesson) notFound();
   return (
-    <main className="min-h-screen bg-background p-3 sm:p-5">
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold">Lesson whiteboard</h1>
+    <WhiteboardCanvas
+      boardId={"class-" + id}
+      identity={admin ? "admin" : "student-" + studentId}
+      details={
+        <div className="space-y-3">
+          <h1 className="text-lg font-bold">Lesson whiteboard</h1>
           <p className="text-sm text-muted-foreground">
             {lesson.name} · {fmtDateTime(lesson.scheduled_at)}
           </p>
+          <nav className="flex flex-wrap gap-3 text-sm font-medium text-primary">
+            <Link
+              href={
+                admin
+                  ? "/classes/" + id
+                  : "/portal/student/" + lesson.student_id + "/notes"
+              }
+            >
+              Class notes
+            </Link>
+            {admin && <Link href="/whiteboard">All whiteboards</Link>}
+          </nav>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm font-medium text-primary">
-          <Link
-            href={
-              admin
-                ? "/classes/" + id
-                : "/portal/student/" + lesson.student_id + "/notes"
-            }
-          >
-            Class notes
-          </Link>
-          <Link href={"/meeting/" + id}>Back to meeting</Link>
-          {admin && <Link href="/whiteboard">All whiteboards</Link>}
-        </div>
-      </header>
-      <WhiteboardCanvas
-        boardId={"class-" + id}
-        identity={admin ? "admin" : "student-" + studentId}
-      />
-    </main>
+      }
+    />
   );
 }

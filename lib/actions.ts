@@ -966,7 +966,8 @@ export async function addStudentNote(studentId: number, f: FormData) {
   await requireAdmin();
   const sid = id(studentId),
     content = sanitizeRichText(text(f.get("content"), "Note", 50000, true));
-  if (!hasRichTextContent(content)) throw new ActionValidationError("Enter a note before saving");
+  if (!hasRichTextContent(content))
+    throw new ActionValidationError("Enter a note before saving");
   await withTransaction(async (tx) => {
     if (!(await row(tx, "SELECT id FROM students WHERE id=?", [sid])))
       throw new ActionValidationError("Student not found");
@@ -1213,9 +1214,29 @@ export async function updatePost(f: FormData) {
     throw new ActionValidationError("Invalid attachments");
   }
   const files = postFiles(rawFiles);
+  let removed: number[] = [];
+  try {
+    const values = JSON.parse(String(f.get("removed_attachment_ids") || "[]"));
+    if (!Array.isArray(values)) throw new Error();
+    removed = [...new Set(values.map((value) => id(value)))] as number[];
+  } catch {
+    throw new ActionValidationError("Invalid attachment removals");
+  }
   const sid = await withTransaction(async (tx) => {
     const old = await post(tx, pid),
       sid = old.student_id!;
+    for (const aid of removed) {
+      if (
+        !(await row(
+          tx,
+          "SELECT id FROM post_attachments WHERE id=? AND post_id=?",
+          [aid, pid],
+        ))
+      )
+        throw new ActionValidationError(
+          "Attachment does not belong to this post",
+        );
+    }
     const title = text(f.get("title"), "Title", 500, true),
       body = sanitizeRichText(text(f.get("body"), "Content", 50000)) || null;
     const due = f.get("due_at") ? businessDateTime(f.get("due_at")) : null,
@@ -1224,6 +1245,7 @@ export async function updatePost(f: FormData) {
     await topicOwner(tx, topic, sid);
     if (
       files.length === 0 &&
+      removed.length === 0 &&
       [title, body, due, topic, maximum].every(
         (value, index) =>
           !changed(
@@ -1252,6 +1274,11 @@ export async function updatePost(f: FormData) {
       args: [title, body, due, topic, maximum, new Date().toISOString(), pid],
     });
     await attachFiles(tx, pid, files);
+    for (const aid of removed)
+      await tx.execute({
+        sql: "DELETE FROM post_attachments WHERE id=? AND post_id=?",
+        args: [aid, pid],
+      });
     await studentNotice(
       tx,
       sid,
@@ -2183,4 +2210,96 @@ export async function moveClassworkPost(
   } catch (reason) {
     return { success: false, error: publicMessage(reason) };
   }
+}
+
+function refreshCommentViews(studentId: number | null, postId: number) {
+  revalidatePath("/classroom/" + studentId + "/post/" + postId);
+  revalidatePath("/portal/student/" + studentId + "/classroom/post/" + postId);
+  revalidatePath("/notifications");
+  revalidatePath("/portal/student/" + studentId + "/notifications");
+}
+/** Comments belong to one classroom post; credentials always determine the author. */
+export async function savePostComment(
+  postId: number,
+  content: string,
+  commentId?: number,
+) {
+  const admin = await verifyAdminSession(),
+    sid = admin ? null : await studentSession();
+  const body = sanitizeRichText(text(content, "Comment", 20000, true));
+  if (!hasRichTextContent(body))
+    throw new ActionValidationError("Write a comment before posting");
+  const owner = await withTransaction(async (tx) => {
+    const p = admin ? await post(tx, postId) : await ownPost(tx, postId, sid!);
+    const now = new Date().toISOString();
+    if (commentId !== undefined) {
+      const old = await row<{
+        author_role: string;
+        author_student_id: number | null;
+      }>(
+        tx,
+        "SELECT author_role,author_student_id FROM post_comments WHERE id=? AND post_id=?",
+        [id(commentId), p.id],
+      );
+      if (
+        !old ||
+        (admin
+          ? old.author_role !== "admin"
+          : old.author_role !== "student" || old.author_student_id !== sid)
+      )
+        throw new ActionValidationError("You can edit only your own comments");
+      await tx.execute({
+        sql: "UPDATE post_comments SET body=?,updated_at=? WHERE id=?",
+        args: [body, now, commentId],
+      });
+    } else {
+      const result = await tx.execute({
+        sql: "INSERT INTO post_comments(post_id,author_role,author_student_id,body,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+        args: [p.id, admin ? "admin" : "student", sid, body, now, now],
+      });
+      const cid = Number(result.lastInsertRowid);
+      await notify(
+        tx,
+        admin ? p.student_id : null,
+        "post_comment",
+        admin ? "New class comment" : "Student commented",
+        admin
+          ? "Your tutor commented on " + p.title
+          : "A student commented on " + p.title,
+        "comment:" + cid,
+        admin
+          ? "/portal/student/" + p.student_id + "/classroom/post/" + p.id
+          : "/classroom/" + p.student_id + "/post/" + p.id,
+      );
+    }
+    return p.student_id;
+  });
+  refreshCommentViews(owner, postId);
+}
+export async function deletePostComment(postId: number, commentId: number) {
+  const admin = await verifyAdminSession(),
+    sid = admin ? null : await studentSession();
+  const owner = await withTransaction(async (tx) => {
+    const p = admin ? await post(tx, postId) : await ownPost(tx, postId, sid!);
+    const old = await row<{
+      author_role: string;
+      author_student_id: number | null;
+    }>(
+      tx,
+      "SELECT author_role,author_student_id FROM post_comments WHERE id=? AND post_id=?",
+      [id(commentId), p.id],
+    );
+    if (
+      !old ||
+      (!admin &&
+        (old.author_role !== "student" || old.author_student_id !== sid))
+    )
+      throw new ActionValidationError("You can delete only your own comments");
+    await tx.execute({
+      sql: "DELETE FROM post_comments WHERE id=?",
+      args: [commentId],
+    });
+    return p.student_id;
+  });
+  refreshCommentViews(owner, postId);
 }

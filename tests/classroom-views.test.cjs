@@ -14,6 +14,7 @@ function fixture({
   authenticated = true,
   postOwner = 1,
   maxPoints = 100,
+  fileOnly = false,
 } = {}) {
   const queries = [];
   const current = {
@@ -21,8 +22,8 @@ function fixture({
     version: 3,
     post_id: 5,
     student_id: 1,
-    content: "LATEST_WORK",
-    file_url: null,
+    content: fileOnly ? null : "LATEST_WORK",
+    file_url: fileOnly ? "https://example.com/attached-work.pdf" : null,
     grade: null,
     feedback: null,
     submitted_at: "2026-11-13T10:00:00Z",
@@ -97,6 +98,10 @@ function fixture({
     const original = mod.require.bind(mod);
     mod.require = (name) => {
       if (name === "@/lib/db") return db;
+      if (name === "@/components/post-comments") return { PostComments: leaf };
+      if (name === "@/components/classroom/assignment-status")
+        return load("components/classroom/assignment-status.tsx");
+      if (name === "@/lib/attachment-url") return load("lib/attachment-url.ts");
       if (name === "@/components/rich-text")
         return load("components/rich-text.tsx");
       if (name === "@/lib/rich-text") return load("lib/rich-text.ts");
@@ -232,4 +237,35 @@ test("historical score keeps the original rubric maximum when current points cha
   const html = renderToStaticMarkup(await f.load(studentRoute).default(props));
   assert(html.includes("75/100"));
   assert(!html.includes("75/10<"));
+});
+
+test("student file-only submissions have a visible full-width submitted-work section separate from submit form", async () => {
+  const f = fixture({ fileOnly: true });
+  const page = await f
+    .load("app/portal/student/[studentId]/classroom/post/[postId]/page.tsx")
+    .default({ params: Promise.resolve({ studentId: "1", postId: "5" }) });
+  const html = renderToStaticMarkup(page);
+  assert.match(html, /Submitted attachment/);
+  assert.match(html, /https:\/\/example.com\/attached-work.pdf/);
+  assert.match(html, /Submitted work/);
+  assert.match(html, /Submit a new attempt/);
+  assert(!html.includes("classroom-assignment-layout"));
+});
+
+test("assignment status palette is consistent and avoids red for normal work states", () => {
+  const f = fixture();
+  const { AssignmentStatus } = f.load(
+    "components/classroom/assignment-status.tsx",
+  );
+  for (const [status, color] of [
+    ["Assigned", "blue"],
+    ["Awaiting grading", "amber"],
+    ["Turned in", "amber"],
+    ["Graded", "emerald"],
+    ["Missing", "slate"],
+  ]) {
+    const badge = AssignmentStatus({ status });
+    assert(badge.props.className.includes(color));
+    assert(!badge.props.className.includes("red-"));
+  }
 });

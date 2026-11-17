@@ -1,5 +1,7 @@
 // Leave room for multipart metadata beneath Vercel's 4.5 MB request limit.
-export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+export const LEGACY_UPLOAD_BYTES = 4 * 1024 * 1024;
+// Kept for legacy multipart fallback only. New uploads stream directly to Drive.
+export const MAX_UPLOAD_BYTES = LEGACY_UPLOAD_BYTES;
 export const MAX_UPLOAD_LABEL = "4 MB";
 
 // Files are stored in Drive and opened as external attachments, never served as app HTML.

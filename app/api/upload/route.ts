@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStudentSession, verifyAdminSession } from "@/lib/auth";
-import { queryOne } from "@/lib/db";
+import { queryOne, execute } from "@/lib/db";
 import { storageFile } from "@/lib/storage-response";
+import { getStorageSecret } from "@/lib/storage-config";
+import { driveFileId } from "@/lib/attachment-url";
+import {
+  actorKey,
+  signUpload,
+  verifyUpload,
+  ticketAllows,
+  pendingFiles,
+  receiptHeader,
+  type UploadTicket,
+} from "@/lib/upload-authority";
 import {
   MAX_UPLOAD_BYTES,
   MAX_UPLOAD_LABEL,
@@ -64,7 +75,168 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
 
+  const actor = { admin, studentId: admin ? null : studentId };
+  const secret = await getStorageSecret();
+  const registered = async (
+    result: ReturnType<typeof storageFile>,
+    fallback: string,
+  ) => {
+    const fileId = result.fileId || driveFileId(result.fileUrl);
+    if (fileId)
+      await execute(
+        "INSERT OR IGNORE INTO uploaded_files(file_id,owner_role,owner_student_id,file_name) VALUES(?,?,?,?)",
+        [
+          fileId,
+          admin ? "admin" : "student",
+          actor.studentId,
+          result.fileName || fallback,
+        ],
+      );
+    const response = NextResponse.json({
+      ...result,
+      fileName: result.fileName || fallback,
+      ...(fileId ? { inlineUrl: "/api/files/" + fileId + "?inline=1" } : {}),
+    });
+    if (fileId && secret) {
+      const tickets = pendingFiles(request.headers, secret).filter(
+        (t) => t.expires > Date.now() && t.fileId !== fileId,
+      );
+      tickets.push({
+        fileId,
+        actor: actorKey(actor),
+        expires: Date.now() + 86400000,
+      });
+      response.headers.append("Set-Cookie", receiptHeader(tickets, secret));
+    }
+    return response;
+  };
   try {
+    if (
+      request.headers
+        .get("content-type")
+        ?.toLowerCase()
+        .startsWith("application/json")
+    ) {
+      const input = await request.json();
+      if (!secret)
+        return NextResponse.json(
+          {
+            code: "CONNECTOR_UPGRADE",
+            error:
+              "Open Settings → File storage to finish the one-time Drive connector upgrade.",
+          },
+          { status: 409 },
+        );
+      if (input.action === "begin") {
+        const name =
+          typeof input.fileName === "string"
+            ? input.fileName.slice(0, 255)
+            : "";
+        const mime = uploadMime({ name, type: String(input.fileType || "") });
+        if (
+          !name ||
+          !mime ||
+          !Number.isSafeInteger(input.size) ||
+          input.size <= 0
+        )
+          return NextResponse.json(
+            { error: "Choose a supported, non-empty file." },
+            { status: 400 },
+          );
+        const student = actor.studentId
+          ? await queryOne<{ name: string }>(
+              "SELECT name FROM students WHERE id=? AND active=1",
+              [actor.studentId],
+            )
+          : null;
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "begin",
+            secret,
+            fileName: name,
+            fileMimeType: mime,
+            size: input.size,
+            studentName: admin ? "Tutor" : student?.name || "Student",
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+        const result = await response.json();
+        if (result.version !== 2)
+          return NextResponse.json(
+            {
+              code: "CONNECTOR_UPGRADE",
+              error:
+                "Update and redeploy the Drive connector from Settings → File storage before uploading larger files.",
+            },
+            { status: 409 },
+          );
+        if (
+          !response.ok ||
+          result.success !== true ||
+          !result.uploadUrl ||
+          !result.fileId
+        )
+          return NextResponse.json(
+            {
+              error:
+                typeof result.error === "string"
+                  ? result.error
+                  : "Drive could not start this upload. Check connector authorization and Drive storage.",
+            },
+            { status: 502 },
+          );
+        const target = new URL(result.uploadUrl);
+        if (
+          target.protocol !== "https:" ||
+          !["www.googleapis.com", "content.googleapis.com"].includes(
+            target.hostname,
+          ) ||
+          !target.pathname.startsWith("/upload/drive/")
+        )
+          throw new Error("Drive returned an invalid upload session");
+        const ticket: UploadTicket = {
+          fileId: result.fileId,
+          actor: actorKey(actor),
+          expires: Date.now() + 86400000,
+        };
+        return NextResponse.json({
+          uploadUrl: target.href,
+          ticket: signUpload(ticket, secret),
+        });
+      }
+      if (input.action === "finish") {
+        const ticket = verifyUpload<UploadTicket>(
+          String(input.ticket || ""),
+          secret,
+        );
+        if (!ticket || !ticketAllows(ticket, actor, ticket.fileId))
+          return NextResponse.json(
+            { error: "This upload session is no longer available." },
+            { status: 403 },
+          );
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "finish",
+            secret,
+            fileId: ticket.fileId,
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+        if (!response.ok) throw new Error("Drive could not finish this upload");
+        return registered(
+          storageFile(await response.json()),
+          String(input.fileName || "Attachment"),
+        );
+      }
+      return NextResponse.json(
+        { error: "Unknown upload action" },
+        { status: 400 },
+      );
+    }
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > MAX_SIZE + 64 * 1024)
       return NextResponse.json(
@@ -118,6 +290,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        secret,
         fileBase64: buffer.toString("base64"),
         fileName: file.name.slice(0, 255),
         fileMimeType: mime,
@@ -149,10 +322,7 @@ export async function POST(request: NextRequest) {
         { status: 502 },
       );
     }
-    return NextResponse.json({
-      ...result,
-      fileName: result.fileName || file.name,
-    });
+    return registered(result, file.name);
   } catch (error) {
     if (error instanceof TypeError)
       return NextResponse.json(

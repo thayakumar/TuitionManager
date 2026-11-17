@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
+import { useActionBusy } from "@/components/action-busy";
 import { Check, X, CalendarClock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +28,15 @@ import { DateTimeField } from "@/components/scheduling-fields";
 export function RescheduleActions({
   requestId,
   preferredTimes,
+  studentName,
+  originalTime,
+  reason,
 }: {
   requestId: number;
   preferredTimes: string[];
+  studentName?: string;
+  originalTime?: string;
+  reason?: string | null;
 }) {
   const customTimeRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<"idle" | "approve" | "reject">("idle");
@@ -38,9 +45,14 @@ export function RescheduleActions({
   const [isPending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
+  useActionBusy(
+    isPending || refreshing,
+    mode === "approve" ? "Rescheduling the lesson…" : "Updating the request…",
+  );
 
   async function resolve(approved: boolean) {
-    if (isPending) return;
+    if (isPending || refreshing) return;
     setPending(true);
     setError(null);
     try {
@@ -65,7 +77,7 @@ export function RescheduleActions({
           : "Request declined — original lesson unchanged",
       );
       setMode("idle");
-      router.refresh();
+      startRefresh(() => router.refresh());
     } catch (error) {
       setError(
         actionError(
@@ -109,7 +121,7 @@ export function RescheduleActions({
           }
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {mode === "approve"
@@ -122,6 +134,31 @@ export function RescheduleActions({
                 : "The original lesson stays scheduled. You can include a short note to explain your decision."}
             </DialogDescription>
           </DialogHeader>
+          {(studentName || originalTime || reason) && (
+            <section className="rounded-xl border border-border bg-secondary/40 p-4 space-y-3">
+              {studentName && <h3 className="font-semibold">{studentName}</h3>}
+              {originalTime && (
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Original class
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {fmtDateTime(originalTime)}
+                  </p>
+                </div>
+              )}
+              {reason && (
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Reason for the request
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap break-words">
+                    {reason}
+                  </p>
+                </div>
+              )}
+            </section>
+          )}
           {mode === "approve" && (
             <section className="form-section">
               <p className="form-section-title mb-4">Requested times · MYT</p>

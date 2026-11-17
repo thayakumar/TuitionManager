@@ -36,7 +36,10 @@ export default async function StudentNotificationsPage({
         }
         action={
           unreadCount > 0 ? (
-            <NotificationReadAction recipientType="student" recipientId={student.id} />
+            <NotificationReadAction
+              recipientType="student"
+              recipientId={student.id}
+            />
           ) : undefined
         }
       />
@@ -53,7 +56,17 @@ export default async function StudentNotificationsPage({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="font-semibold">{n.title}</h2>
+                    <h2 className="font-semibold">
+                      {n.link &&
+                      (n.link === `/portal/student/${student.id}` ||
+                        n.link.startsWith(`/portal/student/${student.id}/`)) ? (
+                        <NotificationReadLink id={n.id} href={n.link}>
+                          {n.title}
+                        </NotificationReadLink>
+                      ) : (
+                        n.title
+                      )}
+                    </h2>
                     {!n.read && (
                       <span
                         className="size-2 rounded-full bg-primary"
@@ -69,13 +82,7 @@ export default async function StudentNotificationsPage({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
-                  {n.link &&
-                    n.link.startsWith(`/portal/student/${student.id}/`) && (
-                      <NotificationReadLink id={n.id} href={n.link} />
-                    )}
-                  {!n.read && (
-                    <NotificationReadAction id={n.id} />
-                  )}
+                  {!n.read && <NotificationReadAction id={n.id} />}
                 </div>
               </CardContent>
             </Card>

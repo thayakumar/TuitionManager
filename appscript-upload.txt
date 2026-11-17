@@ -1,42 +1,52 @@
-// Google Apps Script - TuitionManager File Upload Connector
-// Deploy as web app: Execute as "Me", Who has access: "Anyone"
-// Set the deployed URL as APPS_SCRIPT_UPLOAD_URL env var in Vercel
-
+// TuitionManager Drive connector v2. Deploy as web app: execute as Me, access Anyone.
+// Copy the prepared script from Settings → File storage; authorize Drive + UrlFetch.
+// The connector never depends on public file sharing; the app serves authorized files.
 const FOLDER_ID = "1RNTO1DfalHV_4yqoLZbAtECLyHqWutb0";
-
+const CONNECTOR_SECRET = "__CONNECTOR_SECRET__";
+function output(data) {data.version=2;return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);}
+function oauth() {return {Authorization:"Bearer "+ScriptApp.getOAuthToken()};}
+function api(url,options) {const r=UrlFetchApp.fetch(url,Object.assign({headers:oauth(),muteHttpExceptions:true},options||{}));if(r.getResponseCode()<200||r.getResponseCode()>299)throw new Error("Drive API "+r.getResponseCode()+": "+r.getContentText().slice(0,180));return r;}
+function folderFile(id) {const file=DriveApp.getFileById(id);const parents=file.getParents();let allowed=false;while(parents.hasNext())if(parents.next().getId()===FOLDER_ID)allowed=true;if(!allowed)throw new Error("File is outside the tuition folder");return file;}
+function describe(file) {return {fileId:file.getId(),fileName:file.getName(),fileType:file.getMimeType(),fileUrl:file.getUrl()};}
+function finish(file) {
+  // Classroom files stay private in Drive. Authenticated app access removes the
+  // need for domain-restricted ANYONE_WITH_LINK sharing entirely.
+  return Object.assign({success:true,created:true,version:2,private:true},describe(file));
+}
 function doPost(e) {
   try {
-    const postData = JSON.parse(e.postData.contents);
-
-    if (!postData.fileBase64 || !postData.fileName) {
-      return ContentService.createTextOutput(
-        JSON.stringify({ success: false, error: "Missing file data" })
-      ).setMimeType(ContentService.MimeType.JSON);
+    const p=JSON.parse(e.postData.contents);
+    const expected=PropertiesService.getScriptProperties().getProperty("CONNECTOR_SECRET")||CONNECTOR_SECRET;
+    if(!expected||expected==="__CONNECTOR_SECRET__"||p.secret!==expected)return output({success:false,error:"Connector secret is missing or does not match. Copy the latest script from app Settings."});
+    if(p.action==="begin") {
+      if(!p.fileName||!Number.isSafeInteger(p.size)||p.size<=0)throw new Error("Missing file metadata");
+      const ids=JSON.parse(api("https://www.googleapis.com/drive/v3/files/generateIds?count=1&space=drive&type=files").getContentText());
+      const id=ids.ids[0],prefix=String(p.studentName||"student").replace(/[^a-zA-Z0-9]/g,"_");
+      const name=prefix+"_"+Utilities.formatDate(new Date(),Session.getScriptTimeZone(),"yyyyMMdd-HHmmss")+"_"+String(p.fileName).slice(0,255);
+      const r=api("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,webViewLink",{method:"post",contentType:"application/json",headers:Object.assign(oauth(),{"X-Upload-Content-Type":p.fileMimeType||"application/octet-stream","X-Upload-Content-Length":String(p.size)}),payload:JSON.stringify({id,name,parents:[FOLDER_ID],mimeType:p.fileMimeType||"application/octet-stream"})});
+      const h=r.getAllHeaders(),uploadUrl=h.Location||h.location;if(!uploadUrl)throw new Error("Drive did not return an upload session");
+      return output({success:true,version:2,fileId:id,uploadUrl});
     }
-
-    const folder = DriveApp.getFolderById(FOLDER_ID);
-    const decodedBytes = Utilities.base64Decode(postData.fileBase64);
-    const mimeType = postData.fileMimeType || "application/octet-stream";
-    const studentName = postData.studentName || "student";
-    const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss");
-    const safeName = studentName.replace(/[^a-zA-Z0-9]/g, "_");
-    const fileName = safeName + "_" + timestamp + "_" + postData.fileName;
-
-    const blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
-    const file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: true,
-        fileUrl: file.getUrl(),
-        fileId: file.getId(),
-        fileName: file.getName(),
-      })
-    ).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, error: err.toString() })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
+    if(p.action==="finish")return output(finish(folderFile(p.fileId)));
+    if(p.action==="list") {
+      const query="'"+FOLDER_ID+"' in parents and trashed=false";
+      const data=JSON.parse(api("https://www.googleapis.com/drive/v3/files?q="+encodeURIComponent(query)+"&pageSize=50&orderBy=createdTime%20desc&fields=files(id,name,mimeType,webViewLink,createdTime)").getContentText());
+      return output({success:true,version:2,files:data.files.map(f=>({fileId:f.id,fileName:f.name,fileType:f.mimeType,fileUrl:f.webViewLink||"https://drive.google.com/file/d/"+f.id+"/view"}))});
+    }
+    if(p.action==="read") {
+      const file=folderFile(p.fileId),total=file.getSize(),offset=Number(p.offset)||0,length=Math.min(1024*1024,Math.max(1,Number(p.length)||524288));
+      if(offset<0||offset>=total)throw new Error("Invalid file range");
+      const end=Math.min(total-1,offset+length-1);
+      const r=api("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(p.fileId)+"?alt=media",{headers:Object.assign(oauth(),{Range:"bytes="+offset+"-"+end})});
+      return output({success:true,base64:Utilities.base64Encode(r.getBlob().getBytes()),total,nextOffset:end+1,fileName:file.getName(),mimeType:file.getMimeType()});
+    }
+    // Small-file fallback for older app clients. No error after a successful
+    // create may discard the file ID: even sharing-restricted files are linked.
+    if(!p.fileBase64||!p.fileName)throw new Error("Missing file data");
+    const blob=Utilities.newBlob(Utilities.base64Decode(p.fileBase64),p.fileMimeType||"application/octet-stream",String(p.fileName).slice(0,255));
+    return output(finish(DriveApp.getFolderById(FOLDER_ID).createFile(blob)));
+  } catch(error) {return output({success:false,error:String(error)});}
 }
+
+// Run once in the Apps Script editor to authorize the new connector scopes.
+function authorizeConnector() { const folder=DriveApp.getFolderById(FOLDER_ID); const response=UrlFetchApp.fetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(FOLDER_ID)+"?fields=id,name",{headers:oauth()}); return {folder:folder.getName(),status:response.getResponseCode()}; }

@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "name": "Failed sign-in shows foreground progress, blocks repeated clicks and clears on error",
+      "status": "Pass"
+    },
+    {
+      "name": "Client navigation is blocked while the destination is loading and clears when ready",
+      "status": "Pass"
+    },
+    {
+      "name": "Native form validation does not leave a loading overlay",
+      "status": "Pass"
+    },
+    {
+      "name": "Foreground form network failure preserves input and releases all controls",
+      "status": "Pass"
+    },
+    {
+      "name": "A successful foreground form saves once and opens the new student profile",
+      "status": "Pass"
+    },
+    {
+      "name": "Server-action note save shows progress and prevents duplicate writes",
+      "status": "Pass"
+    },
+    {
+      "name": "Hash-only links do not start navigation blocking",
+      "status": "Pass"
+    }
+  ]
+}

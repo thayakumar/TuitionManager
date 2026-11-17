@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { actionError } from "@/lib/action-errors";
@@ -23,6 +24,7 @@ export function ConfirmAction({
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  useActionBusy(busy, "Saving changes…");
   const [error, setError] = useState<string | null>(null);
   async function confirm() {
     if (busy) return;

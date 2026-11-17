@@ -1,145 +1,155 @@
 import { requireAdminPage } from "@/lib/auth";
 import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Inbox } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 import { RescheduleActions } from "@/components/reschedule-actions";
 import type { RescheduleRequestWithDetails } from "@/lib/types";
-
 export const dynamic = "force-dynamic";
-
-function statusBadge(status: string) {
-  switch (status) {
-    case "pending":
-      return <Badge variant="secondary">Pending</Badge>;
-    case "approved":
-      return <Badge variant="default">Approved</Badge>;
-    case "rejected":
-      return <Badge variant="destructive">Rejected</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-}
-
 export default async function RescheduleRequestsPage() {
   await requireAdminPage();
   const requests = await queryAll<RescheduleRequestWithDetails>(
-    `SELECT rr.*, s.name AS student_name, s.subject, c.scheduled_at
-     FROM reschedule_requests rr
-     JOIN students s ON s.id = rr.student_id
-     JOIN classes c ON c.id = rr.class_id
-     ORDER BY CASE rr.status WHEN 'pending' THEN 0 ELSE 1 END, rr.created_at DESC`,
+    `SELECT rr.*,s.name AS student_name,s.subject,c.scheduled_at FROM reschedule_requests rr JOIN students s ON s.id=rr.student_id JOIN classes c ON c.id=rr.class_id ORDER BY rr.created_at DESC,rr.id DESC`,
   );
-
-  const pending = requests.filter((r) => r.status === "pending");
-
+  const pending = requests.filter((r) => r.status === "pending"),
+    past = requests.filter((r) => r.status !== "pending");
   return (
     <>
       <PageHeader
         title="Reschedule Requests"
         subtitle={
-          pending.length > 0 ? `${pending.length} pending` : "All caught up"
+          pending.length
+            ? `${pending.length} awaiting a decision`
+            : "All caught up"
         }
       />
-
-      {requests.length === 0 ? (
-        <Card className="border shadow-none">
-          <CardContent className="py-12">
-            <div className="text-center text-muted-foreground">
-              <Inbox size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No reschedule requests yet</p>
-            </div>
-          </CardContent>
-        </Card>
+      {!requests.length ? (
+        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          <Inbox className="mx-auto mb-3" />
+          <p>No reschedule requests yet</p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {requests.map((req) => (
-            <Card key={req.id} className="border shadow-none">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <CalendarClock size={16} className="text-orange-500" />
-                    {req.student_name}
-                    {req.subject && (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        — {req.subject}
+        <div className="space-y-8">
+          {pending.length > 0 && (
+            <section aria-labelledby="pending-requests-title">
+              <h2
+                id="pending-requests-title"
+                className="mb-4 text-xl font-semibold"
+              >
+                New requests
+              </h2>
+              <div className="space-y-3">
+                {pending.map((req) => (
+                  <article
+                    key={req.id}
+                    className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="rounded-xl bg-amber-50 p-3 text-amber-700">
+                        <CalendarClock size={22} />
                       </span>
-                    )}
-                  </CardTitle>
-                  {statusBadge(req.status)}
-                </div>
-                <CardDescription>
-                  Original class: {fmtDateTime(req.scheduled_at)} · Requested{" "}
-                  {fmtDateTime(req.created_at)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {req.reason && (
-                  <p className="text-sm text-foreground mb-3">
-                    <span className="font-medium">Reason:</span> {req.reason}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <div className="rounded-lg border border-border/50 px-3 py-1.5 text-sm">
-                    <span className="text-xs text-muted-foreground">
-                      Option 1:{" "}
-                    </span>
-                    <span className="font-medium">
-                      {fmtDateTime(req.preferred_time_1)}
-                    </span>
-                  </div>
-                  {req.preferred_time_2 && (
-                    <div className="rounded-lg border border-border/50 px-3 py-1.5 text-sm">
-                      <span className="text-xs text-muted-foreground">
-                        Option 2:{" "}
-                      </span>
-                      <span className="font-medium">
-                        {fmtDateTime(req.preferred_time_2)}
-                      </span>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold break-words">
+                          {req.student_name} requested to reschedule
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {fmtDateTime(req.created_at)}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {req.preferred_time_3 && (
-                    <div className="rounded-lg border border-border/50 px-3 py-1.5 text-sm">
-                      <span className="text-xs text-muted-foreground">
-                        Option 3:{" "}
-                      </span>
-                      <span className="font-medium">
-                        {fmtDateTime(req.preferred_time_3)}
-                      </span>
+                    <RescheduleActions
+                      requestId={req.id}
+                      preferredTimes={
+                        [
+                          req.preferred_time_1,
+                          req.preferred_time_2,
+                          req.preferred_time_3,
+                        ].filter(Boolean) as string[]
+                      }
+                      studentName={req.student_name}
+                      originalTime={req.scheduled_at}
+                      reason={req.reason}
+                    />
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+          {past.length > 0 && (
+            <section aria-labelledby="past-requests-title">
+              <h2
+                id="past-requests-title"
+                className="mb-4 text-xl font-semibold"
+              >
+                Past requests
+              </h2>
+              <div className="space-y-4">
+                {past.map((req) => (
+                  <article
+                    key={req.id}
+                    className="rounded-2xl border border-border bg-card p-5"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="font-semibold">{req.student_name}</h3>
+                      <Badge
+                        variant="outline"
+                        className={
+                          req.status === "approved"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-100 text-slate-700"
+                        }
+                      >
+                        {req.status === "approved" ? "Approved" : "Declined"}
+                      </Badge>
                     </div>
-                  )}
-                </div>
-
-                {req.status === "pending" && (
-                  <RescheduleActions
-                    requestId={req.id}
-                    preferredTimes={
-                      [
-                        req.preferred_time_1,
-                        req.preferred_time_2,
-                        req.preferred_time_3,
-                      ].filter(Boolean) as string[]
-                    }
-                  />
-                )}
-
-                {req.admin_note && req.status !== "pending" && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    <span className="font-medium">Admin note:</span>{" "}
-                    {req.admin_note}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-sm font-medium text-muted-foreground">
+                          Original class
+                        </dt>
+                        <dd className="mt-1 font-medium">
+                          {fmtDateTime(req.scheduled_at)}
+                        </dd>
+                      </div>
+                      {req.status === "approved" && (
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">
+                            Approved time
+                          </dt>
+                          <dd className="mt-1 font-semibold text-emerald-700">
+                            {req.approved_time
+                              ? fmtDateTime(req.approved_time)
+                              : "Not recorded"}
+                          </dd>
+                        </div>
+                      )}
+                      {req.reason && (
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">
+                            Reason
+                          </dt>
+                          <dd className="mt-1 whitespace-pre-wrap break-words">
+                            {req.reason}
+                          </dd>
+                        </div>
+                      )}
+                      {req.admin_note && (
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">
+                            Your note
+                          </dt>
+                          <dd className="mt-1 whitespace-pre-wrap break-words">
+                            {req.admin_note}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </>

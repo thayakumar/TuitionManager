@@ -1,3 +1,4 @@
+import { FormBusy } from "@/components/action-busy";
 import { ConfirmAction } from "@/components/confirm-action";
 import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
@@ -184,6 +185,7 @@ export default async function InvoiceDetailPage({
                 key={s.value}
                 action={setInvoiceStatus.bind(null, id, s.value)}
               >
+                <FormBusy />
                 <Button
                   type="submit"
                   variant={inv.status === s.value ? "default" : "ghost"}
@@ -253,7 +255,7 @@ export default async function InvoiceDetailPage({
 
           {/* Items Table */}
           <div className="rounded-xl border overflow-x-auto">
-            <Table>
+            <Table searchable={false}>
               <TableHeader>
                 <TableRow className="bg-secondary/30">
                   <TableHead className="font-semibold">

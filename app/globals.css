@@ -608,3 +608,11 @@ aside nav a { min-height: 50px; font-size: 1rem; }
   .student-profile-stats [data-slot=card-content] > div { flex-direction: column-reverse; gap: 12px; }
   .student-profile-stats [data-slot=card-content] > div > div:first-child { min-width: 0; width: 100%; }
 }
+/* Embedded learning images stay readable within narrow post and notes layouts. */
+.rich-text img { display: block; max-width: 100%; height: auto; max-height: 80vh; object-fit: contain; margin: 1rem 0; border-radius: 10px; }
+.rich-text img.ProseMirror-selectednode { outline: 3px solid var(--primary); outline-offset: 3px; }
+.rich-editor-upload { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: .95rem; line-height: 1.5; border-bottom: 1px solid var(--border); }
+.rich-editor-upload-error { display: block; }
+.rich-editor-upload-error > div { margin-top: 10px; }
+.rich-editor-compact .rich-text-editor-content { min-height: 112px; padding: 14px; }
+.rich-editor-compact .rich-editor-toolbar { gap: 4px; padding: 8px; }

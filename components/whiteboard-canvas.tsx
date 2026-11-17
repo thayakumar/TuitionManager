@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, RefreshCw, Save } from "lucide-react";
+import { Download, RefreshCw, Save, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 type Workspace = Record<string, unknown>;
 type Board = {
@@ -13,11 +13,19 @@ type Draft = { data: Workspace; revision: number };
 export function WhiteboardCanvas({
   boardId,
   identity,
+  details,
 }: {
   boardId: string;
   identity: string;
+  details?: React.ReactNode;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const optionsButton = useRef<HTMLButtonElement>(null);
+  function closeDetails() {
+    setDetailsOpen(false);
+    optionsButton.current?.focus();
+  }
   const [status, setStatus] = useState("Loading whiteboard…"),
     [error, setError] = useState(""),
     [conflict, setConflict] = useState(false),
@@ -198,6 +206,7 @@ export function WhiteboardCanvas({
         }
       });
     const poll = setInterval(() => {
+      if (document.hidden) return;
       if (!frameReady) {
         frame.current?.contentWindow?.postMessage(
           { type: "tuition-whiteboard-handshake" },
@@ -301,65 +310,11 @@ export function WhiteboardCanvas({
     };
   }, [boardId, identity]);
   return (
-    <section className="min-w-0 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-        <p role="status" className="text-sm font-medium">
-          {status}
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => controls.current.download()}
-          disabled={!ready}
-        >
-          <Download size={16} /> Download my copy
-        </Button>
-      </div>
-      {conflict && (
-        <div
-          role="alert"
-          className="rounded-xl border border-orange-300 bg-orange-50 p-4 text-orange-950"
-        >
-          <p className="font-semibold">There are two versions of this board.</p>
-          <p className="mt-2 text-sm">
-            Your changes are kept in this tab. Download your copy before
-            choosing which version to save. Saving your version replaces the
-            current saved version.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => controls.current.loadSaved()}
-            >
-              <RefreshCw size={16} /> Load saved version
-            </Button>
-            <Button type="button" onClick={() => controls.current.saveMine()}>
-              <Save size={16} /> Save my version
-            </Button>
-          </div>
-        </div>
-      )}
-      {error && (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4"
-        >
-          <p className="min-w-0 flex-1 break-words text-sm text-destructive">
-            {error}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => controls.current.retry()}
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-white">
+    <main
+      className="fixed inset-0 z-40 overflow-hidden bg-white"
+      aria-label="Whiteboard workspace"
+    >
+      <div className="absolute inset-0">
         {!ready && (
           <p className="absolute inset-0 z-10 grid place-items-center bg-white text-muted-foreground">
             Loading drawing tools…
@@ -377,23 +332,147 @@ export function WhiteboardCanvas({
           }
           sandbox="allow-scripts allow-same-origin allow-downloads"
           allow="clipboard-write"
-          className="block h-[78dvh] min-h-[560px] w-full border-0"
+          className="block h-dvh min-h-0 w-full border-0"
           style={{ visibility: ready ? "visible" : "hidden" }}
         />
       </div>
-      <p className="text-xs text-muted-foreground">
-        Powered by{" "}
-        <a
-          className="underline"
-          href="https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_llm_apps/excaliflow"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="absolute bottom-28 right-3 z-30 flex flex-col items-end gap-3 sm:right-5">
+        {detailsOpen && (
+          <aside
+            className="max-h-[calc(100dvh-200px)] w-[min(360px,calc(100vw-24px))] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-xl"
+            aria-label="Whiteboard details"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                closeDetails();
+              }
+            }}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Board options</h2>
+              <button
+                type="button"
+                aria-label="Close board options"
+                className="grid size-9 place-items-center rounded-full hover:bg-secondary"
+                onClick={closeDetails}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {details}
+            <p className="my-4 flex items-center gap-2 text-sm font-medium">
+              <span
+                aria-hidden="true"
+                className={
+                  "size-2 rounded-full " +
+                  (error || conflict
+                    ? "bg-amber-500"
+                    : status === "Saved"
+                      ? "bg-emerald-500"
+                      : "bg-blue-500")
+                }
+              />
+              {status}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => controls.current.download()}
+              disabled={!ready}
+            >
+              <Download size={16} /> Download my copy
+            </Button>
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              Powered by{" "}
+              <a
+                className="underline"
+                href="https://github.com/Shubhamsaboo/awesome-llm-apps/tree/main/advanced_llm_apps/excaliflow"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Excaliflow
+              </a>
+              . Saved changes sync in a few seconds. Simultaneous edits ask
+              which version to keep.
+            </p>
+          </aside>
+        )}
+        <button
+          type="button"
+          ref={optionsButton}
+          aria-expanded={detailsOpen}
+          aria-label={detailsOpen ? "Hide board options" : "Show board options"}
+          onClick={() => setDetailsOpen(!detailsOpen)}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur"
         >
-          Excaliflow
-        </a>
-        . Saved changes from the other person appear within a few seconds.
-        Simultaneous edits require choosing a version.
+          <SlidersHorizontal size={18} />
+          <span>Board options</span>
+          <span
+            aria-hidden="true"
+            className={
+              "size-2 rounded-full " +
+              (error || conflict
+                ? "bg-amber-500"
+                : status === "Saved"
+                  ? "bg-emerald-500"
+                  : "bg-blue-500")
+            }
+          />
+        </button>
+      </div>
+      <p role="status" aria-live="polite" className="sr-only">
+        {status}
       </p>
-    </section>
+      {conflict && (
+        <div
+          role="alert"
+          className="absolute left-1/2 top-3 z-40 w-[min(600px,calc(100vw-24px))] -translate-x-1/2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 shadow-xl"
+        >
+          <p className="font-semibold">There are two versions of this board.</p>
+          <p className="mt-2 text-sm">
+            Your changes are kept in this tab. Download your copy before
+            choosing. Saving your version replaces the saved version.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => controls.current.download()}
+            >
+              <Download size={16} /> Download my copy
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => controls.current.loadSaved()}
+            >
+              <RefreshCw size={16} /> Load saved version
+            </Button>
+            <Button type="button" onClick={() => controls.current.saveMine()}>
+              <Save size={16} /> Save my version
+            </Button>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div
+          role="alert"
+          className="absolute left-1/2 top-3 z-50 flex w-[min(600px,calc(100vw-24px))] -translate-x-1/2 flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-xl"
+        >
+          <p className="min-w-0 flex-1 break-words text-sm text-amber-950">
+            {error}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => controls.current.retry()}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+    </main>
   );
 }

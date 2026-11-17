@@ -1,3 +1,5 @@
+import { StorageSetup } from "@/components/storage-setup";
+import { FormBusy } from "@/components/action-busy";
 import { Building2, QrCode, Trash2 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
 import { getSettings } from "@/lib/db";
@@ -41,6 +43,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <form action={saveSettings} className="space-y-5">
+              <FormBusy />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Business / your name"
@@ -92,6 +95,7 @@ export default async function SettingsPage() {
                   />
                 </div>
                 <form action={removeDuitNowQR}>
+                  <FormBusy />
                   <Button variant="destructive" type="submit">
                     <Trash2 size={14} />
                     Remove QR
@@ -104,6 +108,7 @@ export default async function SettingsPage() {
                 encType="multipart/form-data"
                 className="space-y-4"
               >
+                <FormBusy />
                 <label className="flex min-h-44 flex-col justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-5">
                   <span className="text-sm font-medium">
                     Upload your DuitNow QR
@@ -129,6 +134,7 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+      <StorageSetup />
     </>
   );
 }

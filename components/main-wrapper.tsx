@@ -9,6 +9,7 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/portal") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
+    pathname === "/whiteboard" ||
     pathname === "/login";
 
   if (isFullscreen) {

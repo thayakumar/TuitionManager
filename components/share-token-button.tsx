@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 
 import { useEffect, useState } from "react";
 import { Copy, Check, Link2, X } from "lucide-react";
@@ -25,6 +26,7 @@ export function ShareTokenButton({
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  useActionBusy(busy, "Updating parent access…");
   const [error, setError] = useState<string | null>(null);
   useEffect(() => setToken(existingToken), [existingToken]);
 

@@ -1,6 +1,7 @@
 export default function Loading() {
   return (
     <section
+      data-page-loading="true"
       aria-busy="true"
       aria-label="Loading page"
       className="mx-auto w-full max-w-6xl animate-pulse space-y-6 py-4 motion-reduce:animate-none"

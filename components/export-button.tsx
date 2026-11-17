@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ export function ExportButton({
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
+  useActionBusy(busy, "Preparing export…");
   return (
     <div>
       <Button

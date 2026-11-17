@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -315,11 +315,36 @@ async function migrateWhiteboards(tx: Transaction) {
   )`);
 }
 
+async function migrateClassroomConversation(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS post_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      author_role TEXT NOT NULL CHECK(author_role IN ('admin','student')),
+      author_student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_post_comments_post ON post_comments(post_id,id);
+    CREATE TABLE IF NOT EXISTS uploaded_files (
+      file_id TEXT PRIMARY KEY,
+      owner_role TEXT NOT NULL CHECK(owner_role IN ('admin','student')),
+      owner_student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+      file_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_uploaded_files_owner ON uploaded_files(owner_role,owner_student_id);
+  `);
+}
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
   // Prepared versions already have their history backfills. Never replay them.
   if (fromVersion >= 2) {
     if (fromVersion < 3) await migratePostOrder(tx);
     await migrateWhiteboards(tx);
+    await migrateClassroomConversation(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -456,6 +481,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
   `);
   await migratePostOrder(tx);
   await migrateWhiteboards(tx);
+  await migrateClassroomConversation(tx);
   await writeSchemaVersion(tx);
 }
 

@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ export function GradeSubmissionForm({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  useActionBusy(busy, "Returning grade…");
   const [grade, setGrade] = useState(submission.grade ?? "");
   const [feedback, setFeedback] = useState(submission.feedback ?? "");
   const [error, setError] = useState("");

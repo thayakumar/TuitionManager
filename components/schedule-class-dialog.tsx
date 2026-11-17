@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 import { ScheduleFields } from "@/components/scheduling-fields";
 import { actionError } from "@/lib/action-errors";
 
@@ -39,6 +40,7 @@ export function ScheduleClassDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, setPending] = useState(false);
+  useActionBusy(isPending, "Scheduling lesson…");
   const [error, setError] = useState<string | null>(null);
 
   const defaultTime = fmtDateInput(

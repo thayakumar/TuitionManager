@@ -40,6 +40,7 @@ export function sanitizeRichText(value: string): string {
       "span",
       "mark",
       "hr",
+      "img",
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
@@ -51,17 +52,41 @@ export function sanitizeRichText(value: string): string {
       h4: ["style"],
       ol: ["start"],
       code: ["class"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
     },
     allowedSchemes: ["https", "http", "mailto"],
+    allowedSchemesByTag: { img: ["https"] },
     allowProtocolRelative: false,
     allowedStyles: { "*": { "text-align": [/^(left|center|right|justify)$/] } },
     transformTags: {
+      img: (tagName, attribs) => ({
+        tagName,
+        attribs: {
+          ...attribs,
+          src: safeInlineImage(attribs.src || "") || "",
+          loading: "lazy",
+        },
+      }),
       a: (tagName, attribs) => ({
         tagName,
         attribs: { ...attribs, target: "_blank", rel: "noopener noreferrer" },
       }),
     },
+    exclusiveFilter: (frame) =>
+      frame.tag === "img" && !safeInlineImage(frame.attribs.src || ""),
   });
+}
+/** Only authenticated image endpoints and ordinary HTTPS images can be embedded. */
+export function safeInlineImage(value: string): string | null {
+  if (/^\/api\/files\/[A-Za-z0-9_-]+(?:\?inline=1)?$/.test(value)) return value;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
 }
 export function richTextPlainText(value: string | null | undefined): string {
   if (!value) return "";
@@ -82,15 +107,79 @@ export function richTextPlainText(value: string | null | undefined): string {
     .trim();
 }
 export function hasRichTextContent(value: string | null | undefined): boolean {
-  return !!richTextPlainText(value).trim();
+  if (richTextPlainText(value).trim()) return true;
+  return (
+    !!value && /<img\b[^>]*\bsrc=["'][^"']+["']/i.test(sanitizeRichText(value))
+  );
+}
+
+function trimUrlPunctuation(value: string): string {
+  let url = value.replace(/[.,;!?:]+$/g, "");
+  for (const [open, close] of [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"],
+  ]) {
+    while (
+      url.endsWith(close) &&
+      url.split(close).length > url.split(open).length
+    )
+      url = url.slice(0, -1);
+  }
+  return url;
+}
+function autoLinkText(text: string): string {
+  return text.replace(/\b(?:https?:\/\/|www\.)[^\s<>]+/giu, (raw) => {
+    const candidate = trimUrlPunctuation(raw);
+    const decoded = candidate
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+    try {
+      const url = new URL(
+        /^www\./i.test(decoded) ? "https://" + decoded : decoded,
+      );
+      if (
+        !["http:", "https:"].includes(url.protocol) ||
+        !url.hostname ||
+        url.username ||
+        url.password
+      )
+        return raw;
+      return (
+        '<a href="' +
+        escapeRichText(url.href) +
+        '" target="_blank" rel="noopener noreferrer">' +
+        candidate +
+        "</a>" +
+        raw.slice(candidate.length)
+      );
+    } catch {
+      return raw;
+    }
+  });
+}
+/** Link text nodes only; existing links and code blocks retain their exact meaning. */
+function autoLinkHtml(html: string): string {
+  const protectedTags: string[] = [];
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith("<")) {
+        const closing = /^<\/(a|pre|code)\b/i.exec(part);
+        const opening = /^<(a|pre|code)\b/i.exec(part);
+        if (closing) protectedTags.pop();
+        else if (opening) protectedTags.push(opening[1].toLowerCase());
+        return part;
+      }
+      return protectedTags.length ? part : autoLinkText(part);
+    })
+    .join("");
 }
 export function richTextHtml(value: string): string {
-  if (isRichText(value)) return sanitizeRichText(value);
-  return escapeRichText(value)
-    .replace(/https?:\/\/[^\s<>]+/g, (raw) => {
-      const url = raw.replace(/[.,;!?)]+$/g, "");
-      const tail = raw.slice(url.length);
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
-    })
-    .replace(/\n/g, "<br>");
+  return autoLinkHtml(
+    isRichText(value)
+      ? sanitizeRichText(value)
+      : escapeRichText(value).replace(/\n/g, "<br>"),
+  );
 }

@@ -1,23 +1,22 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useTransition } from "react";
+import { useActionBusy } from "@/components/action-busy";
 import { useRouter } from "next/navigation";
 import { Paperclip, FileText, Send, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { submitAssignmentResult as submitAssignment } from "@/lib/actions";
 import { actionError, ActionValidationError } from "@/lib/action-errors";
+import { uploadFile } from "@/lib/upload-client";
 import { safeUrl } from "@/lib/domain/validation";
 
 import {
-  MAX_UPLOAD_BYTES,
-  MAX_UPLOAD_LABEL,
   isSupportedUpload,
   SUPPORTED_UPLOAD_ACCEPT,
 } from "@/lib/upload-limits";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { hasRichTextContent } from "@/lib/rich-text";
-const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export function SubmissionForm({
   postId,
@@ -31,11 +30,24 @@ export function SubmissionForm({
   resubmission?: boolean;
 }) {
   const router = useRouter();
+  const [refreshing, startRefresh] = useTransition();
   const [content, setContent] = useState("");
   const [fileUrl, setFileUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editorUploading, setEditorUploading] = useState(false);
+  const [inlineImageError, setInlineImageError] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadWarning, setUploadWarning] = useState("");
   const [error, setError] = useState("");
+  useActionBusy(
+    busy || editorUploading || refreshing,
+    editorUploading
+      ? "Uploading image…"
+      : file
+        ? `Uploading attachment… ${Math.round(uploadProgress)}%`
+        : "Saving your submission…",
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const submitting = useRef(false);
   function selectFile(event: React.ChangeEvent<HTMLInputElement>) {
@@ -43,8 +55,8 @@ export function SubmissionForm({
     setError("");
     setFile(null);
     if (!next) return;
-    if (next.size === 0 || next.size > MAX_FILE_SIZE) {
-      setError(`Choose a nonempty file up to ${MAX_UPLOAD_LABEL}.`);
+    if (next.size === 0) {
+      setError("Choose a nonempty file.");
       event.target.value = "";
       return;
     }
@@ -58,7 +70,8 @@ export function SubmissionForm({
   }
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || editorUploading || inlineImageError || refreshing)
+      return;
     setError("");
     let link: string | null;
     try {
@@ -75,15 +88,10 @@ export function SubmissionForm({
     setBusy(true);
     try {
       if (file) {
-        const body = new FormData();
-        body.set("file", file);
-        body.set("studentName", studentName || "student");
-        const response = await fetch("/api/upload", { method: "POST", body });
-        const result = await response.json();
-        if (!response.ok || !result.fileUrl)
-          throw new ActionValidationError(
-            result.error || "Upload failed. Your work has not been submitted.",
-          );
+        const result = await uploadFile(file, {
+          onProgress: setUploadProgress,
+        });
+        if (result.warning) setUploadWarning(result.warning);
         link = safeUrl(result.fileUrl);
         if (!link)
           throw new ActionValidationError(
@@ -109,7 +117,7 @@ export function SubmissionForm({
       setFile(null);
       if (inputRef.current) inputRef.current.value = "";
       toast.success(resubmission ? "New attempt submitted" : "Work submitted");
-      router.refresh();
+      startRefresh(() => router.refresh());
     } catch (reason) {
       setError(
         actionError(
@@ -124,21 +132,18 @@ export function SubmissionForm({
   }
   return (
     <form onSubmit={handleSubmit} className="space-y-5" aria-busy={busy}>
-      <div className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
-        <p className="flex items-center gap-2 font-semibold">
-          <FileText size={21} className="text-primary" />
-          {resubmission ? "Start a new attempt" : "Ready to share your work?"}
+      {resubmission && (
+        <p className="text-sm text-muted-foreground">
+          Earlier attempts stay in history. Your new attempt will receive a new
+          grade.
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {resubmission
-            ? "Your earlier work and feedback stay in history. This new attempt will wait for a new grade."
-            : "Write an answer, include links in your work or attach a file. You can submit a new attempt later."}
-        </p>
-      </div>
+      )}
       <fieldset disabled={busy} className="min-w-0 space-y-5">
         <section className="form-section space-y-3">
           <RichTextEditor
             label="Your work"
+            onBusyChange={setEditorUploading}
+            onUploadErrorChange={setInlineImageError}
             name="content"
             value={content}
             onChange={setContent}
@@ -159,9 +164,7 @@ export function SubmissionForm({
             <span className="font-medium">
               {file ? file.name : "Attach a file"}
             </span>
-            <span className="mt-1 text-sm text-muted-foreground">
-              Up to {MAX_UPLOAD_LABEL}
-            </span>
+
             <input
               ref={inputRef}
               id={`file-${postId}`}
@@ -198,6 +201,21 @@ export function SubmissionForm({
           )}
         </section>
       </fieldset>
+      {uploadWarning && (
+        <p
+          role="status"
+          className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900"
+        >
+          {uploadWarning}
+        </p>
+      )}
+      {busy && (
+        <p role="status" className="text-sm font-medium text-blue-800">
+          {file
+            ? `Uploading attachment… ${Math.round(uploadProgress)}%`
+            : "Saving your submission…"}
+        </p>
+      )}
       {error && (
         <p
           role="alert"
@@ -211,7 +229,11 @@ export function SubmissionForm({
           type="submit"
           className="w-full"
           disabled={
-            busy || (!hasRichTextContent(content) && !fileUrl.trim() && !file)
+            busy ||
+            refreshing ||
+            editorUploading ||
+            inlineImageError ||
+            (!hasRichTextContent(content) && !fileUrl.trim() && !file)
           }
         >
           <Send size={19} />

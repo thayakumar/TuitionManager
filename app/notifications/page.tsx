@@ -95,7 +95,13 @@ export default async function NotificationsPage() {
                       <p
                         className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}
                       >
-                        {n.title}
+                        {n.link ? (
+                          <NotificationReadLink id={n.id} href={n.link}>
+                            {n.title}
+                          </NotificationReadLink>
+                        ) : (
+                          n.title
+                        )}
                       </p>
                       {!n.read && (
                         <Badge variant="secondary" className="text-xs">
@@ -110,7 +116,6 @@ export default async function NotificationsPage() {
                       {fmtDateTime(n.created_at)}
                     </p>
                   </div>
-                  {n.link && <NotificationReadLink id={n.id} href={n.link} />}
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 
 import { SignInShell } from "@/components/sign-in-shell";
 import { useState } from "react";
@@ -14,6 +15,7 @@ const inputClass =
 export default function AdminLoginPage() {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
+  useActionBusy(isPending, "Signing in…");
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
@@ -37,51 +39,57 @@ export default function AdminLoginPage() {
 
   return (
     <SignInShell role="Admin">
-          <form action={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <Label htmlFor="admin-username">Username</Label>
-              <input
-                id="admin-username"
-                name="username"
-                required
-                autoFocus
-                placeholder="Admin username"
-                autoComplete="username"
-                className={inputClass}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="admin-password">Password</Label>
-              <input
-                id="admin-password"
-                name="password"
-                type="password"
-                required
-                placeholder="Admin password"
-                autoComplete="current-password"
-                className={inputClass}
-              />
-            </div>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSubmit(new FormData(event.currentTarget));
+        }}
+        className="space-y-5"
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="admin-username">Username</Label>
+          <input
+            id="admin-username"
+            name="username"
+            required
+            autoFocus
+            placeholder="Admin username"
+            autoComplete="username"
+            className={inputClass}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="admin-password">Password</Label>
+          <input
+            id="admin-password"
+            name="password"
+            type="password"
+            required
+            placeholder="Admin password"
+            autoComplete="current-password"
+            className={inputClass}
+          />
+        </div>
 
-            {error && (
-              <div
-                role="alert"
-                className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-              >
-                {error}
-              </div>
-            )}
+        {error && (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          >
+            {error}
+          </div>
+        )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? (
-                "Signing in..."
-              ) : (
-                <>
-                  <LogIn size={16} /> Sign In
-                </>
-              )}
-            </Button>
-          </form>
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? (
+            "Signing in..."
+          ) : (
+            <>
+              <LogIn size={16} /> Sign In
+            </>
+          )}
+        </Button>
+      </form>
     </SignInShell>
   );
 }

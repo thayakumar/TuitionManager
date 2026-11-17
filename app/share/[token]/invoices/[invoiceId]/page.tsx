@@ -160,7 +160,7 @@ export default async function ParentInvoiceDetailPage({
 
           {/* Items Table */}
           <div className="rounded-xl border overflow-x-auto">
-            <Table>
+            <Table searchable={false}>
               <TableHeader>
                 <TableRow className="bg-secondary/30">
                   <TableHead className="font-semibold">Description</TableHead>

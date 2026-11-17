@@ -1,6 +1,5 @@
 import { ownStudentContext } from "@/lib/portal-context";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -8,25 +7,29 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  BookOpen,
+  ChevronDown,
 } from "lucide-react";
-import { queryAll, queryOne } from "@/lib/db";
+import { queryAll } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { lessonStatus } from "@/lib/lesson-status";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { fmtDateTime } from "@/lib/format";
-import { format, parseISO, subMonths, addMonths } from "date-fns";
 import { RescheduleRequestDialog } from "@/components/reschedule-request-dialog";
-import type { Student, ClassRow } from "@/lib/types";
+import type { ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 function statusIcon(status: string, attendance: string | null) {
   const state = lessonStatus(status, attendance);
-  return state.key === "scheduled" ? <Clock size={19} /> : state.key === "completed" ? <CheckCircle2 size={19} /> : <XCircle size={19} />;
+  return state.key === "scheduled" ? (
+    <Clock size={19} />
+  ) : state.key === "completed" ? (
+    <CheckCircle2 size={19} />
+  ) : (
+    <XCircle size={19} />
+  );
 }
 
 export default async function StudentSchedulePage({
@@ -39,8 +42,6 @@ export default async function StudentSchedulePage({
   const student = await ownStudentContext(id);
 
   const now = new Date();
-  const startISO = subMonths(now, 3).toISOString();
-  const endISO = addMonths(now, 3).toISOString();
 
   const classes = await queryAll<ClassRow>(
     `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
@@ -52,16 +53,30 @@ export default async function StudentSchedulePage({
     [id],
   );
 
-  const grouped = new Map<string, ClassRow[]>();
-  for (const c of classes) {
-    const monthKey = new Intl.DateTimeFormat("en-MY", {
-      month: "long",
+  const monthKey = (date: Date) =>
+    new Intl.DateTimeFormat("en-CA", {
       year: "numeric",
+      month: "2-digit",
       timeZone: "Asia/Kuala_Lumpur",
-    }).format(new Date(c.scheduled_at));
-    if (!grouped.has(monthKey)) grouped.set(monthKey, []);
-    grouped.get(monthKey)!.push(c);
+    })
+      .format(date)
+      .slice(0, 7);
+  const currentMonth = monthKey(now);
+  const grouped = new Map<string, ClassRow[]>();
+  grouped.set(currentMonth, []);
+  for (const c of classes) {
+    const key = monthKey(new Date(c.scheduled_at));
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(c);
   }
+  const groups = Array.from(grouped.entries()).sort(([a], [b]) => {
+    if (a === currentMonth) return -1;
+    if (b === currentMonth) return 1;
+    const af = a > currentMonth,
+      bf = b > currentMonth;
+    if (af !== bf) return af ? -1 : 1;
+    return af ? a.localeCompare(b) : b.localeCompare(a);
+  });
 
   return (
     <>
@@ -89,19 +104,41 @@ export default async function StudentSchedulePage({
         </Card>
       ) : (
         <div className="space-y-6">
-          {Array.from(grouped.entries()).map(([month, monthClasses]) => (
-            <div key={month}>
-              <div className="flex items-center gap-2 mb-3">
+          {groups.map(([month, monthClasses]) => (
+            <details
+              key={month}
+              open={month === currentMonth}
+              className="group rounded-2xl border border-border bg-card p-4 sm:p-5"
+            >
+              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  {month}
+                  {new Intl.DateTimeFormat("en-MY", {
+                    month: "long",
+                    year: "numeric",
+                    timeZone: "Asia/Kuala_Lumpur",
+                  }).format(new Date(month + "-01T04:00:00Z"))}
                 </h2>
                 <Badge variant="outline" className="text-xs">
                   {monthClasses.length}{" "}
                   {monthClasses.length === 1 ? "class" : "classes"}
                 </Badge>
-              </div>
+                {month === currentMonth && (
+                  <span className="text-sm font-medium text-primary">
+                    Current month
+                  </span>
+                )}
+                <ChevronDown
+                  size={19}
+                  className="ml-auto transition-transform group-open:rotate-180"
+                />
+              </summary>
 
-              <div className="space-y-2">
+              <div className="mt-4 space-y-2">
+                {!monthClasses.length && (
+                  <p className="py-4 text-sm text-muted-foreground">
+                    No classes this month.
+                  </p>
+                )}
                 {monthClasses.map((c) => (
                   <Card
                     key={c.id}
@@ -133,7 +170,10 @@ export default async function StudentSchedulePage({
                         </div>
 
                         <div className="flex min-w-0 w-full items-center gap-2 flex-wrap sm:w-auto sm:justify-end">
-                          <LessonStatusBadge status={c.status} attendance={c.attendance} />
+                          <LessonStatusBadge
+                            status={c.status}
+                            attendance={c.attendance}
+                          />
                           {c.status === "scheduled" && (
                             <>
                               <RescheduleRequestDialog
@@ -169,14 +209,17 @@ export default async function StudentSchedulePage({
 
                       {c.cancel_reason && (
                         <div className="mt-2 text-sm text-muted-foreground flex items-start gap-2 break-words sm:ml-12">
-                          <AlertCircle size={12} /> <span className="min-w-0 break-words">{c.cancel_reason}</span>
+                          <AlertCircle size={12} />{" "}
+                          <span className="min-w-0 break-words">
+                            {c.cancel_reason}
+                          </span>
                         </div>
                       )}
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            </div>
+            </details>
           ))}
         </div>
       )}

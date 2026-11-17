@@ -1,4 +1,8 @@
 "use client";
+import {
+  AssignmentStatus,
+  assignmentState,
+} from "@/components/classroom/assignment-status";
 import { TableExplorer } from "@/components/table-explorer";
 import { richTextPlainText } from "@/lib/rich-text";
 import { useState, type DragEvent } from "react";
@@ -346,25 +350,7 @@ function PostStatus({
 }) {
   if (post.type !== "assignment" && post.type !== "quiz")
     return <span className="text-sm text-muted-foreground">Class update</span>;
-  const status = submission?.graded_at
-    ? "Graded"
-    : submission
-      ? "Awaiting grading"
-      : post.due_at && new Date(post.due_at) < new Date()
-        ? "Missing"
-        : "Assigned";
-  return (
-    <Badge
-      variant="outline"
-      className={
-        status === "Missing"
-          ? "border-red-200 bg-red-50 text-red-700"
-          : "bg-secondary text-secondary-foreground"
-      }
-    >
-      {status}
-    </Badge>
-  );
+  return <AssignmentStatus status={assignmentState(submission, post.due_at)} />;
 }
 
 function ClassworkPanel({
@@ -865,22 +851,6 @@ function GradesTab({
             <tbody>
               {gradable.map((post) => {
                 const sub = submissionMap.get(post.id);
-                let status: string;
-                let statusClass: string;
-
-                if (sub?.graded_at) {
-                  status = "Graded";
-                  statusClass = "text-emerald-700 bg-emerald-50";
-                } else if (sub) {
-                  status = "Awaiting grading";
-                  statusClass = "text-blue-700 bg-blue-50";
-                } else if (post.due_at && new Date(post.due_at) < new Date()) {
-                  status = "Missing";
-                  statusClass = "text-red-700 bg-red-50";
-                } else {
-                  status = "Assigned";
-                  statusClass = "text-muted-foreground bg-muted/50";
-                }
 
                 return (
                   <tr
@@ -907,12 +877,9 @@ function GradesTab({
                         : "—"}
                     </td>
                     <td className="p-3 text-center">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs px-2.5 py-0.5 ${statusClass}`}
-                      >
-                        {status}
-                      </Badge>
+                      <AssignmentStatus
+                        status={assignmentState(sub, post.due_at)}
+                      />
                     </td>
                   </tr>
                 );

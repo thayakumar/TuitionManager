@@ -743,7 +743,7 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 
 **Reflects in:** Admin and student post details; update notification; existing submission history stays intact.
 
-**Manual check:** Attach multiple documents, save, reload and open them. Edit the post and add another file; original attachments remain. Uploading disables publishing until it finishes. Removing a pending file excludes it from the saved post. Supported files are limited to 4 MB each, up to ten newly attached files per save.
+**Manual check:** Attach multiple documents, save, reload and open them. Edit the post and add another file; original attachments remain. Uploading disables publishing until it finishes. Removing a pending file excludes it from the saved post. After the connector v2 upgrade, files upload directly to Drive without an app file-size ceiling. Up to ten newly attached files can be added per save; Drive account quotas still apply. Existing files can be removed from the post or recovered through Add from Drive.
 
 ### 5.2. Searchable records
 
@@ -766,3 +766,57 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 #### 5.3.3. As an Admin or Student, I can recover from concurrent board edits → my unsaved work is preserved instead of silently overwriting another saved version.
 
 **Manual check:** Make edits in two sessions before saving. The stale session must show a conflict, permit downloading its work, and offer loading the saved board or explicitly saving its own version. A failed save retains the local working copy. This uses saved-version synchronization, without live multiplayer cursors.
+
+## 6. Classroom reliability follow-up
+
+### 6.1. Posts, work and comments
+
+#### 6.1.1. As an Admin, I can remove an existing attachment or add a replacement in Edit → the saved post contains exactly the files I kept and added.
+
+**Manual check:** Open Edit from the stream and from post details. Existing files must load. Remove one, add its replacement and Save. Cancel must preserve the old list. Removing a post reference does not delete its Drive file.
+
+#### 6.1.2. As an Admin, I can select Add from Drive → a previously uploaded file is recovered into the post instead of being uploaded again.
+
+**Manual check:** After updating the connector, search recent files, select one, Save and open it as the student. This also recovers files created by the old sharing-error path which never saved an app attachment record.
+
+#### 6.1.3. As an Admin or Student, I can paste an image into rich text or paste an ordinary URL → the image persists as a file and URLs become clickable when viewing the post/work.
+
+**Manual check:** Paste a picture, wait for upload, Save, reload and view as the other role. The stored HTML contains an authenticated file URL, never a base64 image blob. Failed image uploads must block publishing until retried or explicitly discarded.
+
+#### 6.1.4. As a Student, I can submit text, an image or an attachment → Submitted work appears full-width below the instructions, separate from the next submission form.
+
+**Reflects in:** Tutor Student Work; latest attempt; previous attempt history; grading eligibility.
+
+**Manual check:** Submit a file without text, reload and open the attached work as both roles. Submit another attempt: old work/grade remains visible, but only the latest can receive the next grade. Assigned is blue, pending/turned-in amber, graded green, missing grey in every view.
+
+#### 6.1.5. As an Admin or Student, I can comment on any classroom post → the conversation appears below the post and the other role receives a notification.
+
+**Manual check:** Add formatted text and links; reload as the other role. Edit your own comment. A student cannot edit/delete the tutor's comment or access another classroom. A tutor can remove a student's comment.
+
+### 6.2. Navigation and records
+
+#### 6.2.1. As a user, I can see foreground progress while a page or action is loading → repeated interactions are blocked until success or failure.
+
+**Manual check:** With a slow connection, navigate and save once; further clicks must not create duplicate writes. A failed request restores controls and retains the draft. Background note autosave, notification polling and whiteboard saving must not freeze the page.
+
+#### 6.2.2. As an Admin, I can scan reschedule requests → pending rows stay compact and the review dialog contains the original class, reason and proposed/custom choices.
+
+**Manual check:** History shows the original lesson, approved time, reason and admin note, without irrelevant rejected alternatives.
+
+#### 6.2.3. As a user, I can click a notification's title → it marks read and opens the relevant destination without a separate View link.
+
+#### 6.2.4. As a Student, I can expand schedule months → the current month starts first and open; other months begin collapsed below it.
+
+#### 6.2.5. As a Parent, I can read class reports → date, topic, rating and expand action align with their table headings.
+
+#### 6.2.6. As a user, I can read an invoice detail → line items display directly, without search/filter/pagination controls.
+
+### 6.3. Whiteboard and storage setup
+
+#### 6.3.1. As an Admin or Student, I can open a whiteboard → the canvas uses the full viewport; Board options reveals details and controls when needed.
+
+**Manual check:** No Back to meeting link appears. Saving errors/conflicts remain visible even with options closed. Draw, save and reload on desktop and phone.
+
+#### 6.3.2. As an Admin, I can prepare the storage connector in Settings → File storage → a script configured for this app is available to copy or download.
+
+**Manual check:** Replace the code in the existing Google Apps Script project, run authorizeConnector, grant the requested Drive/external-request access, then deploy a new version of the existing web-app deployment. Check connection in Settings before testing a large/private upload. Keep the existing web-app URL; a new deployment URL also requires updating APPS_SCRIPT_UPLOAD_URL in Vercel.

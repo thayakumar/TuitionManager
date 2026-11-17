@@ -12,6 +12,7 @@ export default function GlobalError({
 }) {
   return (
     <section
+      data-page-error="true"
       role="alert"
       className="mx-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center"
     >

@@ -1,3 +1,9 @@
+import { PostComments } from "@/components/post-comments";
+import { attachmentHref } from "@/lib/attachment-url";
+import {
+  AssignmentStatus,
+  assignmentState,
+} from "@/components/classroom/assignment-status";
 import { RichText } from "@/components/rich-text";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -62,7 +68,7 @@ export default async function StudentPostDetailPage({
       "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
       [postId],
     ),
-    post.type === "assignment"
+    post.type === "assignment" || post.type === "quiz"
       ? queryOne<CurrentSubmission>(
           "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at, version FROM submissions WHERE post_id = ? AND student_id = ?",
           [postId, studentId],
@@ -82,14 +88,10 @@ export default async function StudentPostDetailPage({
       <Link href={`/portal/student/${studentId}/classroom`}>
         <Button variant="ghost" size="sm" className="gap-1.5">
           <ArrowLeft size={14} />
-          My Class
+          My Classroomroom
         </Button>
       </Link>
-      <div
-        className={
-          post.type === "assignment" ? "classroom-assignment-layout" : ""
-        }
-      >
+      <div className="space-y-6 min-w-0">
         <Card>
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-start gap-3">
@@ -111,7 +113,7 @@ export default async function StudentPostDetailPage({
                 </p>
               </div>
             </div>
-            {post.type === "assignment" && (
+            {(post.type === "assignment" || post.type === "quiz") && (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {post.max_points !== null && (
                   <Badge variant="outline">{post.max_points} points</Badge>
@@ -151,7 +153,22 @@ export default async function StudentPostDetailPage({
                       rel="noopener noreferrer"
                       className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted/40"
                     >
-                      <FileText size={17} className="shrink-0 text-primary" />
+                      {attachment.file_type?.startsWith("image/") ? (
+                        <img
+                          src={
+                            attachmentHref(attachment.file_url, true) ||
+                            undefined
+                          }
+                          alt=""
+                          loading="lazy"
+                          className="h-16 w-20 shrink-0 rounded-lg border border-border object-cover"
+                        />
+                      ) : (
+                        <FileText
+                          size={22}
+                          className="shrink-0 text-blue-700"
+                        />
+                      )}
                       <span className="min-w-0 flex-1 break-words">
                         {attachment.file_name}
                       </span>
@@ -170,56 +187,55 @@ export default async function StudentPostDetailPage({
             )}
           </CardContent>
         </Card>
-        {post.type === "assignment" && (
-          <Card>
-            <CardContent className="space-y-5 p-5 sm:p-6">
-              <h2 className="font-semibold">Your work</h2>
-              {submission ? (
-                <>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-sm font-medium">
+        {(post.type === "assignment" || post.type === "quiz") && (
+          <>
+            <Card data-testid="submitted-work" className="min-w-0">
+              <CardContent className="space-y-5 p-5 sm:p-7">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-xl font-semibold">Submitted work</h2>
+                  <AssignmentStatus
+                    status={assignmentState(submission, post.due_at)}
+                  />
+                </div>
+                {submission ? (
+                  <>
+                    <h3 className="font-medium">
                       Latest attempt · {submission.version}
                     </h3>
-                    <Badge
-                      variant={submission.graded_at ? "default" : "secondary"}
-                    >
-                      {submission.graded_at ? "Graded" : "Awaiting grading"}
-                    </Badge>
-                  </div>
-                  <AttemptWork
-                    attempt={submission}
-                    maxPoints={post.max_points}
-                  />
-                  <details className="rounded-xl border border-border p-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-primary">
-                      Submit a new attempt
-                    </summary>
-                    <div className="mt-4">
-                      <SubmissionForm
-                        postId={postId}
-                        studentId={studentId}
-                        studentName={student.name}
-                        resubmission
-                      />
-                    </div>
-                  </details>
-                  <SubmissionHistory
-                    attempts={attempts}
-                    latestVersion={submission.version}
-                    maxPoints={post.max_points}
-                  />
-                </>
-              ) : (
+                    <AttemptWork
+                      attempt={submission}
+                      maxPoints={post.max_points}
+                    />
+                    <SubmissionHistory
+                      attempts={attempts}
+                      latestVersion={submission.version}
+                      maxPoints={post.max_points}
+                    />
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">
+                    You haven’t submitted work for this assignment yet.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+            <Card data-testid="submit-work" className="min-w-0">
+              <CardContent className="space-y-5 p-5 sm:p-7">
+                <h2 className="text-xl font-semibold">
+                  {submission ? "Submit a new attempt" : "Submit work"}
+                </h2>
                 <SubmissionForm
                   postId={postId}
                   studentId={studentId}
                   studentName={student.name}
+                  resubmission={!!submission}
                 />
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
+      <PostComments postId={postId} />
     </div>
   );
 }
@@ -230,9 +246,5 @@ function SubmissionStatus({
   submission: CurrentSubmission | undefined;
   dueAt: string | null;
 }) {
-  if (submission?.graded_at) return <Badge>Graded</Badge>;
-  if (submission) return <Badge variant="secondary">Awaiting grading</Badge>;
-  if (dueAt && Date.parse(dueAt) < Date.now())
-    return <Badge variant="destructive">Missing</Badge>;
-  return <Badge variant="outline">Assigned</Badge>;
+  return <AssignmentStatus status={assignmentState(submission, dueAt)} />;
 }

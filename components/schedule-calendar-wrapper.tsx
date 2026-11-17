@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 import { ScheduleFields, DateTimeField } from "@/components/scheduling-fields";
 import { actionError } from "@/lib/action-errors";
 
@@ -65,6 +66,7 @@ export function ScheduleCalendarWrapper({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  useActionBusy(pending, "Updating schedule…");
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [add, setAdd] = useState<{ date: string; duration: number } | null>(
@@ -512,7 +514,9 @@ export function ScheduleCalendarWrapper({
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Plan a lesson</DialogTitle>
-            <DialogDescription className="sr-only">Choose a student, date, time and duration.</DialogDescription>
+            <DialogDescription className="sr-only">
+              Choose a student, date, time and duration.
+            </DialogDescription>
           </DialogHeader>
           {add && (
             <form

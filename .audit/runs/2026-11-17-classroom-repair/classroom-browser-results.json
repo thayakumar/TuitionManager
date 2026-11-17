@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "File-only work is visible in a separate full-width submitted-work section",
+      "status": "Pass"
+    },
+    {
+      "name": "Pending assignment color agrees between stream and post detail",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor sees attachment-only student work clearly",
+      "status": "Pass"
+    },
+    {
+      "name": "Existing attachment appears in edit dialog and can be removed atomically",
+      "status": "Pass"
+    },
+    {
+      "name": "Post composer topic controls and student work fit mobile",
+      "status": "Pass"
+    },
+    {
+      "name": "All post types expose class comments below the post",
+      "status": "Pass"
+    },
+    {
+      "name": "No classroom runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

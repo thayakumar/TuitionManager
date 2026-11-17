@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -200,6 +201,7 @@ export function RecurringScheduleDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  useActionBusy(pending, "Saving recurring schedule…");
   const [error, setError] = useState<string | null>(null);
   async function submit(data: FormData) {
     if (pending) return;

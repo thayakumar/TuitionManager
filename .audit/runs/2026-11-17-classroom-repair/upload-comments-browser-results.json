@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "name": "A 12MB attachment uploads through direct Drive chunks and renders in its saved post",
+      "status": "Pass"
+    },
+    {
+      "name": "Existing Drive uploads can be recovered into a post and private attachments open for its student",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor and student can post, edit and moderate class comments",
+      "status": "Pass"
+    },
+    {
+      "name": "File and comment endpoints reject another classroom and expose no private data",
+      "status": "Pass"
+    },
+    {
+      "name": "Settings prepares the authenticated Drive connector and verifies its version",
+      "status": "Pass"
+    },
+    {
+      "name": "No runtime errors in real upload and comment workflows",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

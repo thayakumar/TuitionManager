@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "name": "Personal whiteboard fills viewport with workspace chrome hidden",
+      "status": "Pass"
+    },
+    {
+      "name": "Board options reveal details and workspace exit without Back to meeting",
+      "status": "Pass"
+    },
+    {
+      "name": "Native drawing autosaves and survives reload in fullscreen",
+      "status": "Pass"
+    },
+    {
+      "name": "Mobile lesson whiteboard fills viewport with optional class links",
+      "status": "Pass"
+    },
+    {
+      "name": "Save error stays visible outside collapsed options and retry works",
+      "status": "Pass"
+    },
+    {
+      "name": "No fullscreen whiteboard runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

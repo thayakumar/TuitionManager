@@ -2,11 +2,17 @@
 export function storageFile(data: unknown): {
   fileUrl: string;
   fileName?: string;
+  fileId?: string;
+  fileType?: string;
+  warning?: string;
 } {
   if (!data || typeof data !== "object")
     throw new Error("The storage service returned an empty response.");
   const root = data as Record<string, unknown>;
-  if (root.success === false || root.status === "error" || root.error) {
+  if (
+    (root.success === false || root.status === "error" || root.error) &&
+    root.created !== true
+  ) {
     const message = typeof root.error === "string" ? root.error : "";
     if (/permission|sharing|access denied|not authorized/i.test(message))
       throw new Error(
@@ -43,5 +49,10 @@ export function storageFile(data: unknown): {
   return {
     fileUrl: url.toString(),
     ...(typeof file.fileName === "string" ? { fileName: file.fileName } : {}),
+    ...(typeof fileId === "string" && /^[\w-]{10,}$/.test(fileId)
+      ? { fileId }
+      : {}),
+    ...(typeof file.fileType === "string" ? { fileType: file.fileType } : {}),
+    ...(typeof root.warning === "string" ? { warning: root.warning } : {}),
   };
 }

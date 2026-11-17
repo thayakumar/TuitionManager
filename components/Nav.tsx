@@ -188,6 +188,7 @@ export default function Nav() {
     pathname.startsWith("/portal") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
+    pathname === "/whiteboard" ||
     pathname === "/login"
   )
     return null;

@@ -1,4 +1,5 @@
 "use client";
+import { useActionBusy } from "@/components/action-busy";
 import { actionError } from "@/lib/action-errors";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ export function RecurrenceManager({ series }: { series: Series[] }) {
     kind: "stop" | "extend";
   } | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
+  useActionBusy(busy !== null, "Updating recurring lessons…");
   const [error, setError] = useState<string | null>(null);
   async function save(r: Series, kind: "stop" | "extend") {
     const horizon = r.generated_through || r.end_date || r.start_date;

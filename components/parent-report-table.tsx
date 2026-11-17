@@ -1,9 +1,11 @@
+"use client";
+
+import { useState, Fragment } from "react";
 import { TableExplorer } from "@/components/table-explorer";
 import { BookOpen, ChevronDown } from "lucide-react";
 import { ReportDetails } from "@/components/report-details";
 import { RatingBadge } from "@/components/rating-badge";
 import { fmtDateTime } from "@/lib/format";
-
 export type ParentReport = {
   id: number;
   class_id: number;
@@ -17,8 +19,8 @@ export type ParentReport = {
   scheduled_at: string;
   duration_minutes: number;
 };
-
 export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
   if (!reports.length)
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
@@ -30,68 +32,94 @@ export function ParentReportTable({ reports }: { reports: ParentReport[] }) {
       </div>
     );
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <TableExplorer><table className="w-full text-left text-sm">
-        <caption className="sr-only">
-          Class reports. Expand a lesson to read its full report.
-        </caption>
-        <thead className="bg-muted/40 text-xs text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 font-medium">Lesson</th>
-            <th className="hidden px-3 py-3 font-medium sm:table-cell">
-              Duration
-            </th>
-            <th className="hidden px-3 py-3 font-medium sm:table-cell">
-              Rating
-            </th>
-            <th className="px-4 py-3 text-right font-medium">Report</th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports.map((report) => (
-            <tr key={report.id} className="border-t border-border"
-              data-table-search={[report.scheduled_at,fmtDateTime(report.scheduled_at),report.duration_minutes,report.rating,report.topics_covered,report.homework,report.performance,report.strengths,report.areas_to_improve,report.next_focus].join(" ")}
-              data-table-columns={JSON.stringify([fmtDateTime(report.scheduled_at),`${report.duration_minutes} min`,report.rating ? `${report.rating}/5` : "Not rated",[report.topics_covered,report.homework,report.performance,report.strengths,report.areas_to_improve,report.next_focus].join(" ")])}>
-              <td colSpan={4} className="p-0">
-                <details className="group">
-                  <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-center gap-3 px-4 py-4 hover:bg-muted/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[minmax(0,1fr)_100px_90px_100px]">
-                    <span>
-                      <span className="block font-medium">
-                        {fmtDateTime(report.scheduled_at)}
-                      </span>
-                      <span className="mt-1 block text-xs text-muted-foreground sm:hidden">
-                        {report.duration_minutes} minutes
-                      </span>
-                      <span className="mt-2 inline-flex sm:hidden">
-                        <RatingBadge rating={report.rating} />
-                      </span>
-                    </span>
-                    <span className="hidden text-muted-foreground sm:block">
-                      {report.duration_minutes} min
-                    </span>
-                    <span className="hidden items-center gap-1 sm:flex">
-                      <RatingBadge rating={report.rating} />
-                    </span>
-                    <span className="flex items-center justify-end gap-1 text-xs font-medium text-primary">
-                      <span className="group-open:hidden">Read report</span>
-                      <span className="hidden group-open:inline">
-                        Close report
-                      </span>
-                      <ChevronDown
-                        size={14}
-                        className="transition-transform group-open:rotate-180"
-                      />
-                    </span>
-                  </summary>
-                  <div className="border-t border-border bg-white p-4">
-                    <ReportDetails report={report} />
-                  </div>
-                </details>
-              </td>
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <TableExplorer label="class reports">
+        <table className="w-full text-left text-sm">
+          <caption className="sr-only">
+            Class reports. Expand a lesson to read its full report.
+          </caption>
+          <thead>
+            <tr className="border-b border-border text-muted-foreground">
+              <th className="p-4 font-medium">Lesson</th>
+              <th className="p-4 font-medium">Duration</th>
+              <th className="p-4 font-medium">Rating</th>
+              <th className="p-4 text-right font-medium">Report</th>
             </tr>
-          ))}
-        </tbody>
-      </table></TableExplorer>
+          </thead>
+          <tbody>
+            {reports.map((report) => {
+              const open = expanded === report.id;
+              return (
+                <Fragment key={report.id}>
+                  <tr
+                    className="border-b border-border/70"
+                    data-table-search={[
+                      report.scheduled_at,
+                      fmtDateTime(report.scheduled_at),
+                      report.duration_minutes,
+                      report.rating ? `${report.rating}/5` : "Not rated",
+                      report.topics_covered,
+                      report.homework,
+                      report.performance,
+                      report.strengths,
+                      report.areas_to_improve,
+                      report.next_focus,
+                    ].join(" ")}
+                    data-table-columns={JSON.stringify([
+                      fmtDateTime(report.scheduled_at),
+                      `${report.duration_minutes} min`,
+                      report.rating ? `${report.rating}/5` : "Not rated",
+                      [
+                        report.topics_covered,
+                        report.homework,
+                        report.performance,
+                        report.strengths,
+                        report.areas_to_improve,
+                        report.next_focus,
+                      ].join(" "),
+                    ])}
+                  >
+                    <td className="p-4 font-medium">
+                      {fmtDateTime(report.scheduled_at)}
+                    </td>
+                    <td className="p-4 text-muted-foreground">
+                      {report.duration_minutes} min
+                    </td>
+                    <td className="p-4">
+                      <RatingBadge rating={report.rating} />
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        aria-controls={`parent-report-${report.id}`}
+                        onClick={() => setExpanded(open ? null : report.id)}
+                        className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 py-2 font-medium text-primary hover:bg-secondary"
+                      >
+                        {open ? "Close report" : "Read report"}
+                        <ChevronDown
+                          size={17}
+                          className={open ? "rotate-180" : ""}
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                  {open && (
+                    <tr id={`parent-report-${report.id}`} data-table-detail>
+                      <td
+                        colSpan={4}
+                        className="border-b border-border bg-secondary/30 p-5"
+                      >
+                        <ReportDetails report={report} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </TableExplorer>
     </div>
   );
 }

@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "Pending requests stay compact; review dialog contains original class and all choices",
+      "status": "Pass"
+    },
+    {
+      "name": "Past requests show only selected outcome, reason and admin note",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin notification title opens target and marks read without View action",
+      "status": "Pass"
+    },
+    {
+      "name": "Student notification title opens own target and marks read",
+      "status": "Pass"
+    },
+    {
+      "name": "Student schedule opens only current month first and other months expand on demand",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent reports use four aligned cells and expandable detail rows; filters stay working",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin and parent invoice details show all items without search or filter controls",
+      "status": "Pass"
+    },
+    {
+      "name": "No browser runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

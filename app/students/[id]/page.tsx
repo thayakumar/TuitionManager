@@ -1,3 +1,4 @@
+import { FormBusy } from "@/components/action-busy";
 import { RichText } from "@/components/rich-text";
 import { TableExplorer } from "@/components/table-explorer";
 import { requireAdminPage } from "@/lib/auth";
@@ -796,6 +797,7 @@ export default async function StudentDetailPage({
         </CardHeader>
         <CardContent>
           <form action={addStudentNote.bind(null, id)} className="mb-4">
+                <FormBusy />
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <Textarea

@@ -1,3 +1,9 @@
+import { PostComments } from "@/components/post-comments";
+import { attachmentHref } from "@/lib/attachment-url";
+import {
+  AssignmentStatus,
+  assignmentState,
+} from "@/components/classroom/assignment-status";
 import { RichText } from "@/components/rich-text";
 import { requireAdminPage } from "@/lib/auth";
 import {
@@ -104,7 +110,7 @@ export default async function PostDetailPage({
       "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
       [postId],
     ),
-    post.type === "assignment"
+    post.type === "assignment" || post.type === "quiz"
       ? queryOne<Submission & { version: number }>(
           "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at, version FROM submissions WHERE post_id = ? AND student_id = ? ORDER BY submitted_at DESC",
           [postId, studentId],
@@ -127,7 +133,7 @@ export default async function PostDetailPage({
     POST_TYPE_CONFIG[post.type as PostType] || POST_TYPE_CONFIG.material;
   const Icon = config.icon;
 
-  const isAssignment = post.type === "assignment";
+  const isAssignment = post.type === "assignment" || post.type === "quiz";
 
   return (
     <>
@@ -168,6 +174,7 @@ export default async function PostDetailPage({
           studentId={studentId}
         />
       )}
+      <PostComments postId={postId} />
     </>
   );
 }
@@ -193,15 +200,15 @@ function PostContent({
     <Card className="border shadow-none">
       <CardContent className="p-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <div
               className={`flex size-11 items-center justify-center rounded-xl ${config.bg} shrink-0`}
             >
               <Icon size={22} className={config.color} />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-foreground">
+              <h1 className="break-words text-2xl font-semibold text-foreground">
                 {post.title}
               </h1>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -218,7 +225,12 @@ function PostContent({
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <EditPostButton post={post} studentId={studentId} topics={topics} />
+            <EditPostButton
+              post={post}
+              studentId={studentId}
+              topics={topics}
+              existingAttachments={attachments}
+            />
             <DeletePostButton postId={post.id} studentId={studentId} />
           </div>
         </div>
@@ -266,15 +278,15 @@ function AssignmentDetail({
       {/* Header Card */}
       <Card className="border shadow-none">
         <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
               <div
                 className={`flex size-11 items-center justify-center rounded-xl ${config.bg} shrink-0`}
               >
                 <Icon size={22} className={config.color} />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">
+                <h1 className="break-words text-2xl font-semibold text-foreground">
                   {post.title}
                 </h1>
                 <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
@@ -288,7 +300,7 @@ function AssignmentDetail({
                     </>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex flex-wrap items-center gap-3 mt-2">
                   {post.max_points !== null && (
                     <Badge variant="outline" className="text-xs">
                       {post.max_points} points
@@ -300,24 +312,9 @@ function AssignmentDetail({
                       Due {fmtDateTime(post.due_at)}
                     </span>
                   )}
-                  {submission ? (
-                    submission.graded_at ? (
-                      <Badge className="text-xs bg-emerald-500 text-white">
-                        Graded
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        Turned in
-                      </Badge>
-                    )
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="text-xs text-red-500 border-red-200"
-                    >
-                      Not submitted
-                    </Badge>
-                  )}
+                  <AssignmentStatus
+                    status={assignmentState(submission, post.due_at)}
+                  />
                 </div>
               </div>
             </div>
@@ -326,6 +323,7 @@ function AssignmentDetail({
                 post={post}
                 studentId={studentId}
                 topics={topics}
+                existingAttachments={attachments}
               />
               <DeletePostButton postId={post.id} studentId={studentId} />
             </div>
@@ -451,9 +449,18 @@ function AttachmentsList({ attachments }: { attachments: PostAttachment[] }) {
             rel="noopener noreferrer"
             className="flex items-center gap-2.5 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors group"
           >
-            <div className="flex size-9 items-center justify-center rounded-lg bg-muted shrink-0">
-              <FileText size={16} className="text-muted-foreground" />
-            </div>
+            {att.file_type?.startsWith("image/") ? (
+              <img
+                src={attachmentHref(att.file_url, true) || undefined}
+                alt=""
+                loading="lazy"
+                className="h-16 w-20 shrink-0 rounded-lg border border-border object-cover"
+              />
+            ) : (
+              <div className="flex size-11 items-center justify-center rounded-lg bg-blue-50 shrink-0">
+                <FileText size={22} className="text-blue-700" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                 {att.file_name}
