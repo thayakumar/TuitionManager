@@ -895,8 +895,23 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 
 ### 10.4. As a chat participant, I can see unread counts and read indicators → I know which conversations need attention.
 
-**Manual check:** Leave a room, receive a message, check the numeric navigation badge, then open the room and read it. Visible rooms poll for updates; hidden browser tabs pause polling. Messages are not end-to-end encrypted, and voice/video calling is not part of this chat release.
+**Manual check:** Leave a room, receive a message, check the numeric navigation badge, then open the room and read it. Visible rooms check for new messages every two seconds using incremental responses, and refresh edits/removals every four seconds; hidden browser tabs pause polling. Messages are not end-to-end encrypted, and voice/video calling is not part of this chat release.
 
 ### 10.5. As an authorized viewer, I can open a PDF attachment → it opens in the current page with partial loading.
 
 **Manual check:** Open a PDF, move through pages, close and reopen it on desktop and phone. The app supports byte-range responses so the viewer can request needed portions. A download requires an explicit action. Google connector latency still affects the initial response; legacy external public files may use the provider's viewer.
+
+
+## 11. Responsive chat sending and delivery recovery
+
+### 11.1. As a chat participant, I can press Send → my message appears immediately as Sending and I can compose the next message.
+
+**Manual check:** On a slow connection, send two messages. Both appear locally without waiting for confirmation. They become confirmed only after the server accepts them. Uploaded attachments remain associated with their exact message. The server returns the saved message directly, avoiding a second thread request.
+
+### 11.2. As a chat participant, I can retry an unconfirmed message → its text, attachments and reply are preserved without duplication.
+
+**Manual check:** Interrupt a send, reload the tab, open the room and use Retry message. A lost response after the server committed also creates only one stored message. Until confirmed, the bubble says Sending or Not confirmed. Recovery is stored in this browser tab's session storage; it is not cross-device storage.
+
+### 11.3. As an Admin, I can switch family rooms while a message is sending → the outgoing message remains in its original room.
+
+**Manual check:** Send on a slow connection and select another student. Neither a local pending bubble nor the later confirmation appears in the other family's thread. Return to see the message. A polling update arriving before the send response resolves into a single bubble.

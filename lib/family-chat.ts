@@ -38,19 +38,34 @@ export async function chatActor(context: ChatContext = {}): Promise<ChatActor> {
   }
   throw new ChatError(400,"Unknown chat viewer");
 }
-async function checkAccess(tx: Pick<Transaction,"execute">, sid: number, actor: ChatActor) {
-  const students = await tx.execute({sql:"SELECT id FROM students WHERE id=? AND (?='admin' OR ?='parent' OR active=1)",args:[sid,actor.role,actor.role]});
-  if (!students.rows.length || (actor.role !== "admin" && actor.studentId !== sid)) throw new ChatError(404,"Chat not found");
-  if (actor.role === "parent") {
-    const token = await tx.execute({sql:"SELECT id FROM share_tokens WHERE token=? AND student_id=? AND active=1",args:[actor.parentToken!,sid]});
-    if (!token.rows.length) throw new ChatError(401,"This parent link is no longer active");
-  }
+type RoomDetails = { id: number; studentName: string; profilePhotoUrl: string | null };
+async function roomDetailsFor(tx: Pick<Transaction,"execute">, sid: number, actor: ChatActor): Promise<RoomDetails> {
+  if (actor.role !== "admin" && actor.studentId !== sid) throw new ChatError(404,"Chat not found");
+  // Room, active student and revocable parent scope share one database round trip.
+  const row = (await tx.execute({sql:`SELECT r.id,s.name AS studentName,s.profile_photo_url AS profilePhotoUrl,
+    CASE WHEN ?='parent' THEN EXISTS(SELECT 1 FROM share_tokens t WHERE t.token=? AND t.student_id=s.id AND t.active=1) ELSE 1 END AS parentActive
+    FROM family_chat_rooms r JOIN students s ON s.id=r.student_id
+    WHERE r.student_id=? AND (?<>'student' OR s.active=1)`,args:[actor.role,actor.parentToken||"",sid,actor.role]})).rows[0];
+  if (!row) throw new ChatError(404,"Chat not found");
+  if (!row.parentActive) throw new ChatError(401,"This parent link is no longer active");
+  return {id:Number(row.id),studentName:String(row.studentName),profilePhotoUrl:row.profilePhotoUrl as string|null};
 }
 async function roomFor(tx: Pick<Transaction,"execute">, sid: number, actor: ChatActor) {
-  await checkAccess(tx,sid,actor);
-  const room = (await tx.execute({sql:"SELECT id FROM family_chat_rooms WHERE student_id=?",args:[sid]})).rows[0];
-  if (!room) throw new ChatError(404,"Chat not found");
-  return Number(room.id);
+  return (await roomDetailsFor(tx,sid,actor)).id;
+}
+const MESSAGE_SELECT = `SELECT m.*,s.name AS student_name,s.profile_photo_url,
+  reply.id AS reply_id,reply.body AS reply_body,reply.author_role AS reply_author_role,reply.deleted_at AS reply_deleted_at
+  FROM family_chat_messages m LEFT JOIN family_chat_messages reply ON reply.id=m.reply_to
+  JOIN family_chat_rooms r ON r.id=m.room_id JOIN students s ON s.id=r.student_id`;
+function messageView(m: Record<string, unknown>, actor: ChatActor, readRows: Array<Record<string,unknown>> = []) {
+  const own=m.author_key===actor.key;
+  return {id:Number(m.id),body:m.deleted_at?"":String(m.body),authorRole:m.author_role,authorName:m.author_role==="admin"?"Tutor":m.author_role==="parent"?"Parent":m.student_name,authorPhoto:m.author_role==="student"?m.profile_photo_url:null,isOwn:own,canEdit:!m.deleted_at&&own,canDelete:!m.deleted_at&&(actor.role==="admin"||own),createdAt:m.created_at,editedAt:m.edited_at||null,deletedAt:m.deleted_at||null,attachments:m.deleted_at?[]:JSON.parse(String(m.attachments)),replyTo:m.reply_to?Number(m.reply_to):null,replyPreview:m.reply_id?{id:Number(m.reply_id),body:m.reply_deleted_at?"":String(m.reply_body),authorName:m.reply_author_role==="admin"?"Tutor":m.reply_author_role==="parent"?"Parent":m.student_name,deletedAt:m.reply_deleted_at}:null,readBy:readRows.filter(r=>Number(r.last_read_id)>=Number(m.id)).map(r=>r.actor_role),...(own?{clientId:String(m.client_id)}:{})};
+}
+async function savedMessage(tx: Pick<Transaction,"execute">, roomId:number, actor:ChatActor, where:string, args:InValue[]) {
+  const sql=MESSAGE_SELECT.replace("SELECT m.*", "SELECT m.*,(SELECT json_group_array(DISTINCT actor_role) FROM family_chat_reads cr WHERE cr.room_id=m.room_id AND cr.last_read_id>=m.id) AS read_roles");
+  const row=(await tx.execute({sql:sql+" WHERE m.room_id=? AND "+where,args:[roomId,...args]})).rows[0];
+  const view=row ? messageView(row,actor) : null;
+  return view ? {...view,readBy:JSON.parse(String(row!.read_roles||"[]")) as ChatRole[]} : null;
 }
 /** Navbar polling returns an aggregate only, never room previews or message bodies. */
 export async function chatUnread(context: ChatContext = {}) {
@@ -99,23 +114,30 @@ export async function chatMessages(studentId: number, context: ChatContext = {},
     const list=refreshCondition ? rows : rows.slice(0,50);if(!forward)list.reverse();
     const hasMore=refreshCondition ? !!(await tx.execute({sql:"SELECT id FROM family_chat_messages WHERE room_id=? AND id<? LIMIT 1",args:[roomId,Number(list[0]?.id||0)]})).rows.length : rows.length>50;
     const room=(await tx.execute({sql:"SELECT s.name AS studentName,s.profile_photo_url AS profilePhotoUrl,r.id,r.student_id AS studentId FROM family_chat_rooms r JOIN students s ON s.id=r.student_id WHERE r.id=?",args:[roomId]})).rows[0];
-    return {room,viewerRole:actor.role,hasMore,messages:list.map(m=>({id:Number(m.id),body:m.deleted_at?"":String(m.body),authorRole:m.author_role,authorName:m.author_role==="admin"?"Tutor":m.author_role==="parent"?"Parent":m.student_name,authorPhoto:m.author_role==="student"?m.profile_photo_url:null,isOwn:m.author_key===actor.key,canEdit:!m.deleted_at&&m.author_key===actor.key,canDelete:!m.deleted_at&&(actor.role==="admin"||m.author_key===actor.key),createdAt:m.created_at,editedAt:m.edited_at,deletedAt:m.deleted_at,attachments:m.deleted_at?[]:JSON.parse(String(m.attachments)),replyTo:m.reply_to?Number(m.reply_to):null,replyPreview:m.reply_id?{id:Number(m.reply_id),body:m.reply_deleted_at?"":String(m.reply_body),authorName:m.reply_author_role==="admin"?"Tutor":m.reply_author_role==="parent"?"Parent":m.student_name,deletedAt:m.reply_deleted_at}:null,readBy:readRows.filter(r=>Number(r.last_read_id)>=Number(m.id)).map(r=>r.actor_role)}))};
+    return {room,viewerRole:actor.role,hasMore,readPositions:readRows.map(row=>({role:row.actor_role,lastReadId:Number(row.last_read_id)})),messages:list.map(m=>messageView(m,actor,readRows))};
   });
 }
-async function verifiedAttachments(tx: Transaction, actor: ChatActor, sid:number, raw: unknown): Promise<ChatAttachment[]> {
-  if (raw===undefined) return [];
-  if (!Array.isArray(raw)||raw.length>20) invalid("Choose at most 20 attachments per message");
-  const out: ChatAttachment[]=[];
-  for (const item of raw as Array<{fileUrl?:string}>) {
-    const fileId=driveFileId(item?.fileUrl);
-    if (!fileId) invalid("Upload attachments using the paperclip");
-    const file=(await tx.execute({sql:"SELECT owner_role,owner_student_id,file_name,mime_type,parent_token_hash FROM uploaded_files WHERE file_id=?",args:[fileId]})).rows[0];
+async function verifiedAttachments(tx: Transaction, actor: ChatActor, sid:number, raw: unknown, inlineUrls: string[] = []): Promise<ChatAttachment[]> {
+  const requested=raw===undefined?[]:raw;
+  if (!Array.isArray(requested)||requested.length>20) invalid("Choose at most 20 attachments per message");
+  const combined=[...(requested as Array<{fileUrl?:string}>),...inlineUrls.map(fileUrl=>({fileUrl}))];
+  const ids=combined.map(item=>{const id=driveFileId(item?.fileUrl);if(!id)invalid("Upload attachments using the paperclip");return id!});
+  const unique=[...new Set(ids)], files=new Map<string,Record<string,unknown>>();
+  // A single lookup for a normal message, rather than a remote round trip per file/image.
+  for(let offset=0;offset<unique.length;offset+=200){
+    const page=unique.slice(offset,offset+200);
+    const rows=(await tx.execute({sql:`SELECT file_id,owner_role,owner_student_id,file_name,mime_type,parent_token_hash FROM uploaded_files WHERE file_id IN (${page.map(()=>"?").join(",")})`,args:page})).rows;
+    for(const row of rows)files.set(String(row.file_id),row);
+  }
+  const out:ChatAttachment[]=[];
+  for(const fileId of ids){
+    const file=files.get(fileId);
     if (!file || (actor.role==="admin"?file.owner_role!=="admin":file.owner_role!=="student"||Number(file.owner_student_id)!==sid)) throw new ChatError(403,"This attachment does not belong to your account");
     if (actor.role === "parent" && file.parent_token_hash !== actor.key.slice(7)) throw new ChatError(403,"This attachment was not uploaded with your parent link");
     if (actor.role === "student" && file.parent_token_hash) throw new ChatError(403,"This attachment was not uploaded by your student account");
     out.push({fileUrl:"/api/files/"+fileId,fileName:String(file.file_name),fileType:String(file.mime_type)});
   }
-  return out;
+  return out.slice(0,(requested as unknown[]).length);
 }
 export async function mutateChat(studentId:number, data:{action:string;body?:unknown;messageId?:unknown;replyTo?:unknown;attachments?:unknown;clientId?:unknown;lastReadId?:unknown},context:ChatContext={}) {
   const sid=positive(studentId,"Student"),actor=await chatActor(context),now=new Date().toISOString();
@@ -136,8 +158,16 @@ export async function mutateChat(studentId:number, data:{action:string;body?:unk
     });
   }
   return withTransaction(async tx=>{
-    const roomId=await roomFor(tx,sid,actor);
+    const room=await roomDetailsFor(tx,sid,actor),roomId=room.id;
     if(!["send","edit","delete"].includes(data.action))invalid("Unknown chat action");
+    const clientId=data.action==="send"?String(data.clientId??""):"";
+    if(data.action==="send"){
+      if(!/^[A-Za-z0-9_-]{8,100}$/.test(clientId))invalid("Message identifier is invalid");
+      // Lost acknowledgements must remain retryable even if an old attachment
+      // has since been removed. Re-authorize the room, then return the stored result.
+      const existing=await savedMessage(tx,roomId,actor,"m.author_key=? AND m.client_id=?",[actor.key,clientId]);
+      if(existing)return {success:true,id:existing.id,message:existing};
+    }
     let previous: Record<string,InValue>|undefined;
     if(data.action!=="send") {
       const mid=positive(data.messageId,"Message");
@@ -157,21 +187,20 @@ export async function mutateChat(studentId:number, data:{action:string;body?:unk
       return fid ? prefix+"/api/files/"+fid+"?inline=1"+suffix : all;
     });
     const body=sanitizeRichText(normalized).replace(/(?:[?&]|&amp;)parent_token=[^&"\s<>]*/g, "");
-    const attachments=await verifiedAttachments(tx,actor,sid,data.attachments ?? (previous?JSON.parse(String(previous.attachments)):[]));
+    const inlineUrls=Array.from(body.matchAll(/<img[^>]+src="([^"]+)"/g),match=>match[1]);
+    const attachments=await verifiedAttachments(tx,actor,sid,data.attachments ?? (previous?JSON.parse(String(previous.attachments)):[]),inlineUrls);
     if(!hasRichTextContent(body)&&!attachments.length)invalid("Write a message or add an attachment");
-    // Inline images must pass the same ownership validation as paperclip files.
-    for(const match of body.matchAll(/<img[^>]+src="([^"]+)"/g)) await verifiedAttachments(tx,actor,sid,[{fileUrl:match[1]}]);
     if(previous) {
-      if(previous.body===body&&previous.attachments===JSON.stringify(attachments))return {success:true,id:Number(previous.id)};
+      if(previous.body===body&&previous.attachments===JSON.stringify(attachments))return {success:true,id:Number(previous.id),message:await savedMessage(tx,roomId,actor,"m.id=?",[Number(previous.id)])};
       await tx.execute({sql:"INSERT INTO family_chat_edits(message_id,body,attachments,changed_by,changed_at,action) VALUES(?,?,?,?,?,'edit')",args:[previous.id,previous.body,previous.attachments,actor.key,now]});
       await tx.execute({sql:"UPDATE family_chat_messages SET body=?,attachments=?,edited_at=? WHERE id=?",args:[body,JSON.stringify(attachments),now,previous.id]});
-      return {success:true,id:Number(previous.id)};
+      return {success:true,id:Number(previous.id),message:await savedMessage(tx,roomId,actor,"m.id=?",[Number(previous.id)])};
     }
-    const clientId=String(data.clientId??"");if(!/^[A-Za-z0-9_-]{8,100}$/.test(clientId))invalid("Message identifier is invalid");
-    let replyTo:number|null=null;
-    if(data.replyTo){replyTo=positive(data.replyTo,"Reply");if(!(await tx.execute({sql:"SELECT id FROM family_chat_messages WHERE id=? AND room_id=?",args:[replyTo,roomId]})).rows.length)throw new ChatError(404,"Reply message not found");}
-    await tx.execute({sql:"INSERT OR IGNORE INTO family_chat_messages(room_id,author_role,author_key,body,attachments,reply_to,client_id,created_at) VALUES(?,?,?,?,?,?,?,?)",args:[roomId,actor.role,actor.key,body,JSON.stringify(attachments),replyTo,clientId,now]});
-    const sent=(await tx.execute({sql:"SELECT id FROM family_chat_messages WHERE room_id=? AND author_key=? AND client_id=?",args:[roomId,actor.key,clientId]})).rows[0];
-    return {success:true,id:Number(sent.id)};
+    let replyTo:number|null=null,replyRow:Record<string,unknown>|undefined;
+    if(data.replyTo){replyTo=positive(data.replyTo,"Reply");replyRow=(await tx.execute({sql:"SELECT id,body,author_role,deleted_at FROM family_chat_messages WHERE id=? AND room_id=?",args:[replyTo,roomId]})).rows[0];if(!replyRow)throw new ChatError(404,"Reply message not found");}
+    const result=await tx.execute({sql:"INSERT INTO family_chat_messages(room_id,author_role,author_key,body,attachments,reply_to,client_id,created_at) VALUES(?,?,?,?,?,?,?,?) RETURNING id",args:[roomId,actor.role,actor.key,body,JSON.stringify(attachments),replyTo,clientId,now]});
+    const sentId=Number(result.rows[0].id);
+    const message=messageView({id:sentId,body,attachments:JSON.stringify(attachments),author_role:actor.role,author_key:actor.key,student_name:room.studentName,profile_photo_url:room.profilePhotoUrl,client_id:clientId,created_at:now,reply_to:replyTo,reply_id:replyRow?.id,reply_body:replyRow?.body,reply_author_role:replyRow?.author_role,reply_deleted_at:replyRow?.deleted_at},actor);
+    return {success:true,id:sentId,message};
   });
 }

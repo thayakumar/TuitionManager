@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "name": "Sending appears immediately while server is delayed; composing and queuing next message stays available",
+      "status": "Pass"
+    },
+    {
+      "name": "Other participant receives the saved message through incremental two-second polling",
+      "status": "Pass"
+    },
+    {
+      "name": "A new message reaches the other open participant without a full thread reload",
+      "status": "Pass"
+    },
+    {
+      "name": "Failed send survives reload, preserves its retry identity and is stored exactly once",
+      "status": "Pass"
+    },
+    {
+      "name": "Lost acknowledgement after commit retries without duplicating the message",
+      "status": "Pass"
+    },
+    {
+      "name": "Poll-before-ack reconciliation keeps a single bubble",
+      "status": "Pass"
+    },
+    {
+      "name": "Switching rooms during an in-flight send never inserts a message into another family",
+      "status": "Pass"
+    },
+    {
+      "name": "Phone pending/failure states fit and no unhandled browser errors occur",
+      "status": "Pass"
+    }
+  ],
+  "metrics": {
+    "optimisticVisibleMs": 146,
+    "recipientVisibleAfterFocusMs": 323,
+    "recipientEndToEndMs": 2100
+  },
+  "errors": []
+}

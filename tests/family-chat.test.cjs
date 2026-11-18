@@ -130,3 +130,55 @@ test('navbar unread summaries aggregate scoped counts without returning room nam
   await assert.rejects(f.actions.chatUnread(parent),/no longer active/);
  }finally{f.close()}
 });
+
+test('send acknowledges the committed message in three SQL statements and exposes correlation IDs only to its author',async()=>{
+ const f=fixture();try{
+  await f.seed();
+  const client=f.db.getClient(),transaction=client.transaction.bind(client),statements=[];
+  client.transaction=async(...args)=>{const tx=await transaction(...args),execute=tx.execute.bind(tx);tx.execute=async(statement,...rest)=>{statements.push(typeof statement==='string'?statement:statement.sql);return execute(statement,...rest)};return tx};
+  const sent=await f.actions.mutateChat(1,send('<p>Instant <b>message</b><script>bad()</script></p>','ack-message-one'),admin);
+  assert.equal(statements.length,3,'one room/scope query, one duplicate lookup and one insert-returning; no follow-up thread fetch');
+  assert.equal(sent.message.id,sent.id);assert.equal(sent.message.clientId,'ack-message-one');assert.equal(sent.message.authorName,'Tutor');assert.equal(sent.message.isOwn,true);assert.equal(sent.message.canEdit,true);assert(!sent.message.body.includes('<script>'));assert.deepEqual(sent.message.attachments,[]);
+  assert.deepEqual(sent.message,(await f.actions.chatMessages(1,admin)).messages[0]);
+  f.as('student',1);const studentView=(await f.actions.chatMessages(1,student)).messages[0];assert(!('clientId' in studentView));assert.equal(studentView.isOwn,false);
+  const studentReply=await f.actions.mutateChat(1,send('My reply','ack-student-reply',{replyTo:sent.id}),student);assert.equal(studentReply.message.authorName,'Alice');assert.equal(studentReply.message.replyPreview.id,sent.id);assert.equal(studentReply.message.replyPreview.authorName,'Tutor');
+  const edited=await f.actions.mutateChat(1,{action:'edit',messageId:studentReply.id,body:'Updated reply'},student);assert.equal(edited.message.body,'Updated reply');assert.equal(edited.message.id,studentReply.id);assert(edited.message.editedAt);
+ }finally{f.close()}
+});
+
+test('lost send acknowledgements replay canonical stored content before revalidating obsolete attachments',async()=>{
+ const f=fixture();try{
+  await f.seed();const hash=require('node:crypto').createHash('sha256').update('parent-alice').digest('hex');
+  await f.db.execute("INSERT INTO uploaded_files(file_id,owner_role,owner_student_id,file_name,mime_type,parent_token_hash) VALUES('parent-retry-file','student',1,'lesson.png','image/png',?)",[hash]);
+  f.as('none');const draft=send('<img src="/api/files/parent-retry-file?inline=1&parent_token=parent-alice">','lost-ack-parent',{attachments:[{fileUrl:'/api/files/parent-retry-file?parent_token=parent-alice'}]});
+  const first=await f.actions.mutateChat(1,draft,parent);assert(!JSON.stringify(first).includes('parent-alice'));assert(!JSON.stringify(first).includes('parent_token'));
+  await f.db.execute("DELETE FROM uploaded_files WHERE file_id='parent-retry-file'");
+  f.as('admin');await f.actions.mutateChat(1,{action:'read'},admin);f.as('none');
+  const retried=await f.actions.mutateChat(1,draft,parent);assert.equal(retried.id,first.id);assert.equal(retried.message.body,first.message.body);assert.deepEqual(retried.message.attachments,first.message.attachments);assert(retried.message.readBy.includes('admin'));
+  assert.equal((await f.db.queryOne('SELECT COUNT(*) n FROM family_chat_messages')).n,1);
+  await f.db.execute("UPDATE share_tokens SET active=0 WHERE token='parent-alice'");await assert.rejects(f.actions.mutateChat(1,draft,parent),/no longer active/);
+ }finally{f.close()}
+});
+
+test('attachment and inline image ownership lookups are batched into one database statement',async()=>{
+ const f=fixture();try{
+  await f.seed();await f.db.execute("INSERT INTO uploaded_files(file_id,owner_role,file_name,mime_type) VALUES('tutor-latency-one','admin','one.png','image/png'),('tutor-latency-two','admin','two.pdf','application/pdf')");
+  const client=f.db.getClient(),transaction=client.transaction.bind(client),statements=[];client.transaction=async(...args)=>{const tx=await transaction(...args),execute=tx.execute.bind(tx);tx.execute=async(statement,...rest)=>{statements.push(typeof statement==='string'?statement:statement.sql);return execute(statement,...rest)};return tx};
+  const sent=await f.actions.mutateChat(1,send('<img src="/api/files/tutor-latency-one?inline=1">','batched-send',{attachments:[{fileUrl:'/api/files/tutor-latency-one'},{fileUrl:'/api/files/tutor-latency-two'}]}),admin);
+  assert.equal(statements.filter(s=>s.includes('FROM uploaded_files')).length,1);assert.equal(statements.length,4);assert.deepEqual(sent.message.attachments.map(x=>x.fileName),['one.png','two.pdf']);
+ }finally{f.close()}
+});
+
+test('incremental polls include only role-level read positions without exposing identity keys or parent credentials',async()=>{
+ const f=fixture();try{
+  await f.seed();const tutor=await f.actions.mutateChat(1,send('Tutor greeting','positions-tutor'),admin);
+  f.as('student',1);const reply=await f.actions.mutateChat(1,send('Student reply','positions-student'),student);await f.actions.mutateChat(1,{action:'read',lastReadId:tutor.id},student);
+  f.as('none');await f.actions.mutateChat(1,{action:'read',lastReadId:reply.id},parent);
+  const delta=await f.actions.chatMessages(1,parent,{after:reply.id});assert.equal(delta.messages.length,0);
+  assert.deepEqual(delta.readPositions.sort((a,b)=>String(a.role).localeCompare(String(b.role))),[{role:'parent',lastReadId:reply.id},{role:'student',lastReadId:tutor.id}]);
+  for(const position of delta.readPositions)assert.deepEqual(Object.keys(position).sort(),['lastReadId','role']);
+  assert(!JSON.stringify(delta).includes('parent-alice'));assert(!JSON.stringify(delta).includes('parent:'));assert(!JSON.stringify(delta).includes('actor_key'));
+  const p=await f.actions.chatMessages(1,parent);assert(p.messages.every(m=>!('clientId' in m)));
+  f.as('student',1);const own=await f.actions.chatMessages(1,student);assert.equal(own.messages.find(m=>m.id===reply.id).clientId,'positions-student');assert(!('clientId' in own.messages.find(m=>m.id===tutor.id)));
+ }finally{f.close()}
+});

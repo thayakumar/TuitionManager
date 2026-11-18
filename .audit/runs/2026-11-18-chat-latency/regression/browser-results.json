@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "Tutor inbox searches rooms and sends a family message visible to student and parent",
+      "status": "Pass"
+    },
+    {
+      "name": "Student reply appears on their right and reaches both other participants",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent can chat in the same room with a distinct role and shared read receipts",
+      "status": "Pass"
+    },
+    {
+      "name": "Message edit and removal propagate through polling while preserving a removed-message marker",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent image attachments upload privately and both tutor and student can preview in place",
+      "status": "Pass"
+    },
+    {
+      "name": "Unread family-chat badge appears outside the room and clears after opening it",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor and family chat layouts fit a phone; tutor can return to room list",
+      "status": "Pass"
+    },
+    {
+      "name": "No unhandled browser runtime errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}
