@@ -1,6 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MessageSquare, Send, Pencil, Trash2 } from "lucide-react";
+import {
+  MessageSquare,
+  Send,
+  Pencil,
+  Trash2,
+  UserRound,
+  GraduationCap,
+} from "lucide-react";
 import { RichText } from "@/components/rich-text";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { hasRichTextContent } from "@/lib/rich-text";
@@ -14,10 +21,18 @@ type Comment = {
   authorName: string;
   created_at: string;
   updated_at: string;
+  isOwn: boolean;
+  author_role: "admin" | "student";
   canEdit: boolean;
   canDelete: boolean;
 };
-export function PostComments({ postId }: { postId: number }) {
+export function PostComments({
+  postId,
+  viewerRole = "admin",
+}: {
+  postId: number;
+  viewerRole?: "admin" | "student";
+}) {
   const [comments, setComments] = useState<Comment[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -32,11 +47,14 @@ export function PostComments({ postId }: { postId: number }) {
   useActionBusy(busy, "Saving comment…");
   const load = useCallback(
     async (before?: number) => {
+      const query = new URLSearchParams();
+      if (viewerRole === "student") query.set("viewer", "student");
+      if (before) query.set("before", String(before));
       const response = await fetch(
         "/api/classroom/posts/" +
           postId +
           "/comments" +
-          (before ? "?before=" + before : ""),
+          (query.size ? "?" + query.toString() : ""),
         { cache: "no-store" },
       );
       const data = await response.json();
@@ -47,7 +65,7 @@ export function PostComments({ postId }: { postId: number }) {
       );
       setMore(data.hasMore);
     },
-    [postId],
+    [postId, viewerRole],
   );
   useEffect(() => {
     let current = true;
@@ -76,7 +94,12 @@ export function PostComments({ postId }: { postId: number }) {
     setBusy(true);
     setError("");
     try {
-      await savePostComment(postId, body, editing ?? undefined);
+      await savePostComment(
+        postId,
+        body,
+        editing ?? undefined,
+        viewerRole === "student",
+      );
       setBody("");
       setEditing(null);
       await load();
@@ -98,7 +121,7 @@ export function PostComments({ postId }: { postId: number }) {
     setBusy(true);
     setError("");
     try {
-      await deletePostComment(postId, id);
+      await deletePostComment(postId, id, viewerRole === "student");
       setDeleting(null);
       await load();
     } catch (e) {
@@ -156,73 +179,107 @@ export function PostComments({ postId }: { postId: number }) {
       {!loading && !comments.length && (
         <p className="mb-5 text-muted-foreground">Start the conversation.</p>
       )}
-      <div className="space-y-5">
+      <div
+        className="space-y-5 rounded-2xl bg-slate-50/60 p-3 sm:p-5"
+        aria-label="Comment conversation"
+      >
         {comments.map((c) => (
-          <article key={c.id} className="border-b border-border/60 pb-5">
-            <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <strong>{c.authorName}</strong>
-                <span className="ml-3 text-sm text-muted-foreground">
-                  {new Intl.DateTimeFormat("en-MY", {
-                    timeZone: "Asia/Kuala_Lumpur",
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(c.created_at))}
-                  {c.updated_at !== c.created_at ? " · Edited" : ""}
-                </span>
-              </div>
-              <div className="flex gap-1">
-                {c.canEdit && (
+          <article
+            key={c.id}
+            data-message-side={c.isOwn ? "right" : "left"}
+            data-comment-id={c.id}
+            className={
+              "flex items-end gap-2 sm:gap-3 " +
+              (c.isOwn ? "flex-row-reverse" : "flex-row")
+            }
+          >
+            <span
+              role="img"
+              aria-label={c.isOwn ? "Your profile" : c.authorName + " profile"}
+              className={
+                "flex size-9 shrink-0 items-center justify-center rounded-full border bg-card " +
+                (c.author_role === "admin"
+                  ? "border-orange-200 text-orange-700"
+                  : "border-blue-200 text-blue-700")
+              }
+            >
+              {c.author_role === "admin" ? (
+                <GraduationCap size={18} />
+              ) : (
+                <UserRound size={18} />
+              )}
+            </span>
+            <div
+              className={
+                "min-w-0 max-w-[calc(100%_-_44px)] rounded-2xl border px-4 py-3 shadow-sm sm:max-w-[80%] " +
+                (c.isOwn
+                  ? "rounded-br-md border-orange-200 bg-orange-50"
+                  : "rounded-bl-md border-slate-200 bg-white")
+              }
+            >
+              <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <strong className="text-sm">
+                  {c.isOwn ? "You" : c.authorName}
+                </strong>
+                <div className="flex items-center gap-1">
+                  {c.canEdit && (
+                    <button
+                      type="button"
+                      aria-label="Edit comment"
+                      className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-ring"
+                      onClick={() => {
+                        setEditing(c.id);
+                        setBody(c.body);
+                        setDeleting(null);
+                      }}
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  )}
+                  {c.canDelete && (
+                    <button
+                      type="button"
+                      aria-label="Delete comment"
+                      className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-ring"
+                      onClick={() => setDeleting(c.id)}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              </header>
+              <RichText content={c.body} />
+              <p className="mt-2 text-right text-xs text-muted-foreground">
+                {new Intl.DateTimeFormat("en-MY", {
+                  timeZone: "Asia/Kuala_Lumpur",
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(c.created_at))}
+                {c.updated_at !== c.created_at ? " · Edited" : ""}
+              </p>
+              {deleting === c.id && (
+                <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
+                  <span className="text-sm">Delete this comment?</span>
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Edit comment"
-                    onClick={() => {
-                      setEditing(c.id);
-                      setBody(c.body);
-                      setDeleting(null);
-                    }}
+                    variant="destructive"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void remove(c.id)}
                   >
-                    <Pencil size={16} />
+                    Delete
                   </Button>
-                )}
-                {c.canDelete && (
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Delete comment"
-                    onClick={() => setDeleting(c.id)}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleting(null)}
                   >
-                    <Trash2 size={16} />
+                    Keep comment
                   </Button>
-                )}
-              </div>
-            </header>
-            <RichText content={c.body} />
-            {deleting === c.id && (
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <span>Delete this comment?</span>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => void remove(c.id)}
-                >
-                  Delete
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeleting(null)}
-                >
-                  Keep comment
-                </Button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </article>
         ))}
       </div>

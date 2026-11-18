@@ -79,7 +79,9 @@ export async function GET(
       );
       if (legacyAttempts.some((file) => driveFileId(file.file_url) === id))
         return NextResponse.redirect(
-          "https://drive.google.com/file/d/" + id + "/view",
+          request.nextUrl.searchParams.get("inline") === "1"
+            ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w2000"
+            : "https://drive.google.com/file/d/" + id + "/view",
         );
     }
     if (!shared)

@@ -1345,7 +1345,11 @@ export async function submitAssignment(f: FormData) {
       "Add your work or an attachment before turning in",
     );
   await withTransaction(async (tx) => {
-    const assignedPost = await ownPost(tx, pid, sid, "assignment");
+    const assignedPost = await ownPost(tx, pid, sid);
+    if (!["assignment", "quiz"].includes(assignedPost.type))
+      throw new ActionValidationError(
+        "This post does not accept submitted work",
+      );
     const old = await row<{
       id: number;
       version: number;
@@ -2103,12 +2107,22 @@ export async function generateInvoiceResult(f: FormData): Promise<{
 export async function submitAssignmentResult(f: FormData): Promise<{
   success: boolean;
   error?: string;
+  code?: string;
 }> {
-  await studentSession();
   try {
     await submitAssignment(f);
     return { success: true };
   } catch (reason) {
+    if (
+      reason instanceof ActionValidationError &&
+      reason.message === "Unauthorized"
+    )
+      return {
+        success: false,
+        code: "SESSION_EXPIRED",
+        error:
+          "Your student session has ended. Sign in again in another tab, then retry. Your work and attached file are still here.",
+      };
     return { success: false, error: publicMessage(reason) };
   }
 }
@@ -2225,8 +2239,9 @@ export async function savePostComment(
   postId: number,
   content: string,
   commentId?: number,
+  asStudent = false,
 ) {
-  const admin = await verifyAdminSession(),
+  const admin = !asStudent && (await verifyAdminSession()),
     sid = admin ? null : await studentSession();
   const body = sanitizeRichText(text(content, "Comment", 20000, true));
   if (!hasRichTextContent(body))
@@ -2278,8 +2293,12 @@ export async function savePostComment(
   });
   refreshCommentViews(owner, postId);
 }
-export async function deletePostComment(postId: number, commentId: number) {
-  const admin = await verifyAdminSession(),
+export async function deletePostComment(
+  postId: number,
+  commentId: number,
+  asStudent = false,
+) {
+  const admin = !asStudent && (await verifyAdminSession()),
     sid = admin ? null : await studentSession();
   const owner = await withTransaction(async (tx) => {
     const p = admin ? await post(tx, postId) : await ownPost(tx, postId, sid!);

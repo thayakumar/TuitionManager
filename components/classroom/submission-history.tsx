@@ -1,4 +1,4 @@
-import { Paperclip, ExternalLink } from "lucide-react";
+import { AttachmentCard } from "@/components/attachment-preview";
 import { attachmentHref } from "@/lib/attachment-url";
 import { RichText } from "@/components/rich-text";
 import { fmtDateTime } from "@/lib/format";
@@ -48,19 +48,11 @@ export function AttemptWork({
         />
       )}
       {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-16 items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-blue-900 hover:bg-blue-50"
-        >
-          <Paperclip size={22} className="shrink-0" />
-          <span className="min-w-0 flex-1">
-            <strong className="block">Submitted attachment</strong>
-            <span className="text-sm underline">Open attached work</span>
-          </span>
-          <ExternalLink size={18} className="shrink-0" />
-        </a>
+        <AttachmentCard
+          fileUrl={attempt.file_url!}
+          fileName="Submitted attachment"
+          submitted
+        />
       ) : attempt.file_url ? (
         <p className="text-sm text-muted-foreground">
           This attachment link is unavailable.

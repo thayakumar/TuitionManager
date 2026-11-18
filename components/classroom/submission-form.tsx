@@ -222,6 +222,16 @@ export function SubmissionForm({
           className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-base text-destructive"
         >
           {error}
+          {/session has ended/i.test(error) && (
+            <a
+              href="/portal/student"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 block font-semibold underline"
+            >
+              Sign in again in a new tab
+            </a>
+          )}
         </p>
       )}
       <div className="border-t border-border pt-5">

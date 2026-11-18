@@ -842,3 +842,21 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 ### 7.5. As an Admin or Student, I can use the logo inside a meeting or whiteboard → home is reachable without restoring a full sidebar.
 
 **Manual check:** Meeting navigation saves pending notes first. The board stays fullscreen with a compact home logo beside its options; saved boards and local drafts retain their existing persistence behaviour.
+
+## 8. Whiteboard, images and class chat
+
+### 8.1. As an Admin or Student, I can open a whiteboard → it opens in a separate tab and preserves the original page.
+
+**Manual check:** Open the board from navigation, Overview or a lesson. Use the small house icon to return that tab to your workspace dashboard. The original tab stays available.
+
+### 8.2. As an Admin or Student, I can paste an image or attach work → its bytes upload through the app and the saved post or submission retains the file.
+
+**Manual check:** Paste a screenshot into the editor, save, reload and view it. Submit an assignment with just an attachment. A temporary storage failure retries automatically; an expired student session offers a new-tab sign-in and retains already uploaded work for retry. Transfers use bounded 2 MiB requests; this is a per-request bound, not a total attachment-size cap. Storage-provider limits still apply.
+
+### 8.3. As an Admin or Student, I can click a posted image → it expands in the current page without downloading.
+
+**Manual check:** Try a rich-text image, an image attachment and a student's submitted image. Close with Escape. Keyboard activation also opens the preview. Downloading requires the explicit Download image action. On a phone, a long filename stays within the dialog.
+
+### 8.4. As an Admin or Student, I can comment on a post → my messages appear on the right and the other participant's messages appear on the left.
+
+**Manual check:** Send a tutor message and a student reply. Compare both views: ownership reverses with the viewer, with profile icons and timestamps. Having both accounts signed in within one browser does not change the student message into a tutor message. Existing edit/delete permissions remain enforced.

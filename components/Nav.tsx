@@ -88,6 +88,12 @@ function AdminNavigation() {
                   )}
                 <Link
                   href={link.href}
+                  target={link.href === "/whiteboard" ? "_blank" : undefined}
+                  rel={
+                    link.href === "/whiteboard"
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
                   title={compact ? link.label : undefined}
                   onClick={() => setOpen(false)}
                   aria-label={

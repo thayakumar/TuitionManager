@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "Whiteboard sidebar and Overview open separate tabs with a small workspace home control",
+      "status": "Pass"
+    },
+    {
+      "name": "A 12MB file uploads through bounded same-origin chunks without any browser Google request",
+      "status": "Pass"
+    },
+    {
+      "name": "Pasted image recovers from a transient Google failure, persists and previews in the current post",
+      "status": "Pass"
+    },
+    {
+      "name": "A student file-only legacy assignment succeeds with both admin and student cookies present",
+      "status": "Pass"
+    },
+    {
+      "name": "Student-owned private image remains viewable after the admin cookie is removed",
+      "status": "Pass"
+    },
+    {
+      "name": "Session expiry after upload keeps the file and permits retry without another upload",
+      "status": "Pass"
+    },
+    {
+      "name": "No runtime exceptions or external Google browser transfer requests",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

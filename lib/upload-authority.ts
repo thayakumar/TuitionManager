@@ -30,7 +30,14 @@ export function verifyUpload<T>(token: string, secret: string): T | null {
     return null;
   }
 }
-export type UploadTicket = { fileId: string; actor: string; expires: number };
+export type UploadTicket = {
+  fileId: string;
+  actor: string;
+  expires: number;
+  uploadUrl?: string;
+  size?: number;
+  mimeType?: string;
+};
 export function ticketAllows(
   ticket: UploadTicket | null,
   actor: UploadActor,

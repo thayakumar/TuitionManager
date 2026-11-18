@@ -59,11 +59,13 @@ export async function POST(request: NextRequest) {
       );
     }
   }
-  const [admin, studentId] = await Promise.all([
+  const [adminSession, studentId] = await Promise.all([
     verifyAdminSession(),
     getStudentSession(),
   ]);
-  if (!admin && !studentId)
+  const studentView = request.headers.get("x-upload-role") === "student";
+  const admin = adminSession && !studentView;
+  if ((!admin && !studentId) || (studentView && !studentId))
     return NextResponse.json(
       { error: "Sign in before uploading a file" },
       { status: 401 },
@@ -200,6 +202,9 @@ export async function POST(request: NextRequest) {
           fileId: result.fileId,
           actor: actorKey(actor),
           expires: Date.now() + 86400000,
+          uploadUrl: target.href,
+          size: input.size,
+          mimeType: mime,
         };
         return NextResponse.json({
           uploadUrl: target.href,

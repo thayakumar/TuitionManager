@@ -44,7 +44,15 @@ export default async function LessonWhiteboard({
             >
               Class notes
             </Link>
-            {admin && <Link href="/whiteboard">All whiteboards</Link>}
+            {admin && (
+              <Link
+                href="/whiteboard"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                All whiteboards
+              </Link>
+            )}
           </nav>
         </div>
       }

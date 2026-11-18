@@ -1,5 +1,5 @@
+import { AttachmentCard } from "@/components/attachment-preview";
 import { PostComments } from "@/components/post-comments";
-import { attachmentHref } from "@/lib/attachment-url";
 import {
   AssignmentStatus,
   assignmentState,
@@ -14,8 +14,6 @@ import {
   Megaphone,
   HelpCircle,
   Calendar,
-  FileText,
-  ExternalLink,
 } from "lucide-react";
 import { queryAll, queryOne } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
@@ -28,7 +26,6 @@ import { SubmissionForm } from "@/components/classroom/submission-form";
 import {
   AttemptWork,
   SubmissionHistory,
-  safeSubmissionHref,
   type SubmissionAttempt,
 } from "@/components/classroom/submission-history";
 import type { Post, PostAttachment, Submission, Student } from "@/lib/types";
@@ -143,46 +140,14 @@ export default async function StudentPostDetailPage({
                 <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Attachments
                 </h2>
-                {attachments.map((attachment) => {
-                  const href = safeSubmissionHref(attachment.file_url);
-                  return href ? (
-                    <a
-                      key={attachment.id}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted/40"
-                    >
-                      {attachment.file_type?.startsWith("image/") ? (
-                        <img
-                          src={
-                            attachmentHref(attachment.file_url, true) ||
-                            undefined
-                          }
-                          alt=""
-                          loading="lazy"
-                          className="h-16 w-20 shrink-0 rounded-lg border border-border object-cover"
-                        />
-                      ) : (
-                        <FileText
-                          size={22}
-                          className="shrink-0 text-blue-700"
-                        />
-                      )}
-                      <span className="min-w-0 flex-1 break-words">
-                        {attachment.file_name}
-                      </span>
-                      <ExternalLink size={14} className="shrink-0" />
-                    </a>
-                  ) : (
-                    <p
-                      key={attachment.id}
-                      className="text-sm text-muted-foreground"
-                    >
-                      {attachment.file_name}: attachment unavailable.
-                    </p>
-                  );
-                })}
+                {attachments.map((attachment) => (
+                  <AttachmentCard
+                    key={attachment.id}
+                    fileUrl={attachment.file_url}
+                    fileName={attachment.file_name}
+                    fileType={attachment.file_type}
+                  />
+                ))}
               </div>
             )}
           </CardContent>
@@ -235,7 +200,7 @@ export default async function StudentPostDetailPage({
           </>
         )}
       </div>
-      <PostComments postId={postId} />
+      <PostComments postId={postId} viewerRole="student" />
     </div>
   );
 }

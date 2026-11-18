@@ -1,8 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, RefreshCw, Save, SlidersHorizontal, X } from "lucide-react";
+import {
+  Home,
+  Download,
+  RefreshCw,
+  Save,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { BrandHomeLink } from "@/components/brand-home-link";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 type Workspace = Record<string, unknown>;
 type Board = {
@@ -409,6 +417,18 @@ export function WhiteboardCanvas({
             compact
             className="rounded-2xl border border-border bg-card/95 p-1 shadow-lg backdrop-blur"
           />
+          <Link
+            href={
+              identity === "admin"
+                ? "/dashboard"
+                : "/portal/student/" + identity.replace("student-", "")
+            }
+            aria-label="Back to workspace"
+            title="Back to workspace"
+            className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card/95 shadow-lg backdrop-blur"
+          >
+            <Home size={20} />
+          </Link>
           <button
             type="button"
             ref={optionsButton}

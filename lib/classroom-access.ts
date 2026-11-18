@@ -8,10 +8,14 @@ export class ClassroomAccessError extends Error {
     super(message);
   }
 }
-export async function classroomAccess(postId: number, adminOnly = false) {
+export async function classroomAccess(
+  postId: number,
+  adminOnly = false,
+  preferStudent = false,
+) {
   if (!Number.isSafeInteger(postId) || postId < 1)
     throw new ClassroomAccessError(404, "Post not found");
-  const admin = await verifyAdminSession();
+  const admin = !preferStudent && (await verifyAdminSession());
   const studentId = admin ? null : await getStudentSession();
   if (!admin && (!studentId || adminOnly))
     throw new ClassroomAccessError(401, "Sign in to open this classroom");

@@ -1,3 +1,4 @@
+import { ActionValidationError } from "./action-errors";
 import {
   uploadMime,
   isSupportedUpload,
@@ -10,20 +11,37 @@ export type UploadedFile = {
   inlineUrl?: string;
   warning?: string;
 };
+class UploadFailure extends ActionValidationError {
+  constructor(
+    message: string,
+    public retryable = false,
+  ) {
+    super(message);
+  }
+}
 export async function uploadFile(
   file: File,
   { onProgress }: { onProgress?: (percent: number) => void } = {},
 ): Promise<UploadedFile> {
-  if (!file.size) throw new Error("Choose a non-empty file.");
+  if (!file.size) throw new ActionValidationError("Choose a non-empty file.");
   if (!isSupportedUpload(file))
-    throw new Error(
+    throw new ActionValidationError(
       "Choose a supported document, image, audio, video or archive.",
     );
-  onProgress?.(0);
+  const role =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/portal/student/")
+      ? "student"
+      : "admin";
+  const jsonHeaders = {
+    "Content-Type": "application/json",
+    "X-Upload-Role": role,
+  };
   const mime = uploadMime(file) || file.type || "application/octet-stream";
+  onProgress?.(0);
   const begin = await fetch("/api/upload", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders,
     body: JSON.stringify({
       action: "begin",
       fileName: file.name,
@@ -34,17 +52,23 @@ export async function uploadFile(
   const session = await begin.json();
   if (!begin.ok) {
     if (session.code !== "CONNECTOR_UPGRADE")
-      throw new Error(session.error || "Could not start this upload.");
+      throw new ActionValidationError(
+        session.error || "Could not start this upload.",
+      );
     if (file.size > LEGACY_UPLOAD_BYTES)
-      throw new Error(
-        "Your Drive connector needs its one-time upgrade before larger files can upload. Ask your tutor to open Settings → File storage. Your file has not been uploaded.",
+      throw new ActionValidationError(
+        "Your Drive connector needs its one-time upgrade before larger files can upload. Open Settings → File storage. Your file has not been uploaded.",
       );
     const body = new FormData();
     body.set("file", file);
-    const response = await fetch("/api/upload", { method: "POST", body });
-    const result = await response.json();
-    if (!response.ok || !result.fileUrl)
-      throw new Error(result.error || "Upload failed.");
+    const r = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "X-Upload-Role": role },
+        body,
+      }),
+      result = await r.json();
+    if (!r.ok || !result.fileUrl)
+      throw new ActionValidationError(result.error || "Upload failed.");
     onProgress?.(100);
     return {
       ...result,
@@ -52,69 +76,107 @@ export async function uploadFile(
       fileType: mime,
     };
   }
-  const chunkSize = 8 * 1024 * 1024;
+  async function transfer(
+    range: string,
+    body?: Blob,
+  ): Promise<{ complete: boolean; nextOffset: number }> {
+    let response: Response;
+    try {
+      response = await fetch("/api/upload/chunk", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "X-Upload-Ticket": session.ticket,
+          "Content-Range": range,
+        },
+        body,
+      });
+    } catch {
+      throw new UploadFailure(
+        "The connection to the app was interrupted. Your file is still selected; retry.",
+        true,
+      );
+    }
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new UploadFailure(
+        "The upload service returned an unreadable response. Retry.",
+        response.status >= 500,
+      );
+    }
+    if (!response.ok)
+      throw new UploadFailure(
+        result.error || "Could not upload this file.",
+        !!result.retryable,
+      );
+    if (
+      !Number.isSafeInteger(result.nextOffset) ||
+      result.nextOffset < 0 ||
+      result.nextOffset > file.size
+    )
+      throw new UploadFailure(
+        "The upload service returned an invalid file position.",
+      );
+    return result;
+  }
   let offset = 0,
     retries = 0;
   while (offset < file.size) {
-    const end = Math.min(offset + chunkSize, file.size);
-    let response: Response;
+    const end = Math.min(offset + 2 * 1024 * 1024, file.size);
     try {
-      response = await fetch(session.uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": mime,
-          "Content-Range":
-            "bytes " + offset + "-" + (end - 1) + "/" + file.size,
-        },
-        body: file.slice(offset, end),
-      });
-    } catch (error) {
-      if (++retries > 3)
-        throw new Error(
-          "The connection to Drive was interrupted. Keep this file selected and retry. No post or submission was saved.",
-        );
-      const probe = await fetch(session.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Range": "bytes */" + file.size },
-        body: new Blob([]),
-      });
-      const range = probe.headers.get("Range");
-      if (probe.status === 308) {
-        offset = range ? Number(range.match(/-(\d+)$/)?.[1] || -1) + 1 : 0;
-        continue;
-      }
-      if (probe.ok) {
+      const result = await transfer(
+        "bytes " + offset + "-" + (end - 1) + "/" + file.size,
+        file.slice(offset, end),
+      );
+      if (result.complete) {
         offset = file.size;
         break;
       }
-      throw error;
+      if (result.nextOffset <= offset)
+        throw new UploadFailure(
+          "Drive has not acknowledged this chunk yet.",
+          true,
+        );
+      offset = result.nextOffset;
+      retries = 0;
+      onProgress?.(Math.min(99, Math.round((offset / file.size) * 100)));
+    } catch (error) {
+      if (
+        !(error instanceof UploadFailure) ||
+        !error.retryable ||
+        ++retries > 3
+      )
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, 200 * retries));
+      try {
+        const status = await transfer("bytes */" + file.size);
+        if (status.complete) {
+          offset = file.size;
+          break;
+        }
+        offset = status.nextOffset;
+      } catch (probeError) {
+        if (probeError instanceof UploadFailure && !probeError.retryable)
+          throw probeError;
+      }
     }
-    if (response.status === 308) {
-      const range = response.headers.get("Range");
-      offset = range ? Number(range.match(/-(\d+)$/)?.[1] || -1) + 1 : end;
-    } else if (response.ok) offset = file.size;
-    else
-      throw new Error(
-        "Drive could not accept this file (" +
-          response.status +
-          "). Check available Drive storage and retry.",
-      );
-    onProgress?.(Math.min(99, Math.round((offset / file.size) * 100)));
   }
-  const final = await fetch("/api/upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "finish",
-      ticket: session.ticket,
-      fileName: file.name,
+  const finish = await fetch("/api/upload", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        action: "finish",
+        ticket: session.ticket,
+        fileName: file.name,
+      }),
     }),
-  });
-  const result = await final.json();
-  if (!final.ok || !result.fileUrl)
-    throw new Error(
+    result = await finish.json();
+  if (!finish.ok || !result.fileUrl)
+    throw new ActionValidationError(
       result.error ||
-        "Drive received the file but could not finish registering it. Retry without publishing your post.",
+        "Drive received the file but could not finish registering it. Keep this page open and retry.",
     );
   onProgress?.(100);
   return { ...result, fileName: result.fileName || file.name, fileType: mime };

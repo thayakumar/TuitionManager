@@ -15,6 +15,7 @@ function fixture({
   postOwner = 1,
   maxPoints = 100,
   fileOnly = false,
+  viewerAdmin = false,
 } = {}) {
   const queries = [];
   const current = {
@@ -83,6 +84,10 @@ function fixture({
     queryAll: async (sql, args = []) => {
       queries.push({ sql, args });
       if (sql.includes("submission_versions")) return attempts;
+      if (sql.includes("FROM post_comments")) return [
+        {id:2,author_role:"student",author_student_id:1,body:"Student",student_name:"Alice",created_at:"2026-11-18",updated_at:"2026-11-18"},
+        {id:1,author_role:"admin",author_student_id:null,body:"Tutor",student_name:null,created_at:"2026-11-18",updated_at:"2026-11-18"},
+      ];
       return [];
     },
   };
@@ -98,6 +103,9 @@ function fixture({
     const original = mod.require.bind(mod);
     mod.require = (name) => {
       if (name === "@/lib/db") return db;
+      if (name === "next/server") return {NextResponse: Response};
+      if (name === "@/lib/classroom-access") return {classroomAccess: async()=>({admin:viewerAdmin,studentId:viewerAdmin?null:1}),ClassroomAccessError:class extends Error{}};
+      if (name === "@/components/attachment-preview") return load("components/attachment-preview.tsx");
       if (name === "@/components/post-comments") return { PostComments: leaf };
       if (name === "@/components/classroom/assignment-status")
         return load("components/classroom/assignment-status.tsx");
@@ -268,4 +276,24 @@ test("assignment status palette is consistent and avoids red for normal work sta
     assert(badge.props.className.includes(color));
     assert(!badge.props.className.includes("red-"));
   }
+});
+
+test("comment ownership is inverted for tutor and student chat viewers",async()=>{
+  for(const viewerAdmin of [false,true]){
+    const f=fixture({viewerAdmin});
+    const route=f.load("app/api/classroom/posts/[postId]/comments/route.ts");
+    const response=await route.GET(new Request("https://app.test/api/classroom/posts/5/comments"),{params:Promise.resolve({postId:"5"})});
+    assert.equal(response.status,200);
+    const data=await response.json();
+    assert.equal(data.comments.find(c=>c.author_role==="admin").isOwn,viewerAdmin);
+    assert.equal(data.comments.find(c=>c.author_role==="student").isOwn,!viewerAdmin);
+    assert.equal(data.comments.find(c=>c.author_role==="student").canDelete,true);
+    assert.equal(data.comments.find(c=>c.author_role==="admin").canEdit,viewerAdmin);
+  }
+});
+test("image attachments are recognized from MIME or a recovered filename",()=>{
+  const {imageAttachment}=fixture().load("components/attachment-preview.tsx");
+  assert.equal(imageAttachment("Tutor_20261118_image.PNG","File"),true);
+  assert.equal(imageAttachment("picture","image/png"),true);
+  assert.equal(imageAttachment("worksheet.pdf","application/pdf"),false);
 });

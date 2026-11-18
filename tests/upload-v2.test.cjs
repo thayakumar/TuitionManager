@@ -45,7 +45,7 @@ function jsonRequest(body) {
     body: JSON.stringify(body),
   });
 }
-test("resumable upload bypasses the Vercel body path for a file above4MB and reports progress", async () => {
+test("resumable upload uses bounded same-origin chunks for a file above4MB and reports progress", async () => {
   const saved = global.fetch;
   const calls = [],
     progress = [];
@@ -69,13 +69,13 @@ test("resumable upload bypasses the Vercel body path for a file above4MB and rep
               },
         );
       }
+      assert.equal(url, "/api/upload/chunk");
+      assert(options.body.size <= 2 * 1024 * 1024);
       offset += options.body.size;
-      return offset < 10 * 1024 * 1024
-        ? new Response(null, {
-            status: 308,
-            headers: { Range: "bytes=0-" + (offset - 1) },
-          })
-        : Response.json({ id: "examplefileid" });
+      return Response.json({
+        complete: offset === 10 * 1024 * 1024,
+        nextOffset: offset,
+      });
     };
     const { uploadFile } = loader()("lib/upload-client.ts");
     const result = await uploadFile(
@@ -86,7 +86,7 @@ test("resumable upload bypasses the Vercel body path for a file above4MB and rep
     );
     assert.equal(result.fileName, "large.zip");
     assert.equal(calls.filter((c) => c.url === "/api/upload").length, 2);
-    assert.equal(calls.filter((c) => c.options.body instanceof Blob).length, 2);
+    assert.equal(calls.filter((c) => c.options.body instanceof Blob).length, 5);
     assert.equal(progress.at(-1), 100);
     assert(
       calls
@@ -178,7 +178,7 @@ test("begin/finish validates connector session target and binds registry ownersh
   try {
     const load = loader({
         "@/lib/auth": {
-          verifyAdminSession: async () => role === "admin",
+          verifyAdminSession: async () => ["admin", "both"].includes(role),
           getStudentSession: async () => sid,
         },
         "@/lib/db": {
@@ -230,6 +230,29 @@ test("begin/finish validates connector session target and binds registry ownersh
       "/api/files/examplefileid?inline=1",
     );
     assert.deepEqual(writes[0][1].slice(0, 3), ["examplefileid", "student", 1]);
+    role = "both";
+    const mixedBeginRequest = jsonRequest({
+      action: "begin",
+      fileName: "work.pdf",
+      fileType: "application/pdf",
+      size: 9999999,
+    });
+    mixedBeginRequest.headers.set("x-upload-role", "student");
+    const mixedBegin = await route.POST(mixedBeginRequest);
+    const mixedTicket = (await mixedBegin.json()).ticket;
+    const mixedFinishRequest = jsonRequest({
+      action: "finish",
+      ticket: mixedTicket,
+      fileName: "work.pdf",
+    });
+    mixedFinishRequest.headers.set("x-upload-role", "student");
+    assert.equal((await route.POST(mixedFinishRequest)).status, 200);
+    assert.deepEqual(writes.at(-1)[1].slice(0, 3), [
+      "examplefileid",
+      "student",
+      1,
+    ]);
+    role = "student";
     sid = 2;
     assert.equal(
       (await route.POST(jsonRequest({ action: "finish", ticket }))).status,
@@ -330,12 +353,23 @@ test("private attachments require registry ownership or tutor-authorized sharing
       params: Promise.resolve({ fileId: "sharedadminfile" }),
     });
     assert.equal(response.status, 200);
-    await db.execute("UPDATE submissions SET file_url='https://drive.google.com/file/d/legacypublicfile/view' WHERE post_id=1");
-    const previousReads=reads;
-    const legacy=await route.GET(req(),{params:Promise.resolve({fileId:"legacypublicfile"})});
-    assert.equal(legacy.status,302);
-    assert.equal(legacy.headers.get("location"),"https://drive.google.com/file/d/legacypublicfile/view");
-    assert.equal(reads,previousReads,"Unregistered legacy links never acquire service-owner access");
+    await db.execute(
+      "UPDATE submissions SET file_url='https://drive.google.com/file/d/legacypublicfile/view' WHERE post_id=1",
+    );
+    const previousReads = reads;
+    const legacy = await route.GET(req(), {
+      params: Promise.resolve({ fileId: "legacypublicfile" }),
+    });
+    assert.equal(legacy.status, 302);
+    assert.equal(
+      legacy.headers.get("location"),
+      "https://drive.google.com/thumbnail?id=legacypublicfile&sz=w2000",
+    );
+    assert.equal(
+      reads,
+      previousReads,
+      "Unregistered legacy links never acquire service-owner access",
+    );
     sid = null;
     assert.equal(
       (
@@ -462,5 +496,134 @@ test("storage setup secret creation requires admin and atomically reuses the exi
   } finally {
     if (before === undefined) delete process.env.APPS_SCRIPT_SHARED_SECRET;
     else process.env.APPS_SCRIPT_SHARED_SECRET = before;
+  }
+});
+
+test("chunk relay authenticates signed sessions, bounds request size and forwards Google acknowledgements", async () => {
+  const savedFetch = global.fetch;
+  let admin = true,
+    sid = null,
+    forwarded = 0;
+  const load = loader({
+    "@/lib/auth": {
+      verifyAdminSession: async () => admin,
+      getStudentSession: async () => sid,
+    },
+    "@/lib/storage-config": {
+      getStorageSecret: async () => "chunk-test-secret",
+    },
+    "next/server": { NextResponse: Response },
+  });
+  const auth = load("lib/upload-authority.ts"),
+    route = load("app/api/upload/chunk/route.ts");
+  const ticket = (values) =>
+    auth.signUpload(
+      {
+        fileId: "chunkfileid",
+        actor: "admin",
+        expires: Date.now() + 60000,
+        size: 524288,
+        mimeType: "image/png",
+        uploadUrl:
+          "https://www.googleapis.com/upload/drive/v3/files?upload_id=test",
+        ...values,
+      },
+      "chunk-test-secret",
+    );
+  const req = (
+    token,
+    range = "bytes 0-262143/524288",
+    bytes = 262144,
+    origin = "https://app.test",
+  ) =>
+    new Request("https://app.test/api/upload/chunk", {
+      method: "PUT",
+      headers: {
+        "content-type": "application/octet-stream",
+        "content-range": range,
+        "x-upload-ticket": token,
+        origin,
+      },
+      body: bytes ? new Uint8Array(bytes) : undefined,
+    });
+  try {
+    global.fetch = async (url, options) => {
+      forwarded++;
+      assert(
+        String(url).startsWith("https://www.googleapis.com/upload/drive/"),
+      );
+      assert.equal(options.redirect, "manual");
+      return new Response(null, {
+        status: 308,
+        headers: { range: "bytes=0-262143" },
+      });
+    };
+    let r = await route.PUT(req(ticket({})));
+    assert.equal(r.status, 200);
+    assert.deepEqual(await r.json(), { complete: false, nextOffset: 262144 });
+    assert.equal((await route.PUT(req("bad"))).status, 403);
+    assert.equal(
+      (
+        await route.PUT(
+          req(
+            ticket({}),
+            "bytes 0-262143/524288",
+            262144,
+            "https://foreign.test",
+          ),
+        )
+      ).status,
+      403,
+    );
+    assert.equal((await route.PUT(req(ticket({ expires: 0 })))).status, 403);
+    assert.equal(
+      (await route.PUT(req(ticket({ uploadUrl: "http://127.0.0.1/private" }))))
+        .status,
+      403,
+    );
+    assert.equal(
+      (
+        await route.PUT(
+          req(
+            ticket({ size: 4 * 1024 * 1024 }),
+            "bytes 0-3145727/4194304",
+            3 * 1024 * 1024,
+          ),
+        )
+      ).status,
+      413,
+    );
+    assert.equal(
+      (await route.PUT(req(ticket({}), "bytes 0-262143/999999"))).status,
+      400,
+    );
+    admin = false;
+    assert.equal((await route.PUT(req(ticket({})))).status, 401);
+    sid = 1;
+    assert.equal(
+      (await route.PUT(req(ticket({ actor: "student:2" })))).status,
+      401,
+    );
+    admin = true; // Both cookies may exist: the signed student identity must still be respected.
+    r = await route.PUT(req(ticket({ actor: "student:1" })));
+    assert.equal(r.status, 200);
+    global.fetch = async () => new Response(null, { status: 201 });
+    assert.deepEqual(
+      await (await route.PUT(req(ticket({ actor: "student:1" })))).json(),
+      { complete: true, nextOffset: 524288 },
+    );
+    global.fetch = async () => {
+      throw new TypeError("network");
+    };
+    r = await route.PUT(req(ticket({ actor: "student:1" })));
+    assert.equal(r.status, 503);
+    assert.equal((await r.json()).retryable, true);
+    assert.equal(
+      forwarded,
+      2,
+      "Invalid or oversized requests must never reach Google",
+    );
+  } finally {
+    global.fetch = savedFetch;
   }
 });

@@ -8,7 +8,11 @@ export async function GET(
 ) {
   try {
     const id = Number((await params).postId),
-      actor = await classroomAccess(id);
+      actor = await classroomAccess(
+        id,
+        false,
+        new URL(request.url).searchParams.get("viewer") === "student",
+      );
     const raw = new URL(request.url).searchParams.get("before"),
       before = raw ? Number(raw) : Number.MAX_SAFE_INTEGER;
     if (!Number.isSafeInteger(before) || before < 1)
@@ -34,6 +38,10 @@ export async function GET(
             ...c,
             authorName:
               c.author_role === "admin" ? "Tutor" : c.student_name || "Student",
+            isOwn: actor.admin
+              ? c.author_role === "admin"
+              : c.author_role === "student" &&
+                c.author_student_id === actor.studentId,
             canEdit: actor.admin
               ? c.author_role === "admin"
               : c.author_role === "student" &&

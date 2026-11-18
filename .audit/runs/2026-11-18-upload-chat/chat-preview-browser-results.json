@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "Tutor own comments align right and student comments align left with profile icons",
+      "status": "Pass"
+    },
+    {
+      "name": "Student own comments align right even with an administrator cookie in the same browser",
+      "status": "Pass"
+    },
+    {
+      "name": "Recovered image attachments expand on the same page without a download",
+      "status": "Pass"
+    },
+    {
+      "name": "An attachment-only image submission previews instead of automatically downloading",
+      "status": "Pass"
+    },
+    {
+      "name": "Images inside rich post content expand in place and support keyboard opening",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor can preview the same image and student work without downloading",
+      "status": "Pass"
+    },
+    {
+      "name": "Chat bubbles and image preview fit phone width",
+      "status": "Pass"
+    },
+    {
+      "name": "No unhandled browser errors or automatic download requests",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

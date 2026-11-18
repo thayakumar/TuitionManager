@@ -34,6 +34,8 @@ export default async function WhiteboardPage() {
                   <Link
                     key={b.class_id}
                     href={"/meeting/" + b.class_id + "/whiteboard"}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="block rounded-xl border border-border p-3 hover:bg-secondary"
                   >
                     <strong className="block text-sm">{b.name}</strong>

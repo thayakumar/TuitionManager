@@ -1,5 +1,5 @@
+import { AttachmentCard } from "@/components/attachment-preview";
 import { PostComments } from "@/components/post-comments";
-import { attachmentHref } from "@/lib/attachment-url";
 import {
   AssignmentStatus,
   assignmentState,
@@ -8,7 +8,6 @@ import { RichText } from "@/components/rich-text";
 import { requireAdminPage } from "@/lib/auth";
 import {
   SubmissionHistory,
-  safeSubmissionHref,
   type SubmissionAttempt,
 } from "@/components/classroom/submission-history";
 import { notFound } from "next/navigation";
@@ -20,9 +19,6 @@ import {
   Megaphone,
   HelpCircle,
   Calendar,
-  Paperclip,
-  ExternalLink,
-  FileText,
   Inbox,
 } from "lucide-react";
 import { queryAll, queryOne } from "@/lib/db";
@@ -440,46 +436,14 @@ function AttachmentsList({ attachments }: { attachments: PostAttachment[] }) {
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
         Attachments
       </p>
-      {attachments.map((att) =>
-        safeSubmissionHref(att.file_url) ? (
-          <a
-            key={att.id}
-            href={safeSubmissionHref(att.file_url)!}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2.5 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors group"
-          >
-            {att.file_type?.startsWith("image/") ? (
-              <img
-                src={attachmentHref(att.file_url, true) || undefined}
-                alt=""
-                loading="lazy"
-                className="h-16 w-20 shrink-0 rounded-lg border border-border object-cover"
-              />
-            ) : (
-              <div className="flex size-11 items-center justify-center rounded-lg bg-blue-50 shrink-0">
-                <FileText size={22} className="text-blue-700" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                {att.file_name}
-              </p>
-              {att.file_type && (
-                <p className="text-xs text-muted-foreground">{att.file_type}</p>
-              )}
-            </div>
-            <ExternalLink
-              size={14}
-              className="text-muted-foreground shrink-0"
-            />
-          </a>
-        ) : (
-          <p key={att.id} className="text-sm text-muted-foreground">
-            {att.file_name}: attachment unavailable.
-          </p>
-        ),
-      )}
+      {attachments.map((att) => (
+        <AttachmentCard
+          key={att.id}
+          fileUrl={att.file_url}
+          fileName={att.file_name}
+          fileType={att.file_type}
+        />
+      ))}
     </div>
   );
 }
