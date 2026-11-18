@@ -45,6 +45,7 @@ export function PostComments({
     [deleting, setDeleting] = useState<number | null>(null),
     [more, setMore] = useState(false);
   const submitting = useRef(false);
+  const commentForm = useRef<HTMLFormElement>(null);
   useActionBusy(busy, "Saving comment…");
   const load = useCallback(
     async (before?: number) => {
@@ -286,9 +287,10 @@ export function PostComments({
           </article>
         ))}
       </div>
-      <form onSubmit={submit} className="mt-6 space-y-3">
+      <form ref={commentForm} onSubmit={submit} className="mt-6 space-y-3">
         <RichTextEditor
           compact
+          onSend={() => commentForm.current?.requestSubmit()}
           label={editing ? "Edit your comment" : "Add class comment"}
           value={body}
           onChange={setBody}

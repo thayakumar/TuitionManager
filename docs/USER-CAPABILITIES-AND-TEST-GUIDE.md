@@ -915,3 +915,7 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 ### 11.3. As an Admin, I can switch family rooms while a message is sending → the outgoing message remains in its original room.
 
 **Manual check:** Send on a slow connection and select another student. Neither a local pending bubble nor the later confirmation appears in the other family's thread. Return to see the message. A polling update arriving before the send response resolves into a single bubble.
+
+### 11.4. As a chat participant, I can press Enter → my family message or classroom comment is sent without clicking Send.
+
+**Manual check:** Test tutor/student/parent family chat and tutor/student classroom post comments. Shift+Enter inserts a new line. Empty Enter does not submit. Enter used to confirm IME composition does not send. Existing pending/upload/content validation still applies; non-chat rich-text editors retain their normal Enter behavior.

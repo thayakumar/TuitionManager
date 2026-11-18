@@ -53,6 +53,7 @@ export function RichTextEditor({
   compact = false,
   uploadRole,
   parentToken,
+  onSend,
 }: {
   name?: string;
   label?: string;
@@ -67,6 +68,7 @@ export function RichTextEditor({
   compact?: boolean;
   uploadRole?: "admin" | "student" | "parent";
   parentToken?: string;
+  onSend?: () => void;
 }) {
   const id = useId(),
     [html, setHtml] = useState(value ?? defaultValue),
@@ -81,6 +83,8 @@ export function RichTextEditor({
   const imageUploading = useRef(false);
   const failedImages = useRef<File[]>([]);
   const locked = disabled || imageBusy;
+  const sendState = useRef({ onSend, locked });
+  sendState.current = { onSend, locked };
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -108,6 +112,12 @@ export function RichTextEditor({
       onChange?.(next);
     },
     editorProps: {
+      handleKeyDown: (view, event) => {
+        if (!sendState.current.onSend || event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || view.composing || event.keyCode === 229) return false;
+        event.preventDefault();
+        if (!sendState.current.locked) sendState.current.onSend();
+        return true;
+      },
       handlePaste: (_view, event) => {
         const images = Array.from(event.clipboardData?.files || []).filter(
           (file) => file.type.startsWith("image/"),
@@ -494,6 +504,7 @@ export function RichTextEditor({
           </div>
         )}
       </div>
+      {onSend && <p className="px-3 py-2 text-xs text-muted-foreground">Enter to send · Shift+Enter for a new line</p>}
       {name && <input type="hidden" name={name} value={html} />}
     </div>
   );

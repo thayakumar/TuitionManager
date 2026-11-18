@@ -1,0 +1,41 @@
+{
+  "results": [
+    {
+      "name": "admin family chat Enter sends once and keeps composer focus",
+      "status": "Pass"
+    },
+    {
+      "name": "admin Shift+Enter creates multiline content and IME Enter does not send",
+      "status": "Pass"
+    },
+    {
+      "name": "admin classroom comment Enter sends while Shift+Enter and composing do not",
+      "status": "Pass"
+    },
+    {
+      "name": "student family chat Enter sends once and keeps composer focus",
+      "status": "Pass"
+    },
+    {
+      "name": "student Shift+Enter creates multiline content and IME Enter does not send",
+      "status": "Pass"
+    },
+    {
+      "name": "student classroom comment Enter sends while Shift+Enter and composing do not",
+      "status": "Pass"
+    },
+    {
+      "name": "parent family chat Enter sends once and keeps composer focus",
+      "status": "Pass"
+    },
+    {
+      "name": "parent Shift+Enter creates multiline content and IME Enter does not send",
+      "status": "Pass"
+    },
+    {
+      "name": "No unhandled browser errors",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}
