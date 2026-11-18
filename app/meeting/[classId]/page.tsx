@@ -73,6 +73,7 @@ export default async function MeetingPage({
       initialNotes={notesRow?.content ?? ""}
       isAdmin={isAdmin}
       jwt={jwt}
+      diagnosticHref={cls.is_trial?undefined:isAdmin?`/diagnostics/${cls.student_id}`:`/portal/student/${cls.student_id}/diagnostic`}
       jaasAppId={getJaasAppId()}
     />
   );

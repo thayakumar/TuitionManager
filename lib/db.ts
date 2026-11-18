@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -391,6 +391,41 @@ async function migrateFamilyChat(tx: Transaction) {
   `);
 }
 
+async function migrateDiagnostics(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS diagnostic_templates (
+      version TEXT PRIMARY KEY,
+      data_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS diagnostics (
+      student_id INTEGER PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
+      version TEXT NOT NULL DEFAULT 'ask-readiness-v3',
+      status TEXT NOT NULL DEFAULT 'awaiting' CHECK(status IN ('awaiting','open','in_progress','submitted','locked')),
+      revision INTEGER NOT NULL DEFAULT 0 CHECK(revision>=0),
+      answers TEXT NOT NULL DEFAULT '{}',
+      question_snapshot TEXT,
+      report TEXT,
+      class_id INTEGER REFERENCES classes(id) ON DELETE SET NULL,
+      opened_at TEXT,
+      started_at TEXT,
+      submitted_at TEXT,
+      locked_at TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_diagnostics_status ON diagnostics(status,student_id);
+    CREATE TABLE IF NOT EXISTS diagnostic_requests (
+      student_id INTEGER NOT NULL REFERENCES diagnostics(student_id) ON DELETE CASCADE,
+      actor_key TEXT NOT NULL,
+      request_id TEXT NOT NULL,
+      request_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY(student_id,actor_key,request_id)
+    );
+    INSERT OR IGNORE INTO diagnostics(student_id) SELECT id FROM students;
+  `);
+}
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
   // Prepared versions already have their history backfills. Never replay them.
   if (fromVersion >= 2) {
@@ -399,6 +434,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
     await migrateClassroomConversation(tx);
     await migrateStudentProfile(tx);
     await migrateFamilyChat(tx);
+    await migrateDiagnostics(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -538,6 +574,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
   await migrateClassroomConversation(tx);
   await migrateStudentProfile(tx);
   await migrateFamilyChat(tx);
+  await migrateDiagnostics(tx);
   await writeSchemaVersion(tx);
 }
 

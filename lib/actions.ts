@@ -292,6 +292,7 @@ export async function createStudentQuick(f: FormData): Promise<number> {
     });
     const studentId = Number(r.lastInsertRowid);
     await tx.execute({sql: "INSERT INTO family_chat_rooms(student_id) VALUES(?)", args: [studentId]});
+    await tx.execute({sql: "INSERT INTO diagnostics(student_id) VALUES(?)", args: [studentId]});
     return studentId;
   });
   refresh(sid);

@@ -147,7 +147,7 @@ export default async function ClassDetailPage({
         }
         subtitle={`${student.name} · ${fmtDateTime(cls.scheduled_at)}`}
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {report && (
               <WhatsAppShare
                 text={[
@@ -173,6 +173,7 @@ export default async function ClassDetailPage({
                 </Button>
               </Link>
             )}
+            {!cls.is_trial && <Button asChild variant="outline"><Link href={`/diagnostics/${student.id}`}><Brain size={16}/>Diagnostic</Link></Button>}
             <Link href={`/students/${student.id}`}>
               <Button variant="secondary">
                 <UserCircle size={16} /> Student profile

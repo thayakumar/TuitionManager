@@ -241,6 +241,7 @@ export default async function StudentDetailPage({
 
   return (
     <>
+      <Link href={`/diagnostics/${id}`} className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 hover:bg-orange-100/60"><span><strong className="block text-lg">ASK readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">Open the one-time assessment or review saved results.</span></span><ArrowRight size={21} className="shrink-0 text-orange-600"/></Link>
       <PageHeader
         title={student.name}
         subtitle={`${student.subject || "General"}${student.grade_level ? " · " + student.grade_level : ""} · ${currency(Number(student.hourly_rate), currencySymbol)}/hr`}

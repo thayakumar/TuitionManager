@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "name": "New account diagnostic waits for tutor and no answer key reaches student",
+      "status": "Pass"
+    },
+    {
+      "name": "Student starts once, answers save, and refresh resumes the same attempt",
+      "status": "Pass"
+    },
+    {
+      "name": "Another student and unauthenticated visitors cannot access answers, reports, template or tutor controls",
+      "status": "Pass"
+    },
+    {
+      "name": "Complete original 35-question test including numeric, text and flowchart items; submit hides results pending lock",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor reviews all answers and marks, locks once, and student automatically receives results only",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor can finalize a partial attempt; mobile question and locked report fit",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor diagnostics overview is searchable and links all student reports",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

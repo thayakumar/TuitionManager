@@ -15,6 +15,7 @@ import {
   Bell,
   X,
   MessagesSquare,
+  BrainCircuit,
 } from "lucide-react";
 import { useUnreadFamilyChats } from "@/components/family-chat-unread";
 import { logoutStudent } from "@/lib/actions";
@@ -39,6 +40,7 @@ function StudentNavigation({
     { path: "", label: "Dashboard", icon: LayoutDashboard },
     { path: "/schedule", label: "My Schedule", icon: CalendarDays },
     { path: "/classroom", label: "My Classroom", icon: BookOpen },
+    { path: "/diagnostic", label: "My Diagnostic", icon: BrainCircuit },
     { path: "/chat", label: "Family chat", icon: MessagesSquare },
     { path: "/notes", label: "My Notes", icon: StickyNote },
     { path: "/notifications", label: "Notifications", icon: Bell },

@@ -919,3 +919,27 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 ### 11.4. As a chat participant, I can press Enter → my family message or classroom comment is sent without clicking Send.
 
 **Manual check:** Test tutor/student/parent family chat and tutor/student classroom post comments. Shift+Enter inserts a new line. Empty Enter does not submit. Enter used to confirm IME composition does not send. Existing pending/upload/content validation still applies; non-chat rich-text editors retain their normal Enter behavior.
+
+## 12. One-time readiness diagnostic
+
+### 12.1. As an Admin, I can create a student → their one-time diagnostic is prepared and waits for me to open it.
+
+**Manual check:** Find the student in Diagnostics or their profile. The student sees an awaiting-tutor page, with their account name and level already supplied. During the first regular class after the trial, use Open diagnostic. Regular meetings include a Diagnostic shortcut in a new tab; trial meetings do not add this shortcut.
+
+### 12.2. As a Student, I can start my opened diagnostic → I answer 35 bilingual questions in one saved attempt.
+
+**Manual check:** Answer the 3 unscored background questions and 32 skill questions. Progress saves to your account. Refresh and continue the same attempt; use Back to review and Not sure / Skip when needed. Leaving with unsaved answers prompts saving. Another student's account cannot read or change your work. Your name/school entry and the standalone test's reset button have been removed.
+
+### 12.3. As a Student, I can submit once → my answers become read-only while the tutor reviews them.
+
+**Manual check:** Review the answered/skipped count and confirm submission. Scores and answer keys are not released yet. Starting again, editing the submitted answers, or sending a forged score is rejected on the server. The server calculates marks using the frozen question version.
+
+### 12.4. As an Admin, I can review all students' diagnostics → I see their answers and readiness reports.
+
+**Manual check:** Search/filter/page the Diagnostics table. A student's report includes the 32-question overall score, four learning areas, difficulty breakdown, background answers, gaps, timing hints and teaching actions. The Answers and marking table includes all 35 responses. Background responses do not affect the score; skipped skill questions count in the denominator. Timing suggestions are not validated personality or attention measurements.
+
+### 12.5. As an Admin, I can lock submitted or in-progress work → a final snapshot is released to the student.
+
+**Manual check:** Lock results asks for confirmation and shows the saved-answer count. Locking an incomplete attempt excludes unsaved work and marks unanswered skill questions as skipped. Once locked, no reset, reopening or second attempt is available. The student's results appear automatically; the questionnaire disappears. Existing reports retain their question version and marks even if future templates change. Draft saves from another tab cannot overwrite a newer revision or a lock.
+
+The uploaded question bank and answer key are stored in the private database, outside this public repository. Diagnostic templates are immutable per version. Parents have no new diagnostic access in this release.

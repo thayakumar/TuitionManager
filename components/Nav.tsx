@@ -21,6 +21,7 @@ import {
   X,
   BarChart3,
   MessagesSquare,
+  BrainCircuit,
 } from "lucide-react";
 import { useUnreadFamilyChats } from "@/components/family-chat-unread";
 import { logoutAdmin } from "@/lib/actions";
@@ -36,6 +37,7 @@ const links = [
   { href: "/students", label: "Students", icon: Users },
   { href: "/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/classroom", label: "Classroom", icon: BookOpen },
+  { href: "/diagnostics", label: "Diagnostics", icon: BrainCircuit },
   { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler },
   { href: "/invoices", label: "Invoices", icon: Receipt },
   { href: "/financial-history", label: "Financial history", icon: BarChart3 },

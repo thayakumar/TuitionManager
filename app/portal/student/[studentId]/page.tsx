@@ -57,7 +57,7 @@ export default async function StudentDashboardPage({
         ? "Good afternoon"
         : "Good evening";
 
-  const [upcoming, recentCompleted, stats] = await Promise.all([
+  const [upcoming, recentCompleted, stats, diagnostic] = await Promise.all([
     queryAll<ClassRow>(
       `SELECT id, student_id, scheduled_at, duration_minutes, subject, location,
               status, attendance, recurrence_id, is_trial, cancel_reason,
@@ -85,6 +85,7 @@ export default async function StudentDashboardPage({
          (SELECT COALESCE(SUM(duration_minutes), 0) FROM classes WHERE student_id = ? AND status = 'completed' AND julianday(scheduled_at) < julianday(?) AND attendance IN ('present','late')) AS total_hours`,
       [id, id, nowISO, id, nowISO, id, nowISO],
     ),
+    queryOne<{status:string}>("SELECT status FROM diagnostics WHERE student_id=?",[id]),
   ]);
 
   const nextClass = upcoming[0];
@@ -108,6 +109,8 @@ export default async function StudentDashboardPage({
           </Link>
         </Button>
       </header>
+
+      {diagnostic && <Link href={`/portal/student/${id}/diagnostic`} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 hover:bg-orange-100/60"><span><strong className="block text-lg">Your readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">{diagnostic.status==='locked'?'Your results are ready to view.':diagnostic.status==='in_progress'?'Continue your saved one-time assessment.':diagnostic.status==='open'?'Your tutor has opened your diagnostic.':diagnostic.status==='submitted'?'Submitted · waiting for tutor review.':'Your tutor will open this for your first regular class.'}</span></span><ArrowRight size={21} className="shrink-0 text-orange-600"/></Link>}
 
       {/* Next Class Highlight */}
       {nextClass && (

@@ -15,6 +15,7 @@ import {
   Save,
   StickyNote,
   PencilRuler,
+  BrainCircuit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JitsiMeeting } from "@/components/jitsi-meeting";
@@ -34,6 +35,7 @@ export function MeetingRoom({
   isAdmin = true,
   jwt,
   jaasAppId,
+  diagnosticHref,
 }: {
   classId: number;
   roomName: string;
@@ -45,6 +47,7 @@ export function MeetingRoom({
   isAdmin?: boolean;
   jwt?: string;
   jaasAppId?: string;
+  diagnosticHref?: string;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -208,6 +211,7 @@ export function MeetingRoom({
         </div>
 
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+          {diagnosticHref && <Button asChild variant="outline" size="sm"><Link href={diagnosticHref} target="_blank" rel="noopener noreferrer"><BrainCircuit size={16}/>Diagnostic</Link></Button>}
           <Button
             variant="outline"
             size="sm"
