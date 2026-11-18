@@ -4,6 +4,7 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BrandHomeLink } from "@/components/brand-home-link";
 import {
   ArrowLeft,
   Copy,
@@ -161,6 +162,17 @@ export function MeetingRoom({
       setLeaving(false);
     }
   }
+  async function goHome() {
+    if (leaving || imageUploading || imageUploadError) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setLeaving(true);
+    try {
+      await flush();
+      router.push(isAdmin ? "/dashboard" : "/portal/student/" + studentId);
+    } catch {
+      setLeaving(false);
+    }
+  }
   function handleHangup() {
     void handleLeave();
   }
@@ -168,8 +180,14 @@ export function MeetingRoom({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5 shrink-0">
+        <div className="flex min-w-0 flex-1 basis-full items-center gap-2 sm:basis-0">
+          <BrandHomeLink
+            href={isAdmin ? "/dashboard" : "/portal/student/" + studentId}
+            compact
+            onNavigate={goHome}
+            disabled={leaving || imageUploading || imageUploadError}
+          />
           <Button
             variant="ghost"
             size="icon-sm"
@@ -189,7 +207,7 @@ export function MeetingRoom({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
           <Button
             variant="outline"
             size="sm"

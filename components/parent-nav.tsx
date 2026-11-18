@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandHomeLink } from "@/components/brand-home-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -64,31 +65,25 @@ function SidebarContent({
   basePath,
   studentName,
   businessName,
+  onHome,
 }: {
   pathname: string;
   basePath: string;
   studentName: string;
   businessName: string;
+  onHome?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="px-4 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center brand-mark rounded-xl text-white shadow-sm">
-            <GraduationCap size={20} />
-          </div>
-          <div>
-            <div className="text-sm font-bold tracking-tight text-foreground">
-              {studentName}
-            </div>
-            <div className="text-xs text-muted-foreground">Parent View</div>
-          </div>
-        </div>
+      <div className="shrink-0 px-4 py-5" onClick={onHome}>
+        <BrandHomeLink href={basePath} subtitle={studentName + " · Parent"} />
       </div>
-
       <Separator />
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav
+        aria-label="Parent navigation"
+        className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-4"
+      >
         {navLinks.map((l) => {
           const href = `${basePath}${l.path}`;
           const active =
@@ -134,7 +129,7 @@ export function ParentNav({
 
   return (
     <>
-      <aside className="no-print hidden md:flex fixed inset-y-0 left-0 z-30 w-60 border-r border-border bg-card flex-col">
+      <aside className="no-print hidden overflow-hidden md:flex fixed inset-y-0 left-0 z-30 w-60 border-r border-border bg-card flex-col">
         <SidebarContent
           pathname={pathname}
           basePath={basePath}
@@ -163,17 +158,15 @@ export function ParentNav({
               basePath={basePath}
               studentName={studentName}
               businessName={businessName}
+              onHome={() => setOpen(false)}
             />
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center brand-mark rounded-lg text-white">
-            <GraduationCap size={14} />
-          </div>
-          <span className="text-sm font-bold tracking-tight text-foreground">
-            {studentName}
-          </span>
-        </div>
+        <BrandHomeLink
+          href={basePath}
+          subtitle={studentName + " · Parent"}
+          className="min-w-0 flex-1"
+        />
       </div>
     </>
   );

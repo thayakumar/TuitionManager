@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "name": "Admin sign-in and legacy home open Dashboard; Overview is a separate navigation hub",
+      "status": "Pass"
+    },
+    {
+      "name": "Dashboard metric cards are full-card links to the related records",
+      "status": "Pass"
+    },
+    {
+      "name": "Collapsed rail fits its font-scaled width with a three-digit unread badge and no horizontal scrollbar",
+      "status": "Pass",
+      "detail": {
+        "width": 68,
+        "client": 67,
+        "scroll": 67
+      }
+    },
+    {
+      "name": "Collapsed navigation persists and brand works across admin routes",
+      "status": "Pass",
+      "detail": {
+        "routesChecked": 14
+      }
+    },
+    {
+      "name": "Short desktop rail scrolls by keyboard without visible scrollbar or missing settings",
+      "status": "Pass"
+    },
+    {
+      "name": "Expanded desktop sidebar restores clean labels and Overview active state",
+      "status": "Pass"
+    },
+    {
+      "name": "Admin phone logo and drawer logo return to Dashboard and close the drawer",
+      "status": "Pass"
+    },
+    {
+      "name": "Student desktop pages have the brand pointing only to the student dashboard",
+      "status": "Pass"
+    },
+    {
+      "name": "Student phone header and drawer show the clickable site logo",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent desktop and phone brands preserve the scoped dashboard",
+      "status": "Pass"
+    },
+    {
+      "name": "Fullscreen whiteboards keep a compact home logo without reducing canvas space",
+      "status": "Pass"
+    },
+    {
+      "name": "Meeting home navigation saves pending notes before opening each dashboard",
+      "status": "Pass"
+    },
+    {
+      "name": "Sign-in branding exists and signed-out users cannot open admin Overview or Dashboard",
+      "status": "Pass"
+    },
+    {
+      "name": "No unhandled browser errors across all role navigation views",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

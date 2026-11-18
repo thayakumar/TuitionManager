@@ -559,3 +559,14 @@ test("storage response normalization accepts deployed connector variants and rej
   ]) assert.throws(()=>storageFile(data));
   assert.throws(()=>storageFile({success:false,error:"Sharing permission denied"}),/Drive received the file but could not share it/);
 });
+
+test("navigation redirects preserve the public origin and legacy home resolves before rendering", () => {
+  const {middleware}=load("middleware.ts",{"next/server":{NextResponse:{next:()=>({next:true}),redirect:url=>({location:url.toString()})}}});
+  const request=(path,cookies={},extra={})=>({url:"http://localhost:3000"+path,nextUrl:new URL("http://localhost:3000"+path),headers:new Headers({host:"127.0.0.1:4660",...extra}),cookies:{get:key=>cookies[key]?{value:cookies[key]}:undefined}});
+  assert.equal(middleware(request("/",{admin_session:"presence"})).location,"http://127.0.0.1:4660/dashboard");
+  assert.equal(middleware(request("/overview")).location,"http://127.0.0.1:4660/portal/admin");
+  assert.equal(middleware(request("/portal/student/1/schedule")).location,"http://127.0.0.1:4660/portal/student");
+  assert.equal(middleware(request("/meeting/1")).location,"http://127.0.0.1:4660/portal/student");
+  assert.equal(middleware(request("/dashboard",{admin_session:"presence"})).next,true);
+  assert.equal(middleware(request("/",{admin_session:"presence"},{"x-forwarded-host":"tuition.example","x-forwarded-proto":"https"})).location,"https://tuition.example/dashboard");
+});

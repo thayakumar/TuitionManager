@@ -15,11 +15,33 @@ const PUBLIC_PATHS = [
   "/icon-512.svg",
 ];
 
+function publicDestination(path: string, request: NextRequest): URL {
+  const original = new URL(request.url);
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0].trim() ||
+    request.headers.get("host") ||
+    original.host;
+  const protocol =
+    request.headers.get("x-forwarded-proto")?.split(",")[0].trim() ||
+    original.protocol.slice(0, -1);
+  try {
+    if (!["http", "https"].includes(protocol))
+      throw new Error("Invalid scheme");
+    return new URL(path, protocol + "://" + host);
+  } catch {
+    return new URL(path, original);
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public paths (login pages, share links, etc.) — no auth needed
-  if (PUBLIC_PATHS.some((p) => pathname === p || (p.endsWith("/") && pathname.startsWith(p)))) {
+  if (
+    PUBLIC_PATHS.some(
+      (p) => pathname === p || (p.endsWith("/") && pathname.startsWith(p)),
+    )
+  ) {
     return NextResponse.next();
   }
 
@@ -32,7 +54,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/portal/student/")) {
     const studentSession = request.cookies.get("student_session")?.value;
     if (!studentSession) {
-      const portalUrl = new URL("/portal/student", request.url);
+      const portalUrl = publicDestination("/portal/student", request);
       return NextResponse.redirect(portalUrl);
     }
     return NextResponse.next();
@@ -43,7 +65,7 @@ export function middleware(request: NextRequest) {
     const adminSession = request.cookies.get("admin_session")?.value;
     const studentSession = request.cookies.get("student_session")?.value;
     if (!adminSession && !studentSession) {
-      const loginUrl = new URL("/portal/student", request.url);
+      const loginUrl = publicDestination("/portal/student", request);
       return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
@@ -52,15 +74,18 @@ export function middleware(request: NextRequest) {
   // Admin routes require admin_session cookie
   const session = request.cookies.get("admin_session")?.value;
   if (!session) {
-    const loginUrl = new URL("/portal/admin", request.url);
+    const loginUrl = publicDestination("/portal/admin", request);
     return NextResponse.redirect(loginUrl);
   }
+
+  // Redirect before rendering the legacy root page; avoid a streamed redirect
+  // through the dashboard's shared navigation tree.
+  if (pathname === "/")
+    return NextResponse.redirect(publicDestination("/dashboard", request));
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

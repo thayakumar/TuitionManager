@@ -616,3 +616,11 @@ aside nav a { min-height: 50px; font-size: 1rem; }
 .rich-editor-upload-error > div { margin-top: 10px; }
 .rich-editor-compact .rich-text-editor-content { min-height: 112px; padding: 14px; }
 .rich-editor-compact .rich-editor-toolbar { gap: 4px; padding: 8px; }
+
+/* Sidebar rails scroll when needed without reserving a scrollbar beside icons. */
+.sidebar-scroll { scrollbar-width: none; }
+.sidebar-scroll::-webkit-scrollbar { display: none; }
+.brand-home-link { text-decoration: none; }
+@media (prefers-reduced-motion: reduce) {
+  .overview-tile { transition: none; }
+}

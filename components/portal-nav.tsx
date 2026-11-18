@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BrandHomeLink } from "@/components/brand-home-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -42,18 +43,13 @@ function StudentNavigation({
   function content() {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-3 p-5 pb-8">
-          <div className="flex size-10 shrink-0 items-center justify-center brand-mark rounded-2xl text-white">
-            <GraduationCap size={22} />
-          </div>
-          <div className="min-w-0">
-            <strong className="block truncate text-sm">{studentName}</strong>
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              Your learning space
-            </span>
-          </div>
+        <div className="shrink-0 p-5" onClick={() => setOpen(false)}>
+          <BrandHomeLink href={base} subtitle={studentName} />
         </div>
-        <nav className="flex-1 space-y-1 px-3">
+        <nav
+          aria-label="Student navigation"
+          className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3"
+        >
           {links.map((link) => {
             const href = base + link.path,
               active = link.path ? path.startsWith(href) : path === base;
@@ -85,7 +81,7 @@ function StudentNavigation({
   }
   return (
     <>
-      <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card md:flex">
+      <aside className="no-print fixed inset-y-0 left-0 z-30 hidden overflow-hidden w-60 flex-col border-r border-border bg-card md:flex">
         {content()}
       </aside>
       <div className="no-print sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
@@ -96,9 +92,11 @@ function StudentNavigation({
         >
           <Menu size={20} />
         </button>
-        <strong className="min-w-0 flex-1 truncate text-sm">
-          {studentName}
-        </strong>
+        <BrandHomeLink
+          href={base}
+          subtitle={studentName}
+          className="min-w-0 flex-1"
+        />
         <Link
           href={base + "/notifications"}
           aria-label={`Notifications, ${count} unread`}
@@ -115,7 +113,7 @@ function StudentNavigation({
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
           />
-          <aside className="relative h-full w-72 max-w-[85vw] bg-card">
+          <aside className="relative h-dvh overflow-hidden w-72 max-w-[85vw] bg-card">
             <button
               aria-label="Close navigation"
               onClick={() => setOpen(false)}

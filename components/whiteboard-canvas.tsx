@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Download, RefreshCw, Save, SlidersHorizontal, X } from "lucide-react";
+import { BrandHomeLink } from "@/components/brand-home-link";
 import { Button } from "@/components/ui/button";
 type Workspace = Record<string, unknown>;
 type Board = {
@@ -398,28 +399,41 @@ export function WhiteboardCanvas({
             </p>
           </aside>
         )}
-        <button
-          type="button"
-          ref={optionsButton}
-          aria-expanded={detailsOpen}
-          aria-label={detailsOpen ? "Hide board options" : "Show board options"}
-          onClick={() => setDetailsOpen(!detailsOpen)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur"
-        >
-          <SlidersHorizontal size={18} />
-          <span>Board options</span>
-          <span
-            aria-hidden="true"
-            className={
-              "size-2 rounded-full " +
-              (error || conflict
-                ? "bg-amber-500"
-                : status === "Saved"
-                  ? "bg-emerald-500"
-                  : "bg-blue-500")
+        <div className="flex items-center gap-2">
+          <BrandHomeLink
+            href={
+              identity === "admin"
+                ? "/dashboard"
+                : "/portal/student/" + identity.replace("student-", "")
             }
+            compact
+            className="rounded-2xl border border-border bg-card/95 p-1 shadow-lg backdrop-blur"
           />
-        </button>
+          <button
+            type="button"
+            ref={optionsButton}
+            aria-expanded={detailsOpen}
+            aria-label={
+              detailsOpen ? "Hide board options" : "Show board options"
+            }
+            onClick={() => setDetailsOpen(!detailsOpen)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur"
+          >
+            <SlidersHorizontal size={18} />
+            <span>Board options</span>
+            <span
+              aria-hidden="true"
+              className={
+                "size-2 rounded-full " +
+                (error || conflict
+                  ? "bg-amber-500"
+                  : status === "Saved"
+                    ? "bg-emerald-500"
+                    : "bg-blue-500")
+              }
+            />
+          </button>
+        </div>
       </div>
       <p role="status" aria-live="polite" className="sr-only">
         {status}

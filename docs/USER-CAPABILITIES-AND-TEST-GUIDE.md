@@ -820,3 +820,25 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 #### 6.3.2. As an Admin, I can prepare the storage connector in Settings → File storage → a script configured for this app is available to copy or download.
 
 **Manual check:** Replace the code in the existing Google Apps Script project, run authorizeConnector, grant the requested Drive/external-request access, then deploy a new version of the existing web-app deployment. Check connection in Settings before testing a large/private upload. Keep the existing web-app URL; a new deployment URL also requires updating APPS_SCRIPT_UPLOAD_URL in Vercel.
+
+## 7. Navigation and workspace home
+
+### 7.1. As an Admin, I can open Dashboard → the existing teaching metrics and quick-glance panels remain available at /dashboard.
+
+**Manual check:** Sign in and open the old / bookmark; both resolve to Dashboard. Active students, monthly lessons, teaching hours and revenue cards open the related records.
+
+### 7.2. As an Admin, I can open Overview → twelve large cards take me to existing workspace pages.
+
+**Manual check:** Overview and Dashboard are separate navigation entries. Each card's full surface is clickable and leads to its labelled page. Anonymous/student/parent credentials do not grant admin access.
+
+### 7.3. As an Admin, Student or Parent, I can click the TuitionHub logo → I return to my role's dashboard.
+
+**Manual check:** Verify desktop, phone header and phone drawer links. Student links stay within that student; parent links preserve the active scoped token. A drawer closes even when already on its dashboard.
+
+### 7.4. As an Admin, I can collapse navigation → icons and unread counts remain inside the rail without an internal scrollbar.
+
+**Manual check:** Try a count above 99 and a short screen. Focus the Settings link by keyboard or scroll the rail to reach it. No horizontal page overflow appears; expansion restores text labels and the preference survives navigation.
+
+### 7.5. As an Admin or Student, I can use the logo inside a meeting or whiteboard → home is reachable without restoring a full sidebar.
+
+**Manual check:** Meeting navigation saves pending notes first. The board stays fullscreen with a compact home logo beside its options; saved boards and local drafts retain their existing persistence behaviour.

@@ -21,7 +21,7 @@ export default async function WhiteboardPage() {
         <div className="space-y-4">
           <h1 className="text-lg font-bold">Your whiteboard</h1>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-block text-sm font-medium text-primary"
           >
             Back to workspace

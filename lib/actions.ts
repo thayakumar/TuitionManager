@@ -47,6 +47,8 @@ async function activeStudent(tx: Transaction, studentId: number) {
 function refresh(studentId?: number) {
   for (const p of [
     "/",
+    "/dashboard",
+    "/overview",
     "/students",
     "/schedule",
     "/invoices",

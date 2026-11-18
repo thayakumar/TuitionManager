@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
     try {
       const result = await loginAdmin(formData);
       if (result.success) {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       } else {
         setError(result.error || "Invalid credentials");
