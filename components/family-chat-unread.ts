@@ -19,4 +19,3 @@ export function useUnreadFamilyChats(role: ChatRole, parentToken?: string) {
   }, [role, parentToken]);
   return count;
 }
-
