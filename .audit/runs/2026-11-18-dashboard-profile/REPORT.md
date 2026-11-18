@@ -1,0 +1,11 @@
+# Actionable dashboard, monthly drafts and editable profiles
+
+Implemented the supplied Dashboard Redesign Brief. Financial panels and queries were removed from Dashboard; six teaching KPIs, accurate attention totals, direct action links, five-row previews, today's lessons, attendance and compact upcoming lessons remain. Financial History stays separate.
+
+Monthly draft generation shares its invoice calculation with manual generation. The authenticated scheduler runs near the end of the last Malaysian calendar day, with delayed-delivery grace. Only positive billable attended unclaimed lessons generate drafts. Absent/cancelled/unmarked lessons, empty months and duplicate claims are excluded; trials remain free alongside paid lessons. Replays are idempotent, failed runs roll back, drafts remain hidden from family views. Production activation requires a configured CRON_SECRET; see docs/MONTHLY-DRAFT-INVOICES.md. No production student billing was triggered by these checks.
+
+Students can edit their own name, phone, email and profile picture. Academic/billing/access settings remain tutor-controlled. Uploaded photos appear in authorized student/admin/parent surfaces and student comment/chat avatars. A browser check caught missing upload MIME registration; registration now retains it, allowing valid new photos through the ownership check. Private images deny other students and signed-out visitors.
+
+The meeting-note editor uses the same fixed same-origin uploader as classroom posts and now passes its viewing role explicitly. Browser tests for both tutor and student paste a new image, inject a transient provider failure, wait for that exact new image to be saved and confirm its URL survives reload. This verifies the pictured flow against controlled storage; the user's live Google Drive transfer remains unverified.
+
+Executed evidence: dashboard SQL/render regression; monthly billing temporal/financial/concurrency/auth scenarios; profile migration/authorization tests; six profile browser checks; three dashboard/meeting browser checks. See sibling JSON, screenshots, MONTHLY-INVOICES.md and STUDENT-PROFILE.md. The final combined release has 89 passing automated tests and a passing production build. Browser data uses isolated SQLite and a local Google/Apps Script provider; no production files were uploaded.

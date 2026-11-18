@@ -230,6 +230,7 @@ test("begin/finish validates connector session target and binds registry ownersh
       "/api/files/examplefileid?inline=1",
     );
     assert.deepEqual(writes[0][1].slice(0, 3), ["examplefileid", "student", 1]);
+    assert.equal(writes[0][1][4], "application/pdf", "registry retains inferred MIME even when connector omits fileType");
     role = "both";
     const mixedBeginRequest = jsonRequest({
       action: "begin",
@@ -626,4 +627,65 @@ test("chunk relay authenticates signed sessions, bounds request size and forward
   } finally {
     global.fetch = savedFetch;
   }
+});
+
+test("meeting editor can explicitly upload as student outside the portal URL", async () => {
+  const previousFetch = global.fetch;
+  const previousWindow = global.window;
+  const seen = [];
+  global.window = { location: { pathname: '/meeting/55' } };
+  global.fetch = async (url, options) => {
+    if (url === '/api/upload/chunk') return Response.json({ complete: true, nextOffset: 3 });
+    seen.push(options.headers['X-Upload-Role']);
+    return Response.json(JSON.parse(options.body).action === 'begin'
+      ? { ticket: 'signed' }
+      : { fileUrl: 'https://drive.google.com/file/d/studentmeetingimage/view', fileName: 'note.png' });
+  };
+  try {
+    await loader()('lib/upload-client.ts').uploadFile(new File(['abc'], 'note.png', {type:'image/png'}), { role: 'student' });
+    assert.deepEqual(seen, ['student', 'student']);
+  } finally { global.fetch = previousFetch; if (previousWindow === undefined) delete global.window; else global.window = previousWindow; }
+});
+
+test('parent upload binds a revocable bearer identity even with both session cookies', async () => {
+  const previousFetch=global.fetch, previousUrl=process.env.APPS_SCRIPT_UPLOAD_URL;
+  process.env.APPS_SCRIPT_UPLOAD_URL='https://connector.test';
+  let revoked=false, calls=0;const writes=[];
+  const load=loader({
+    '@/lib/auth':{verifyAdminSession:async()=>true,getStudentSession:async()=>2},
+    '@/lib/parent-upload':{parentUploadIdentity:async token=>token==='family-one'&&!revoked?{studentId:1,parentTokenHash:'family-hash'}:null},
+    '@/lib/db':{execute:async(...args)=>writes.push(args),queryOne:async()=>({name:'Alice'})},
+    '@/lib/storage-config':{getStorageSecret:async()=>'secret'},'next/server':{NextResponse:Response}
+  });
+  const route=load('app/api/upload/route.ts'),authority=load('lib/upload-authority.ts');
+  function request(body,token='family-one'){return new Request('https://app.test/api/upload',{method:'POST',headers:{origin:'https://app.test','Content-Type':'application/json','X-Upload-Role':'parent','X-Parent-Token':token},body:JSON.stringify(body)})}
+  global.fetch=async(_url,options)=>{calls++;return Response.json(JSON.parse(options.body).action==='begin'?{success:true,version:2,uploadUrl:'https://www.googleapis.com/upload/drive/v3/files?upload_id=parent',fileId:'parentuploadfile'}:{success:true,version:2,created:true,fileId:'parentuploadfile',fileUrl:'https://drive.google.com/file/d/parentuploadfile/view',fileName:'family.pdf'})};
+  try{
+    assert.equal((await route.POST(request({action:'begin',fileName:'family.pdf',size:9},'wrong'))).status,401);
+    const begin=await route.POST(request({action:'begin',fileName:'family.pdf',size:9}));assert.equal(begin.status,200);
+    const ticket=(await begin.json()).ticket;assert.equal(authority.verifyUpload(ticket,'secret').actor,'parent:family-hash');
+    const finished=await route.POST(request({action:'finish',ticket,fileName:'family.pdf'}));assert.equal(finished.status,200);
+    assert.match((await finished.json()).inlineUrl,/parent_token=family-one/);
+    assert.deepEqual(writes[0][1].slice(0,3),['parentuploadfile','student',1]);assert.equal(writes[0][1][5],'family-hash');
+    revoked=true;const before=calls;assert.equal((await route.POST(request({action:'finish',ticket}))).status,401);assert.equal(calls,before);
+    assert.equal(authority.ticketAllows(authority.verifyUpload(ticket,'secret'),{admin:true,studentId:null},'parentuploadfile'),false);
+  } finally {global.fetch=previousFetch;if(previousUrl===undefined)delete process.env.APPS_SCRIPT_UPLOAD_URL;else process.env.APPS_SCRIPT_UPLOAD_URL=previousUrl}
+});
+
+test('parent client sends its bearer only to same-origin transfer endpoints',async()=>{
+  const previous=global.fetch,seen=[];
+  global.fetch=async(url,options)=>{assert(url.startsWith('/api/upload'));seen.push(options.headers['X-Parent-Token']);return Response.json(url.endsWith('/chunk')?{complete:true,nextOffset:3}:JSON.parse(options.body).action==='begin'?{ticket:'signed'}:{fileUrl:'https://drive.google.com/file/d/parentuploadfile/view',fileName:'note.png'})};
+  try{await loader()('lib/upload-client.ts').uploadFile(new File(['abc'],'note.png',{type:'image/png'}),{role:'parent',parentToken:'private-family-token'});assert.deepEqual(seen,['private-family-token','private-family-token','private-family-token'])}finally{global.fetch=previous}
+});
+
+test('parent chunk tickets reject another parent or revoked token before forwarding bytes',async()=>{
+  let revoked=false;const load=loader({
+    '@/lib/auth':{verifyAdminSession:async()=>true,getStudentSession:async()=>9},
+    '@/lib/parent-upload':{parentUploadIdentity:async t=>t==='valid-parent'&&!revoked?{studentId:1,parentTokenHash:'bound-parent'}:null},
+    '@/lib/storage-config':{getStorageSecret:async()=>'secret'},'next/server':{NextResponse:Response}
+  });const route=load('app/api/upload/chunk/route.ts'),{signUpload}=load('lib/upload-authority.ts');
+  const ticket=signUpload({fileId:'parentimagefile',actor:'parent:bound-parent',size:3,uploadUrl:'https://www.googleapis.com/upload/drive/v3/files?upload_id=parent',expires:Date.now()+10000},'secret');
+  const request=(token)=>new Request('https://app.test/api/upload/chunk',{method:'PUT',headers:{Origin:'https://app.test','X-Upload-Ticket':ticket,'X-Parent-Token':token,'Content-Range':'bytes 0-2/3'},body:'abc'});
+  const prev=global.fetch;let forwarded=0;global.fetch=async()=>{forwarded++;return Response.json({},{status:201})};
+  try {assert.equal((await route.PUT(request('other'))).status,401);assert.equal((await route.PUT(request('valid-parent'))).status,200);assert.equal(forwarded,1);revoked=true;assert.equal((await route.PUT(request('valid-parent'))).status,401);assert.equal(forwarded,1)}finally{global.fetch=prev}
 });

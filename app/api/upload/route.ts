@@ -1,3 +1,4 @@
+import { parentUploadIdentity } from "@/lib/parent-upload";
 import { NextRequest, NextResponse } from "next/server";
 import { getStudentSession, verifyAdminSession } from "@/lib/auth";
 import { queryOne, execute } from "@/lib/db";
@@ -63,9 +64,12 @@ export async function POST(request: NextRequest) {
     verifyAdminSession(),
     getStudentSession(),
   ]);
-  const studentView = request.headers.get("x-upload-role") === "student";
-  const admin = adminSession && !studentView;
-  if ((!admin && !studentId) || (studentView && !studentId))
+  const requestedRole = request.headers.get("x-upload-role");
+  const studentView = requestedRole === "student";
+  const parentView = requestedRole === "parent";
+  const parent = parentView ? await parentUploadIdentity(request.headers.get("x-parent-token")) : null;
+  const admin = adminSession && !studentView && !parentView;
+  if ((parentView && !parent) || (!parentView && ((!admin && !studentId) || (studentView && !studentId))))
     return NextResponse.json(
       { error: "Sign in before uploading a file" },
       { status: 401 },
@@ -77,7 +81,7 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
 
-  const actor = { admin, studentId: admin ? null : studentId };
+  const actor = { admin, studentId: parent?.studentId ?? (admin ? null : studentId), parentTokenHash: parent?.parentTokenHash };
   const secret = await getStorageSecret();
   const registered = async (
     result: ReturnType<typeof storageFile>,
@@ -86,18 +90,20 @@ export async function POST(request: NextRequest) {
     const fileId = result.fileId || driveFileId(result.fileUrl);
     if (fileId)
       await execute(
-        "INSERT OR IGNORE INTO uploaded_files(file_id,owner_role,owner_student_id,file_name) VALUES(?,?,?,?)",
+        "INSERT OR IGNORE INTO uploaded_files(file_id,owner_role,owner_student_id,file_name,mime_type,parent_token_hash) VALUES(?,?,?,?,?,?)",
         [
           fileId,
           admin ? "admin" : "student",
           actor.studentId,
           result.fileName || fallback,
+          uploadMime({name:result.fileName || fallback,type:result.fileType || ""}) || "",
+          parent?.parentTokenHash ?? null,
         ],
       );
     const response = NextResponse.json({
       ...result,
       fileName: result.fileName || fallback,
-      ...(fileId ? { inlineUrl: "/api/files/" + fileId + "?inline=1" } : {}),
+      ...(fileId ? { inlineUrl: "/api/files/" + fileId + "?inline=1" + (parentView ? "&parent_token=" + encodeURIComponent(request.headers.get("x-parent-token") || "") : "") } : {}),
     });
     if (fileId && secret) {
       const tickets = pendingFiles(request.headers, secret).filter(
@@ -273,10 +279,10 @@ export async function POST(request: NextRequest) {
     // Student identity is server-derived; an arbitrary studentName form value
     // must never route a student's upload into another person's identity.
     let name = "Tutor";
-    if (studentId) {
+    if (actor.studentId) {
       const student = await queryOne<{ name: string }>(
         "SELECT name FROM students WHERE id=? AND active=1",
-        [studentId],
+        [actor.studentId],
       );
       if (!student)
         return NextResponse.json(

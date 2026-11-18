@@ -44,7 +44,7 @@ import { lessonStatus } from "@/lib/lesson-status";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareTokenButton } from "@/components/share-token-button";
@@ -263,6 +263,7 @@ export default async function StudentDetailPage({
             {/* Avatar + Name */}
             <div className="flex items-center gap-4">
               <Avatar className="size-16 border-4 border-orange-100">
+                {student.profile_photo_url && <AvatarImage src={student.profile_photo_url} alt={student.name} />}
                 <AvatarFallback className="bg-[#b82f25] text-white text-xl font-bold">
                   {getInitials(student.name)}
                 </AvatarFallback>

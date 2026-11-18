@@ -1,21 +1,19 @@
 import Link from "next/link";
 import {
-  GraduationCap,
   ArrowRight,
   Users,
   CalendarDays,
   Clock,
-  Wallet,
+  BookOpen,
+  RefreshCw,
+  FileText,
+  CircleHelp,
+  ClipboardCheck,
+  CheckCircle2,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
-import { queryAll, queryOne, getSettings } from "@/lib/db";
-import {
-  monthlyRevenue,
-  financeTotals,
-  currentBillingMonth,
-  invoiceBillingMonth,
-  type FinanceInvoice,
-} from "@/lib/finance";
+import { queryAll, queryOne } from "@/lib/db";
+import { currentBillingMonth } from "@/lib/finance";
 import {
   businessDateTime,
   monthBounds,
@@ -29,11 +27,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { DashboardQuickActions } from "@/components/dashboard-actions";
-import { RevenueChart } from "@/components/revenue-chart";
 import { AttendanceChart } from "@/components/attendance-chart";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
-import { currency, fmtDateTime, fmtTime } from "@/lib/format";
+import { fmtDateTime, fmtTime } from "@/lib/format";
 import type { ClassWithStudent } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
@@ -46,33 +43,30 @@ export default async function DashboardPage() {
     dayStart = businessDateTime(`${localDay}T00:00`),
     dayEnd = businessDateTime(`${nextDate(localDay, 1)}T00:00`);
   const [
-    settings,
     students,
     classes,
     upcoming,
     needsReport,
-    invoices,
     stats,
     attendance,
+    pendingRequests,
+    unmarked,
+    attentionCounts,
   ] = await Promise.all([
-    getSettings(["currency", "business_name"]),
     queryAll<{ id: number; name: string; subject: string | null }>(
       "SELECT id,name,subject FROM students WHERE active=1 ORDER BY name",
     ),
     queryAll<ClassWithStudent>(
-      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.scheduled_at>=? AND c.scheduled_at<? ORDER BY c.scheduled_at LIMIT 5",
+      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE julianday(c.scheduled_at)>=julianday(?) AND julianday(c.scheduled_at)<julianday(?) ORDER BY julianday(c.scheduled_at) LIMIT 5",
       [dayStart, dayEnd],
     ),
     queryAll<ClassWithStudent>(
-      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.status='scheduled' AND c.scheduled_at>=? ORDER BY c.scheduled_at LIMIT 5",
+      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.status='scheduled' AND julianday(c.scheduled_at)>=julianday(?) ORDER BY julianday(c.scheduled_at) LIMIT 5",
       [iso],
     ),
     queryAll<ClassWithStudent>(
-      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id LEFT JOIN reports r ON r.class_id=c.id WHERE c.status='completed' AND c.attendance IN ('present','late') AND c.scheduled_at<? AND r.id IS NULL ORDER BY c.scheduled_at DESC LIMIT 5",
+      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id LEFT JOIN reports r ON r.class_id=c.id WHERE c.status='completed' AND c.attendance IN ('present','late') AND julianday(c.scheduled_at)<julianday(?) AND r.id IS NULL ORDER BY julianday(c.scheduled_at) DESC LIMIT 5",
       [iso],
-    ),
-    queryAll<FinanceInvoice>(
-      "SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ORDER BY i.issued_at DESC",
     ),
     queryOne<{
       today_classes: number;
@@ -80,23 +74,33 @@ export default async function DashboardPage() {
       month_minutes: number;
       upcoming: number;
     }>(
-      "SELECT SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS today_classes,SUM(CASE WHEN scheduled_at>=? AND scheduled_at<? THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND scheduled_at>=? AND scheduled_at<? THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND scheduled_at>=? THEN 1 ELSE 0 END) AS upcoming FROM classes",
+      "SELECT SUM(CASE WHEN julianday(scheduled_at)>=julianday(?) AND julianday(scheduled_at)<julianday(?) THEN 1 ELSE 0 END) AS today_classes,SUM(CASE WHEN julianday(scheduled_at)>=julianday(?) AND julianday(scheduled_at)<julianday(?) THEN 1 ELSE 0 END) AS month_classes,SUM(CASE WHEN status='completed' AND attendance IN ('present','late') AND julianday(scheduled_at)>=julianday(?) AND julianday(scheduled_at)<julianday(?) THEN duration_minutes ELSE 0 END) AS month_minutes,SUM(CASE WHEN status='scheduled' AND julianday(scheduled_at)>=julianday(?) THEN 1 ELSE 0 END) AS upcoming FROM classes",
       [dayStart, dayEnd, start, end, start, end, iso],
     ),
     queryOne<{ present: number; absent: number }>(
-      "SELECT SUM(CASE WHEN attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN attendance='absent' THEN 1 ELSE 0 END) AS absent FROM classes WHERE status<>'canceled' AND scheduled_at>=? AND scheduled_at<=?",
+      "SELECT SUM(CASE WHEN attendance IN ('present','late') THEN 1 ELSE 0 END) AS present,SUM(CASE WHEN attendance='absent' THEN 1 ELSE 0 END) AS absent FROM classes WHERE status<>'canceled' AND julianday(scheduled_at)>=julianday(?) AND julianday(scheduled_at)<=julianday(?)",
       [new Date(now.getTime() - 30 * 86400000).toISOString(), iso],
     ),
-  ]);
-  const symbol = settings.currency || "RM",
-    totals = financeTotals(invoices),
-    thisMonth = financeTotals(
-      invoices.filter((i) => invoiceBillingMonth(i) === month),
+    queryOne<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM reschedule_requests WHERE status='pending'",
     ),
-    revenue = monthlyRevenue(invoices).slice(-6),
-    unpaid = invoices
-      .filter((i) => i.status !== "paid" && i.status !== "canceled")
-      .slice(0, 5);
+    queryAll<ClassWithStudent>(
+      "SELECT c.*,s.name AS student_name,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.status='scheduled' AND julianday(c.scheduled_at)<julianday(?) ORDER BY julianday(c.scheduled_at) DESC LIMIT 5",
+      [iso],
+    ),
+    queryOne<{ reports: number; unmarked: number; ungraded: number }>(
+      `SELECT
+        (SELECT COUNT(*) FROM classes c LEFT JOIN reports r ON r.class_id=c.id WHERE c.status='completed' AND c.attendance IN ('present','late') AND julianday(c.scheduled_at)<julianday(?) AND r.id IS NULL) AS reports,
+        (SELECT COUNT(*) FROM classes WHERE status='scheduled' AND julianday(scheduled_at)<julianday(?)) AS unmarked,
+        (SELECT COUNT(*) FROM submissions s JOIN posts p ON p.id=s.post_id WHERE p.type IN ('assignment','quiz') AND s.grade IS NULL AND s.graded_at IS NULL) AS ungraded`,
+      [iso, iso],
+    ),
+  ]);
+  const pendingCount = Number(pendingRequests?.count ?? 0),
+    reportCount = Number(attentionCounts?.reports ?? 0),
+    unmarkedCount = Number(attentionCounts?.unmarked ?? 0),
+    ungradedCount = Number(attentionCounts?.ungraded ?? 0),
+    caughtUp = !pendingCount && !reportCount && !unmarkedCount && !ungradedCount;
   return (
     <>
       <section className="dashboard-intro page-heading mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
@@ -117,7 +121,7 @@ export default async function DashboardPage() {
         </div>
         <DashboardQuickActions students={students} />
       </section>
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {[
           {
             href: "/students",
@@ -141,19 +145,35 @@ export default async function DashboardPage() {
             Icon: Clock,
           },
           {
-            href: "/financial-history",
-            label: "Revenue this month",
-            value: currency(thisMonth.revenue, symbol),
-            detail: "Paid + outstanding · billing month",
-            Icon: Wallet,
+            href: "/schedule",
+            label: "Today's lessons",
+            value: Number(stats?.today_classes ?? 0),
+            detail: "Your day at a glance",
+            Icon: BookOpen,
           },
-        ].map(({ label, value, detail, Icon, href }) => (
+          {
+            href: "/requests",
+            label: "Pending reschedules",
+            value: pendingCount,
+            detail: "Requests to review",
+            Icon: RefreshCw,
+            warning: pendingCount > 0,
+          },
+          {
+            href: "#needs-attention",
+            label: "Reports overdue",
+            value: reportCount,
+            detail: "Attended lessons without a report",
+            Icon: FileText,
+            warning: reportCount > 0,
+          },
+        ].map(({ label, value, detail, Icon, href, warning }) => (
           <Link
             key={label}
             href={href}
             className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="metric-card h-full transition-colors hover:border-primary/40">
+            <Card className={`metric-card h-full transition-colors hover:border-primary/40 ${warning ? "border-amber-300 bg-amber-50/60" : ""}`}>
               <CardContent className="relative p-5 sm:p-6">
                 <Icon className="metric-icon absolute right-5 top-5 size-9 rounded-xl bg-primary/5 p-2 text-primary" />
                 <p className="text-xs text-muted-foreground">{label}</p>
@@ -164,6 +184,72 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+      <Card id="needs-attention" className="mb-6 scroll-mt-6">
+        <CardHeader>
+          <CardTitle>Needs Your Attention</CardTitle>
+          <CardDescription>Teaching tasks ready for your next step</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {caughtUp && (
+            <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-5 text-emerald-800">
+              <CheckCircle2 size={22} aria-hidden="true" />
+              <p className="font-medium">You're all caught up!</p>
+            </div>
+          )}
+          {pendingCount > 0 && (
+            <Link href="/requests" className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+              <RefreshCw size={20} className="shrink-0" aria-hidden="true" />
+              <span className="min-w-0 flex-1 font-medium">Review reschedule requests</span>
+              <Badge className="bg-amber-100 text-amber-900">{pendingCount}</Badge>
+              <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+            </Link>
+          )}
+          {reportCount > 0 && (
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center gap-3">
+                <FileText size={20} className="shrink-0 text-amber-700" aria-hidden="true" />
+                <p className="flex-1 font-semibold">Reports to write</p>
+                <Badge className="bg-amber-100 text-amber-900">{reportCount}</Badge>
+              </div>
+              <div className="mt-3 divide-y divide-border/60">
+                {needsReport.map((c) => (
+                  <Link key={c.id} href={`/classes/${c.id}?report=true`} className="flex items-center justify-between gap-3 py-3 text-sm hover:text-primary">
+                    <span className="min-w-0"><strong className="block">{c.student_name}</strong><span className="mt-1 block text-xs text-muted-foreground">{fmtDateTime(c.scheduled_at)}</span></span>
+                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  </Link>
+                ))}
+              </div>
+              {reportCount > 5 && <Link href="/schedule" className="mt-2 block text-sm font-medium text-primary">Showing 5 of {reportCount} · View schedule →</Link>}
+            </div>
+          )}
+          {unmarkedCount > 0 && (
+            <div className="rounded-xl border border-border p-4">
+              <div className="flex items-center gap-3">
+                <CircleHelp size={20} className="shrink-0 text-blue-700" aria-hidden="true" />
+                <p className="flex-1 font-semibold">Unmarked lessons</p>
+                <Badge className="bg-blue-100 text-blue-900">{unmarkedCount}</Badge>
+              </div>
+              <div className="mt-3 divide-y divide-border/60">
+                {unmarked.map((c) => (
+                  <Link key={c.id} href={`/classes/${c.id}`} className="flex items-center justify-between gap-3 py-3 text-sm hover:text-primary">
+                    <span className="min-w-0"><strong className="block">{c.student_name}</strong><span className="mt-1 block text-xs text-muted-foreground">{fmtDateTime(c.scheduled_at)}</span></span>
+                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  </Link>
+                ))}
+              </div>
+              {unmarkedCount > 5 && <Link href="/schedule" className="mt-2 block text-sm font-medium text-primary">Showing 5 of {unmarkedCount} · View schedule →</Link>}
+            </div>
+          )}
+          {ungradedCount > 0 && (
+            <Link href="/classroom" className="flex items-center gap-3 rounded-xl border border-border p-4 hover:border-primary/40">
+              <ClipboardCheck size={20} className="shrink-0 text-amber-700" aria-hidden="true" />
+              <span className="min-w-0 flex-1 font-medium">Grade student submissions</span>
+              <Badge className="bg-amber-100 text-amber-900">{ungradedCount}</Badge>
+              <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+            </Link>
+          )}
+        </CardContent>
+      </Card>
       <div className="mb-6 grid gap-5 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -231,76 +317,6 @@ export default async function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>A few next steps</CardTitle>
-            <CardDescription>Small tasks, kept in sight</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Link
-              href="/requests"
-              className="block rounded-xl border border-orange-100 bg-orange-50 p-4 text-sm"
-            >
-              <strong className="text-orange-700">
-                Review reschedule requests →
-              </strong>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Requests leave the original lesson scheduled until you approve a
-                new time.
-              </p>
-            </Link>
-            <div>
-              <p className="text-sm font-semibold">
-                {needsReport.length
-                  ? `${needsReport.length} reports to finish`
-                  : "Reports are up to date"}
-              </p>
-              {needsReport.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/classes/${c.id}?report=true`}
-                  className="mt-2 block text-xs text-primary hover:underline"
-                >
-                  {c.student_name} · {fmtDateTime(c.scheduled_at)}
-                </Link>
-              ))}
-            </div>
-            <Link
-              href="/financial-history"
-              className="block rounded-xl bg-secondary p-4 text-sm"
-            >
-              <strong>
-                {currency(totals.outstanding, symbol)} outstanding
-              </strong>
-              <p className="mt-1 text-xs text-muted-foreground">
-                See the full financial picture →
-              </p>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mb-6 grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle>Revenue overview</CardTitle>
-                <CardDescription className="mt-2">
-                  By lesson billing month · cancelled invoices excluded
-                </CardDescription>
-              </div>
-              <Link
-                href="/financial-history"
-                className="text-xs font-semibold text-primary"
-              >
-                Financial history →
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <RevenueChart data={revenue} symbol={symbol} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
             <CardTitle>Attendance</CardTitle>
             <CardDescription>
               Last 30 days · marked lessons only
@@ -316,23 +332,22 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming lessons</CardTitle>
+      <section aria-labelledby="upcoming-lessons" className="mt-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+            <h2 id="upcoming-lessons" className="text-xl font-semibold">Upcoming lessons</h2>
             <CardDescription>
               {Number(stats?.upcoming ?? 0)} scheduled · showing the next 5
             </CardDescription>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             {upcoming.map((c) => (
               <Link
                 className="flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0"
                 key={c.id}
                 href={`/classes/${c.id}`}
               >
-                <div>
-                  <p className="text-sm font-semibold">{c.student_name}</p>
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-semibold">{c.student_name}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {fmtDateTime(c.scheduled_at)}
                   </p>
@@ -351,48 +366,8 @@ export default async function DashboardPage() {
             >
               View the schedule →
             </Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Unpaid invoices</CardTitle>
-            <CardDescription>
-              Latest unpaid documents · {currency(totals.outstanding, symbol)}{" "}
-              total outstanding
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {unpaid.map((i) => (
-              <Link
-                className="flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0"
-                key={i.id}
-                href={`/invoices/${i.id}`}
-              >
-                <div>
-                  <p className="text-sm font-semibold">{i.student_name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {i.invoice_number}
-                  </p>
-                </div>
-                <strong className="shrink-0 text-sm">
-                  {currency(Number(i.total_amount), symbol)}
-                </strong>
-              </Link>
-            ))}
-            {!unpaid.length && (
-              <p className="py-6 text-sm text-muted-foreground">
-                Nothing outstanding. All caught up!
-              </p>
-            )}
-            <Link
-              href="/invoices"
-              className="mt-4 block text-xs font-semibold text-primary"
-            >
-              Manage invoices →
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+      </section>
     </>
   );
 }

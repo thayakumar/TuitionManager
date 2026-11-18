@@ -20,7 +20,9 @@ import {
   Sparkles,
   X,
   BarChart3,
+  MessagesSquare,
 } from "lucide-react";
+import { useUnreadFamilyChats } from "@/components/family-chat-unread";
 import { logoutAdmin } from "@/lib/actions";
 import { useSidebar } from "@/components/layout-shell";
 import { BrandHomeLink } from "@/components/brand-home-link";
@@ -37,6 +39,7 @@ const links = [
   { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler },
   { href: "/invoices", label: "Invoices", icon: Receipt },
   { href: "/financial-history", label: "Financial history", icon: BarChart3 },
+  { href: "/chats", label: "Family chats", icon: MessagesSquare },
   { href: "/requests", label: "Requests", icon: CalendarClock },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -45,7 +48,8 @@ function AdminNavigation() {
   const pathname = usePathname(),
     { collapsed, toggle } = useSidebar();
   const [open, setOpen] = useState(false),
-    count = useUnreadNotifications("admin", null);
+    count = useUnreadNotifications("admin", null),
+    chatCount = useUnreadFamilyChats("admin");
   useEffect(() => setOpen(false), [pathname]);
   function contents(mobile = false) {
     const compact = collapsed && !mobile;
@@ -97,7 +101,7 @@ function AdminNavigation() {
                   title={compact ? link.label : undefined}
                   onClick={() => setOpen(false)}
                   aria-label={
-                    link.href === "/notifications"
+                    link.href === "/chats" ? "Family chats, " + chatCount + " unread" : link.href === "/notifications"
                       ? "Notifications, " + count + " unread"
                       : link.label
                   }
@@ -114,6 +118,7 @@ function AdminNavigation() {
                   {!compact && (
                     <span className="min-w-0 flex-1">{link.label}</span>
                   )}
+                  {link.href === "/chats" && chatCount > 0 && <span className={compact ? "absolute right-0 top-0 origin-top-right scale-75" : ""}><UnreadBadge count={chatCount}/></span>}
                   {link.href === "/notifications" && count > 0 && (
                     <span
                       className={

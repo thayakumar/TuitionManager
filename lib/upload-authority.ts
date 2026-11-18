@@ -1,8 +1,8 @@
 import crypto from "crypto";
-export type UploadActor = { admin: boolean; studentId: number | null };
+export type UploadActor = { admin: boolean; studentId: number | null; parentTokenHash?: string | null };
 export const UPLOAD_RECEIPT_COOKIE = "tuition_pending_files";
 export const actorKey = (actor: UploadActor) =>
-  actor.admin ? "admin" : "student:" + actor.studentId;
+  actor.parentTokenHash ? "parent:" + actor.parentTokenHash : actor.admin ? "admin" : "student:" + actor.studentId;
 export function signUpload(value: unknown, secret: string): string {
   const body = Buffer.from(JSON.stringify(value)).toString("base64url");
   return (

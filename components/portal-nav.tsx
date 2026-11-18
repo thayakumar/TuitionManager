@@ -14,7 +14,9 @@ import {
   LogOut,
   Bell,
   X,
+  MessagesSquare,
 } from "lucide-react";
+import { useUnreadFamilyChats } from "@/components/family-chat-unread";
 import { logoutStudent } from "@/lib/actions";
 import {
   UnreadBadge,
@@ -31,11 +33,13 @@ function StudentNavigation({
     base = `/portal/student/${studentId}`;
   const [open, setOpen] = useState(false);
   const count = useUnreadNotifications("student", studentId);
+  const chatCount = useUnreadFamilyChats("student");
   useEffect(() => setOpen(false), [path]);
   const links = [
     { path: "", label: "Dashboard", icon: LayoutDashboard },
     { path: "/schedule", label: "My Schedule", icon: CalendarDays },
     { path: "/classroom", label: "My Classroom", icon: BookOpen },
+    { path: "/chat", label: "Family chat", icon: MessagesSquare },
     { path: "/notes", label: "My Notes", icon: StickyNote },
     { path: "/notifications", label: "Notifications", icon: Bell },
     { path: "/profile", label: "My Profile", icon: UserCircle },
@@ -63,6 +67,7 @@ function StudentNavigation({
               >
                 <link.icon size={18} />
                 <span className="flex-1">{link.label}</span>
+                {link.path === "/chat" && <UnreadBadge count={chatCount}/>}
                 {link.path === "/notifications" && (
                   <UnreadBadge count={count} />
                 )}

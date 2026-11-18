@@ -1,3 +1,4 @@
+import { parentUploadIdentity } from "@/lib/parent-upload";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession, getStudentSession } from "@/lib/auth";
 import { getStorageSecret } from "@/lib/storage-config";
@@ -30,10 +31,13 @@ export async function PUT(request: NextRequest) {
     verifyAdminSession(),
     getStudentSession(),
   ]);
+  const parent = ticket.actor.startsWith("parent:") ? await parentUploadIdentity(request.headers.get("x-parent-token")) : null;
   if (
-    ticket.actor === "admin"
-      ? !admin
-      : !sid || ticket.actor !== "student:" + sid
+    ticket.actor.startsWith("parent:")
+      ? !parent || ticket.actor !== "parent:" + parent.parentTokenHash
+      : ticket.actor === "admin"
+        ? !admin
+        : !sid || ticket.actor !== "student:" + sid
   )
     return failure(
       "Sign in to the same account before retrying this upload.",

@@ -13,6 +13,7 @@ import {
   Settings,
   CalendarPlus,
   Repeat2,
+  MessagesSquare,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
@@ -27,6 +28,7 @@ const sections = [
   { href: "/financial-history", label: "Financial history", icon: BarChart3 },
   { href: "/schedule/new", label: "Plan a lesson", icon: CalendarPlus },
   { href: "/schedule/recurring", label: "Recurring lessons", icon: Repeat2 },
+  { href: "/chats", label: "Family chats", icon: MessagesSquare },
   { href: "/requests", label: "Requests", icon: CalendarClock },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings", label: "Settings", icon: Settings },

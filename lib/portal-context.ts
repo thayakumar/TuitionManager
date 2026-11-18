@@ -4,6 +4,7 @@ import { getStudentSession } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 
 export type PortalStudent = {
+  profile_photo_url: string | null;
   id: number;
   name: string;
   subject: string | null;
@@ -17,7 +18,7 @@ export type PortalStudent = {
   created_at: string;
 };
 const STUDENT_COLUMNS =
-  "s.id,s.name,s.subject,s.grade_level,s.phone,s.email,s.guardian_name,s.guardian_contact,s.username,s.active,s.created_at";
+  "s.id,s.profile_photo_url,s.name,s.subject,s.grade_level,s.phone,s.email,s.guardian_name,s.guardian_contact,s.username,s.active,s.created_at";
 
 /** Authorize before any child route reads student data, independently of its layout. */
 export async function ownStudentContext(

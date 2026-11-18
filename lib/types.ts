@@ -1,4 +1,5 @@
 export type Student = {
+  profile_photo_url?: string | null;
   id: number;
   name: string;
   subject: string | null;

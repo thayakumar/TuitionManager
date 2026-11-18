@@ -25,8 +25,9 @@ export async function GET(
       created_at: string;
       updated_at: string;
       student_name: string | null;
+      profile_photo_url: string | null;
     }>(
-      "SELECT c.id,c.author_role,c.author_student_id,c.body,c.created_at,c.updated_at,s.name AS student_name FROM post_comments c LEFT JOIN students s ON s.id=c.author_student_id WHERE c.post_id=? AND c.id<? ORDER BY c.id DESC LIMIT 51",
+      "SELECT c.id,c.author_role,c.author_student_id,c.body,c.created_at,c.updated_at,s.name AS student_name,s.profile_photo_url FROM post_comments c LEFT JOIN students s ON s.id=c.author_student_id WHERE c.post_id=? AND c.id<? ORDER BY c.id DESC LIMIT 51",
       [id, before],
     );
     return NextResponse.json(

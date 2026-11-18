@@ -1,3 +1,4 @@
+import { StudentProfileForm } from "@/components/student-profile-form";
 import { ownStudentContext } from "@/lib/portal-context";
 import { notFound } from "next/navigation";
 import {
@@ -62,7 +63,7 @@ export default async function StudentProfilePage({
   const [student, shareTokenRow] = await Promise.all([
     queryOne<Student>(
       `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-              guardian_contact, username, password, active, created_at
+              guardian_contact, username, profile_photo_url, active, created_at
        FROM students WHERE id = ? AND active = 1`,
       [id],
     ),
@@ -89,12 +90,12 @@ export default async function StudentProfilePage({
       <div className="profile-identity relative rounded-2xl border border-border bg-card p-6 mb-6">
 
 
-        <div className="relative flex items-center gap-4">
-          <div className="flex size-16 items-center justify-center rounded-2xl bg-secondary text-primary text-3xl font-bold">
-            {student.name.charAt(0).toUpperCase()}
+        <div className="relative flex items-center gap-4 min-w-0">
+          <div className="flex size-16 shrink-0 overflow-hidden items-center justify-center rounded-2xl bg-secondary text-primary text-3xl font-bold">
+            {student.profile_photo_url ? <img src={student.profile_photo_url} alt={`${student.name} profile`} className="size-full rounded-2xl object-cover" /> : student.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h2 className="text-xl font-bold">{student.name}</h2>
+            <h2 className="text-xl font-bold break-words">{student.name}</h2>
             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
               {student.subject && (
                 <span className="flex items-center gap-1">
@@ -124,26 +125,7 @@ export default async function StudentProfilePage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-border/50">
-              <InfoRow icon={User} label="Full Name" value={student.name} />
-              <InfoRow
-                icon={BookOpen}
-                label="Subject"
-                value={student.subject}
-              />
-              <InfoRow
-                icon={GraduationCap}
-                label="Grade / Level"
-                value={student.grade_level}
-              />
-              <InfoRow icon={Mail} label="Email" value={student.email} />
-              <InfoRow icon={Phone} label="Phone" value={student.phone} />
-            </div>
-            {!student.email && !student.phone && !student.grade_level && (
-              <p className="text-sm text-muted-foreground py-3">
-                No additional details on file.
-              </p>
-            )}
+            <StudentProfileForm student={student} />
           </CardContent>
         </Card>
 
@@ -224,12 +206,7 @@ export default async function StudentProfilePage({
                 {student.username || "—"}
               </p>
             </div>
-            <div className="rounded-lg border border-border/50 p-4">
-              <p className="text-xs text-muted-foreground mb-1">Password</p>
-              <p className="text-sm font-mono font-semibold text-foreground">
-                {student.password || "—"}
-              </p>
-            </div>
+
           </div>
           <p className="text-xs text-muted-foreground mt-3">
             Contact your tutor if you need to change your credentials.

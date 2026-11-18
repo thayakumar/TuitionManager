@@ -320,6 +320,7 @@ export function MeetingRoom({
             )}
             <RichTextEditor
               label="Meeting notes"
+              uploadRole={isAdmin ? "admin" : "student"}
               onBusyChange={setImageUploading}
               onUploadErrorChange={setImageUploadError}
               value={notes}

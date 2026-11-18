@@ -12,8 +12,11 @@ import {
   Receipt,
   GraduationCap,
   Menu,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
+import { useUnreadFamilyChats } from "@/components/family-chat-unread";
+import { UnreadBadge } from "@/components/notification-bell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -29,6 +32,7 @@ const navLinks = [
   { path: "/attendance", label: "Attendance", icon: ClipboardList },
   { path: "/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/reports", label: "Class Reports", icon: MessageSquare },
+  { path: "/chat", label: "Family chat", icon: MessagesSquare },
   { path: "/invoices", label: "Invoices", icon: Receipt },
 ];
 
@@ -37,11 +41,13 @@ function NavLink({
   label,
   icon: Icon,
   active,
+  unread = 0,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
+  unread?: number;
 }) {
   return (
     <Link
@@ -55,7 +61,8 @@ function NavLink({
       )}
     >
       <Icon size={18} />
-      {label}
+      <span className="min-w-0 flex-1">{label}</span>
+      <UnreadBadge count={unread}/>
     </Link>
   );
 }
@@ -66,12 +73,14 @@ function SidebarContent({
   studentName,
   businessName,
   onHome,
+  chatCount,
 }: {
   pathname: string;
   basePath: string;
   studentName: string;
   businessName: string;
   onHome?: () => void;
+  chatCount: number;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -97,6 +106,7 @@ function SidebarContent({
               label={l.label}
               icon={l.icon}
               active={active}
+              unread={l.path === "/chat" ? chatCount : 0}
             />
           );
         })}
@@ -123,6 +133,7 @@ export function ParentNav({
   businessName: string;
 }) {
   const pathname = usePathname();
+  const chatCount = useUnreadFamilyChats("parent", token);
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
   const basePath = `/share/${token}`;
@@ -135,6 +146,7 @@ export function ParentNav({
           basePath={basePath}
           studentName={studentName}
           businessName={businessName}
+          chatCount={chatCount}
         />
       </aside>
 
@@ -158,6 +170,7 @@ export function ParentNav({
               basePath={basePath}
               studentName={studentName}
               businessName={businessName}
+              chatCount={chatCount}
               onHome={() => setOpen(false)}
             />
           </SheetContent>

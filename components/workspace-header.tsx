@@ -7,6 +7,8 @@ import { ChevronRight, Sparkles } from "lucide-react";
 const labels: Record<string, string> = {
   overview: "Overview",
   dashboard: "Dashboard",
+  chat: "Family chat",
+  chats: "Family chats",
   students: "Students",
   schedule: "Schedule",
   invoices: "Invoices",
@@ -27,9 +29,11 @@ const labels: Record<string, string> = {
 export function WorkspaceHeader({
   role = "Admin",
   name,
+  avatarSrc,
 }: {
   role?: "Admin" | "Student" | "Parent";
   name?: string;
+  avatarSrc?: string | null;
 }) {
   const path = usePathname();
   const segments = path.split("/").filter(Boolean);
@@ -57,7 +61,7 @@ export function WorkspaceHeader({
         <span className="truncate font-medium">{section}</span>
       </div>
       <div className="workspace-role">
-        <span className="size-1.5 rounded-full bg-primary" />
+        {avatarSrc ? <img src={avatarSrc} alt={name ? `${name} profile` : "Profile photo"} className="size-8 rounded-full object-cover" /> : <span className="size-1.5 rounded-full bg-primary" />}
         {role} workspace
       </div>
       <div className="hidden items-center gap-2 text-xs text-muted-foreground xl:flex">

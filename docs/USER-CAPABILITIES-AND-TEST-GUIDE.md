@@ -860,3 +860,43 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 ### 8.4. As an Admin or Student, I can comment on a post → my messages appear on the right and the other participant's messages appear on the left.
 
 **Manual check:** Send a tutor message and a student reply. Compare both views: ownership reverses with the viewer, with profile icons and timestamps. Having both accounts signed in within one browser does not change the student message into a tutor message. Existing edit/delete permissions remain enforced.
+
+## 9. Actionable dashboard, monthly drafts and student profiles
+
+### 9.1. As an Admin, I can open Dashboard → I see six teaching KPIs and the work needing attention.
+
+**Manual check:** Pending reschedules, reports to write, unmarked lessons and latest ungraded submissions link to their action pages. Counts include the full backlog; lesson lists show at most five. Resolve all tasks to see the caught-up state. Financial figures remain on Financial History. Today, attendance and upcoming lessons fit desktop and phone views.
+
+### 9.2. As an Admin, I can review automatically generated month-end drafts → only unclaimed billable attended lessons are included.
+
+**Manual check:** With the cron secret configured, the last-day run near 23:59 Malaysia creates private drafts. Replaying does not duplicate invoices or lesson charges. Absent/cancelled/unmarked lessons are excluded; students without a positive billable total get no automatic draft. Family views show nothing until you issue the invoice. See MONTHLY-DRAFT-INVOICES.md for activation, delayed delivery and late corrections.
+
+### 9.3. As a Student, I can edit My Profile → my name, phone, email and uploaded photo are saved.
+
+**Manual check:** Save and reload. Confirm the photo appears in student navigation/profile, tutor profile and authorized parent header. Other students and logged-out visitors cannot read the private image. Academic details, rate, guardian and account access remain tutor-managed. Remove the photo and save to restore the fallback avatar.
+
+### 9.4. As an Admin or Student, I can paste an image into meeting notes → it uploads, autosaves and survives reload in my own notes.
+
+**Manual check:** Paste a screenshot, wait for upload and Saved, then reload. A transient transfer failure retries. The student upload context stays scoped to the student. Teacher and student notes remain separate. These checks do not test the external live video service or production Drive permissions.
+
+## 10. Family chats and PDF viewing
+
+### 10.1. As an Admin, I can create a student → a private family chat room is created automatically.
+
+**Manual check:** Open Chats, search for the student and select their room. Existing students receive rooms during migration. Each room contains only that student's tutor, student and holders of that student's active parent link.
+
+### 10.2. As an Admin, Student or Parent, I can send formatted messages and attachments → the other family participants can see them in the same room.
+
+**Manual check:** Send text, paste an image, attach a document and reply to another participant. Own messages appear right; others appear left. An uploaded but unsent parent attachment is private to that parent link until shared in the chat. Refresh to confirm persistence. Opening another student's room or file must fail.
+
+### 10.3. As a chat participant, I can edit or remove my message → other participants see the update.
+
+**Manual check:** Edit and delete a message while another participant has the room open. The tutor may moderate other messages. Removed content is replaced by a deletion marker; edit/delete history remains in the database. Repeated send requests with the same client identifier create one message.
+
+### 10.4. As a chat participant, I can see unread counts and read indicators → I know which conversations need attention.
+
+**Manual check:** Leave a room, receive a message, check the numeric navigation badge, then open the room and read it. Visible rooms poll for updates; hidden browser tabs pause polling. Messages are not end-to-end encrypted, and voice/video calling is not part of this chat release.
+
+### 10.5. As an authorized viewer, I can open a PDF attachment → it opens in the current page with partial loading.
+
+**Manual check:** Open a PDF, move through pages, close and reopen it on desktop and phone. The app supports byte-range responses so the viewer can request needed portions. A download requires an explicit action. Google connector latency still affects the initial response; legacy external public files may use the provider's viewer.

@@ -1,0 +1,7 @@
+{
+  "results": [
+    "admin PDF opens inline, no duplicate probe or automatic download, scoped byte range passes",
+    "student PDF opens inline, no duplicate probe or automatic download, scoped byte range passes"
+  ],
+  "errors": []
+}

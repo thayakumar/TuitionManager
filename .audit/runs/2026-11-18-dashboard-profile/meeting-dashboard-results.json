@@ -1,0 +1,8 @@
+{
+  "results": [
+    "Admin dashboard action sections and phone no-overflow passed",
+    "admin meeting pasted image transient-failure recovery, save and reload passed",
+    "student meeting pasted image transient-failure recovery, save and reload passed"
+  ],
+  "errors": []
+}

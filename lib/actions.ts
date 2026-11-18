@@ -1,5 +1,6 @@
 "use server";
 import { ActionValidationError } from "./action-errors";
+import { unclaimedLessons, createDraftInvoice } from "./invoice-generation";
 import { sanitizeRichText, hasRichTextContent } from "./rich-text";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -21,7 +22,6 @@ import {
   businessDate,
   nextDate,
   billingMonth,
-  monthBounds,
 } from "./domain/business-time";
 async function requireAdmin() {
   if (!(await verifyAdminSession()))
@@ -290,7 +290,9 @@ export async function createStudentQuick(f: FormData): Promise<number> {
       sql: "INSERT INTO students(name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,username,password,active) VALUES(?,?,?,?,?,?,?,?,?,?,?,1)",
       args: [...values, username, `${username}123`],
     });
-    return Number(r.lastInsertRowid);
+    const studentId = Number(r.lastInsertRowid);
+    await tx.execute({sql: "INSERT INTO family_chat_rooms(student_id) VALUES(?)", args: [studentId]});
+    return studentId;
   });
   refresh(sid);
   return sid;
@@ -642,16 +644,10 @@ export async function generateInvoiceQuick(f: FormData): Promise<number> {
   if (start > end)
     throw new ActionValidationError("Period end must follow start");
   const ids = await withTransaction(async (tx) => {
-    const lessons = (
-      await tx.execute({
-        sql: `SELECT c.id,c.scheduled_at,c.duration_minutes,c.is_trial,s.hourly_rate FROM classes c JOIN students s ON s.id=c.student_id WHERE c.student_id=? AND c.status='completed' AND c.attendance IN ('present','late') AND c.scheduled_at>=? AND c.scheduled_at<? AND NOT EXISTS(SELECT 1 FROM invoice_items ii WHERE ii.class_id=c.id) ORDER BY c.scheduled_at`,
-        args: [
-          sid,
-          businessDateTime(`${start}T00:00`),
-          businessDateTime(`${nextDate(end, 1)}T00:00`),
-        ],
-      })
-    ).rows;
+    const lessons = await unclaimedLessons(tx, sid,
+      businessDateTime(`${start}T00:00`),
+      businessDateTime(`${nextDate(end, 1)}T00:00`),
+    );
     if (!lessons.length)
       throw new ActionValidationError(
         "No present, un-invoiced lessons in this period",
@@ -663,45 +659,8 @@ export async function generateInvoiceQuick(f: FormData): Promise<number> {
     }
     const ids: number[] = [];
     for (const [month, classes] of groups) {
-      const [periodStart, nextMonth] = monthBounds(month);
-      const items = classes.map((c) => {
-        const amount = c.is_trial
-          ? 0
-          : Math.round(
-              (Number(c.duration_minutes) / 60) * Number(c.hourly_rate) * 100,
-            ) / 100;
-        return { c, amount };
-      });
-      const total =
-        Math.round(items.reduce((s, x) => s + x.amount, 0) * 100) / 100;
-      const num = `INV-${month.replace("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`;
-      const r = await tx.execute({
-        sql: "INSERT INTO invoices(student_id,invoice_number,period_start,period_end,total_amount,status,notes,billing_month) VALUES(?,?,?,?,?,'draft',?,?)",
-        args: [
-          sid,
-          num,
-          periodStart,
-          new Date(Date.parse(nextMonth) - 1).toISOString(),
-          total,
-          text(f.get("notes"), "Notes", 10000) || null,
-          month,
-        ],
-      });
-      const invoiceId = Number(r.lastInsertRowid);
-      ids.push(invoiceId);
-      await tx.batch(
-        items.map(({ c, amount }) => ({
-          sql: "INSERT INTO invoice_items(invoice_id,class_id,description,quantity,unit_amount,amount) VALUES(?,?,?,?,?,?)",
-          args: [
-            invoiceId,
-            c.id,
-            `${c.is_trial ? "[TRIAL] " : ""}${new Date(String(c.scheduled_at)).toLocaleString("en-GB", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "medium", timeStyle: "short" })} (${c.duration_minutes} min)`,
-            Number(c.duration_minutes) / 60,
-            c.is_trial ? 0 : Number(c.hourly_rate),
-            amount,
-          ],
-        })),
-      );
+      ids.push(await createDraftInvoice(tx, sid, month, classes,
+        text(f.get("notes"), "Notes", 10000) || null));
     }
     return ids;
   });

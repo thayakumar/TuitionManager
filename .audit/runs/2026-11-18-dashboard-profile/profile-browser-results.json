@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "name": "Student edits personal fields, uploads own image and retains profile after reload",
+      "status": "Pass"
+    },
+    {
+      "name": "Tutor sees updated student photo and personal details",
+      "status": "Pass"
+    },
+    {
+      "name": "Parent bearer scope displays only the matching child profile image",
+      "status": "Pass"
+    },
+    {
+      "name": "Other students and signed-out visitors cannot read the private profile image",
+      "status": "Pass"
+    },
+    {
+      "name": "Phone profile form fits and photo removal persists",
+      "status": "Pass"
+    },
+    {
+      "name": "No unhandled runtime errors during profile walkthrough",
+      "status": "Pass"
+    }
+  ],
+  "errors": []
+}

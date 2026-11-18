@@ -21,21 +21,22 @@ class UploadFailure extends ActionValidationError {
 }
 export async function uploadFile(
   file: File,
-  { onProgress }: { onProgress?: (percent: number) => void } = {},
+  { onProgress, role: requestedRole, parentToken }: { onProgress?: (percent: number) => void; role?: "admin" | "student" | "parent"; parentToken?: string } = {},
 ): Promise<UploadedFile> {
   if (!file.size) throw new ActionValidationError("Choose a non-empty file.");
   if (!isSupportedUpload(file))
     throw new ActionValidationError(
       "Choose a supported document, image, audio, video or archive.",
     );
-  const role =
+  const role = requestedRole ?? (
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/portal/student/")
       ? "student"
-      : "admin";
+      : "admin");
   const jsonHeaders = {
     "Content-Type": "application/json",
     "X-Upload-Role": role,
+    ...(parentToken ? { "X-Parent-Token": parentToken } : {}),
   };
   const mime = uploadMime(file) || file.type || "application/octet-stream";
   onProgress?.(0);
@@ -63,7 +64,7 @@ export async function uploadFile(
     body.set("file", file);
     const r = await fetch("/api/upload", {
         method: "POST",
-        headers: { "X-Upload-Role": role },
+        headers: { "X-Upload-Role": role, ...(parentToken ? { "X-Parent-Token": parentToken } : {}) },
         body,
       }),
       result = await r.json();
@@ -87,6 +88,7 @@ export async function uploadFile(
         headers: {
           "Content-Type": "application/octet-stream",
           "X-Upload-Ticket": session.ticket,
+          ...(parentToken ? { "X-Parent-Token": parentToken } : {}),
           "Content-Range": range,
         },
         body,

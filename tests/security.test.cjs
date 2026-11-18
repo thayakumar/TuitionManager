@@ -274,6 +274,7 @@ test("upload denies anonymous/malformed requests and derives student identity be
     await f.db.execute("INSERT INTO students(name) VALUES ('Alice')");
     process.env.APPS_SCRIPT_UPLOAD_URL = "https://example.invalid/connector";
     const route = load("app/api/upload/route.ts", {
+      "@/lib/parent-upload": {parentUploadIdentity: async()=>null},
       "@/lib/auth": {
         verifyAdminSession: async () => admin,
         getStudentSession: async () => sid,

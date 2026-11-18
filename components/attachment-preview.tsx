@@ -107,21 +107,28 @@ export function AttachmentCard({
   fileType,
   className = "",
   submitted = false,
+  parentToken,
 }: {
   fileUrl: string;
   fileName?: string;
   fileType?: string | null;
   className?: string;
   submitted?: boolean;
+  parentToken?: string;
 }) {
   const [preview, setPreview] = useState<string | null>(null),
     [inspecting, setInspecting] = useState(false),
     [fileOpen, setFileOpen] = useState(false),
+    [pdf, setPdf] = useState(false),
+    [pdfLoaded, setPdfLoaded] = useState(false),
     [error, setError] = useState("");
   const probe = useRef<AbortController | null>(null);
   useEffect(() => () => probe.current?.abort(), []);
-  const href = attachmentHref(fileUrl),
-    inline = attachmentHref(fileUrl, true),
+  const scoped = (url: string | null) => url && parentToken && url.startsWith("/api/files/")
+    ? url + (url.includes("?") ? "&" : "?") + "parent_token=" + encodeURIComponent(parentToken)
+    : url;
+  const href = scoped(attachmentHref(fileUrl)),
+    inline = scoped(attachmentHref(fileUrl, true)),
     isImage = imageAttachment(fileName, fileType);
   if (!href)
     return (
@@ -132,6 +139,10 @@ export function AttachmentCard({
   async function open() {
     if (isImage) {
       setPreview(inline);
+      return;
+    }
+    if (fileType === "application/pdf" || /\.pdf(?:$|[?#])/i.test(fileName)) {
+      setPdf(true); setPdfLoaded(false); setFileOpen(true);
       return;
     }
     if (!driveFileId(fileUrl)) {
@@ -146,7 +157,7 @@ export function AttachmentCard({
     const controller = new AbortController();
     probe.current = controller;
     try {
-      const response = await fetch(inline!, { signal: controller.signal });
+      const response = await fetch(inline!, { method: "HEAD", signal: controller.signal });
       const mime = response.headers.get("Content-Type") || "";
       await response.body?.cancel();
       if (controller.signal.aborted) return;
@@ -154,6 +165,9 @@ export function AttachmentCard({
         throw new Error(
           "The attachment could not be opened. Please try again.",
         );
+      if (/^application\/pdf\b/i.test(mime)) {
+        setPdf(true); setPdfLoaded(false);
+      }
       if (/^image\/(?:png|jpeg|gif|webp|avif)\b/i.test(mime)) {
         setFileOpen(false);
         setPreview(inline);
@@ -248,17 +262,23 @@ export function AttachmentCard({
           if (!open) {
             probe.current?.abort();
             setInspecting(false);
+            setPdf(false); setPdfLoaded(false);
           }
         }}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className={pdf ? "sm:max-w-6xl max-h-[95dvh] overflow-y-auto [&>*]:min-w-0" : "sm:max-w-xl"}>
           <DialogHeader>
             <DialogTitle className="break-all pr-8">{fileName}</DialogTitle>
             <DialogDescription>
               {submitted ? "Submitted attachment" : "Learning material"}
             </DialogDescription>
           </DialogHeader>
-          {inspecting ? (
+          {pdf && !inspecting && !error ? (
+            <div className="relative h-[70dvh] min-h-64 overflow-hidden rounded-xl border border-border bg-slate-50">
+              {!pdfLoaded && <p role="status" className="absolute inset-x-0 top-0 flex items-center justify-center gap-2 bg-card p-3"><LoaderCircle size={20} className="animate-spin"/>Opening PDF…</p>}
+              <iframe title={"PDF preview: " + fileName} src={inline || undefined} onLoad={() => setPdfLoaded(true)} className="h-full w-full border-0"/>
+            </div>
+          ) : inspecting ? (
             <p role="status" className="flex items-center gap-2 py-6">
               <LoaderCircle size={20} className="animate-spin" />
               Opening attachment…

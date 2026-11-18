@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 7;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -339,12 +339,66 @@ async function migrateClassroomConversation(tx: Transaction) {
   `);
 }
 
+async function migrateStudentProfile(tx: Transaction) {
+  const columns = (await tx.execute("PRAGMA table_info(students)")).rows;
+  if (!columns.some((column) => column.name === "profile_photo_url"))
+    await tx.execute("ALTER TABLE students ADD COLUMN profile_photo_url TEXT");
+}
+
+async function migrateFamilyChat(tx: Transaction) {
+  const fileColumns = (await tx.execute("PRAGMA table_info(uploaded_files)")).rows;
+  if (!fileColumns.some(column => column.name === "parent_token_hash"))
+    await tx.execute("ALTER TABLE uploaded_files ADD COLUMN parent_token_hash TEXT");
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS family_chat_rooms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER NOT NULL UNIQUE REFERENCES students(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS family_chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      room_id INTEGER NOT NULL REFERENCES family_chat_rooms(id) ON DELETE CASCADE,
+      author_role TEXT NOT NULL CHECK(author_role IN ('admin','student','parent')),
+      author_key TEXT NOT NULL,
+      body TEXT NOT NULL,
+      attachments TEXT NOT NULL DEFAULT '[]',
+      reply_to INTEGER REFERENCES family_chat_messages(id),
+      client_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      edited_at TEXT,
+      deleted_at TEXT,
+      UNIQUE(room_id,author_key,client_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_family_chat_messages_room ON family_chat_messages(room_id,id);
+    CREATE TABLE IF NOT EXISTS family_chat_reads (
+      room_id INTEGER NOT NULL REFERENCES family_chat_rooms(id) ON DELETE CASCADE,
+      actor_key TEXT NOT NULL,
+      actor_role TEXT NOT NULL,
+      last_read_id INTEGER NOT NULL DEFAULT 0,
+      read_at TEXT NOT NULL,
+      PRIMARY KEY(room_id,actor_key)
+    );
+    CREATE TABLE IF NOT EXISTS family_chat_edits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message_id INTEGER NOT NULL REFERENCES family_chat_messages(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      attachments TEXT NOT NULL,
+      changed_by TEXT NOT NULL,
+      changed_at TEXT NOT NULL,
+      action TEXT NOT NULL
+    );
+    INSERT OR IGNORE INTO family_chat_rooms(student_id) SELECT id FROM students;
+  `);
+}
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
   // Prepared versions already have their history backfills. Never replay them.
   if (fromVersion >= 2) {
     if (fromVersion < 3) await migratePostOrder(tx);
     await migrateWhiteboards(tx);
     await migrateClassroomConversation(tx);
+    await migrateStudentProfile(tx);
+    await migrateFamilyChat(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -482,6 +536,8 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
   await migratePostOrder(tx);
   await migrateWhiteboards(tx);
   await migrateClassroomConversation(tx);
+  await migrateStudentProfile(tx);
+  await migrateFamilyChat(tx);
   await writeSchemaVersion(tx);
 }
 

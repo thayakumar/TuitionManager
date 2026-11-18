@@ -19,6 +19,7 @@ type Comment = {
   id: number;
   body: string;
   authorName: string;
+  profile_photo_url?: string | null;
   created_at: string;
   updated_at: string;
   isOwn: boolean;
@@ -203,7 +204,9 @@ export function PostComments({
                   : "border-blue-200 text-blue-700")
               }
             >
-              {c.author_role === "admin" ? (
+              {c.profile_photo_url && c.author_role === "student" ? (
+                <img src={c.profile_photo_url} alt="" className="size-full rounded-full object-cover" />
+              ) : c.author_role === "admin" ? (
                 <GraduationCap size={18} />
               ) : (
                 <UserRound size={18} />

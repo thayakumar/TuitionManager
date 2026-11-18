@@ -51,6 +51,8 @@ export function RichTextEditor({
   onBusyChange,
   onUploadErrorChange,
   compact = false,
+  uploadRole,
+  parentToken,
 }: {
   name?: string;
   label?: string;
@@ -63,6 +65,8 @@ export function RichTextEditor({
   onBusyChange?: (busy: boolean) => void;
   onUploadErrorChange?: (blocked: boolean) => void;
   compact?: boolean;
+  uploadRole?: "admin" | "student" | "parent";
+  parentToken?: string;
 }) {
   const id = useId(),
     [html, setHtml] = useState(value ?? defaultValue),
@@ -133,7 +137,7 @@ export function RichTextEditor({
   });
   useEditorState({ editor, selector: (ctx) => ctx.editor?.state });
   useEffect(() => {
-    editor?.setEditable(!locked);
+    editor?.setEditable(!locked, false);
   }, [editor, locked]);
   useEffect(() => {
     if (value !== undefined && editor && value !== editor.getHTML()) {
@@ -153,6 +157,8 @@ export function RichTextEditor({
     try {
       for (const file of files) {
         const uploaded = await uploadFile(file, {
+          role: uploadRole,
+          parentToken,
           onProgress: (progress) => setImageProgress(progress),
         });
         const src = uploaded.inlineUrl || uploaded.fileUrl;

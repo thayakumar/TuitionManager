@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { richTextHtml } from "@/lib/rich-text";
+import { richTextHtml, escapeRichText } from "@/lib/rich-text";
 import { attachmentHref } from "@/lib/attachment-url";
 import { ImagePreviewDialog } from "@/components/attachment-preview";
 export function RichText({
   content,
   className = "",
+  parentToken,
 }: {
   content: string | null | undefined;
   className?: string;
+  parentToken?: string;
 }) {
   const [image, setImage] = useState<{
     src: string;
@@ -16,8 +18,11 @@ export function RichText({
     download: string | null;
   } | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  function withParent(url: string | null) { return url && parentToken && url.startsWith("/api/files/") ? url + (url.includes("?") ? "&" : "?") + "parent_token=" + encodeURIComponent(parentToken) : url; }
   useEffect(() => {
     root.current?.querySelectorAll("img").forEach((image) => {
+      const src = image.getAttribute("src");
+      if (src && parentToken && src.startsWith("/api/files/") && !src.includes("parent_token=")) image.setAttribute("src", withParent(src)!);
       image.tabIndex = 0;
       image.setAttribute("role", "button");
       image.setAttribute(
@@ -30,11 +35,11 @@ export function RichText({
   function openImage(target: HTMLImageElement) {
     const src = target.getAttribute("src");
     if (!src) return;
-    const inline = attachmentHref(src, true) || src;
+    const inline = withParent(attachmentHref(src, true)) || src;
     setImage({
       src: inline,
       title: target.alt || target.title || "Image",
-      download: attachmentHref(src),
+      download: withParent(attachmentHref(src)),
     });
   }
   return (
@@ -60,7 +65,7 @@ export function RichText({
             openImage(event.target);
           }
         }}
-        dangerouslySetInnerHTML={{ __html: richTextHtml(content) }}
+        dangerouslySetInnerHTML={{ __html: parentToken ? richTextHtml(content).replace(/(<img\b[^>]*\bsrc=")([^"]+)(")/gi, (match, start, src, end) => src.startsWith("/api/files/") ? start + escapeRichText(withParent(src.replace(/&amp;/g, "&")) || src) + end : match) : richTextHtml(content) }}
       />
       <ImagePreviewDialog
         src={image?.src || null}
