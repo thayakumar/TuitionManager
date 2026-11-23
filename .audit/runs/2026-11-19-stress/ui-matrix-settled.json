@@ -1,0 +1,684 @@
+{
+  "base": "http://localhost:4704",
+  "results": [
+    {
+      "role": "admin",
+      "path": "/dashboard",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/overview",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/new",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/4",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/5/edit",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/1/history",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classes/12001",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=2026-11",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=0000-01",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=9999-12",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/new",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/recurring",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/recurring/new",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1/post/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1/post/501",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices/new",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/financial-history",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/requests",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/notifications",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/settings",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/diagnostics",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/diagnostics/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/chats",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/whiteboard",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/meeting/12001",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/meeting/12001/whiteboard",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/dashboard",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/overview",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/new",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/4",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/5/edit",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/students/1/history",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classes/12001",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=2026-11",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=0000-01",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule?month=9999-12",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/new",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/recurring",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/schedule/recurring/new",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1/post/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/classroom/1/post/501",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices/new",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/invoices/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/financial-history",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/requests",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/notifications",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/settings",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/diagnostics",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/diagnostics/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/chats",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/whiteboard",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/meeting/12001",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "admin",
+      "path": "/meeting/12001/whiteboard",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/schedule",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom/post/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom/post/501",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/notes",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/profile",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/notifications",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/diagnostic",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/chat",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/schedule",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom/post/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/classroom/post/501",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/notes",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/profile",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/notifications",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/diagnostic",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "student",
+      "path": "/portal/student/1/chat",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/schedule",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/attendance",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/reports",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/invoices",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/invoices/1",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/chat",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/schedule",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/attendance",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/reports",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/invoices",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/invoices/1",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "role": "parent",
+      "path": "/share/stress-parent-1/chat",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    }
+  ],
+  "errors": [
+    {
+      "role": "admin",
+      "url": "/invoices/new",
+      "error": "Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+    }
+  ]
+}

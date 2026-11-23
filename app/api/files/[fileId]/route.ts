@@ -135,6 +135,7 @@ async function serveFile(
   const abort = new AbortController();
   const stop = () => abort.abort();
   request.signal.addEventListener("abort", stop, { once: true });
+  if (request.signal.aborted) abort.abort();
   async function read(offset: number, length: number) {
     const r = await fetch(connector!, {
       method: "POST",

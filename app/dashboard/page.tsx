@@ -1,3 +1,4 @@
+import { getInitials } from "@/lib/initials";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -282,11 +283,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <div aria-hidden="true" className="lesson-avatar">
-                    {c.student_name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .slice(0, 2)
-                      .join("")}
+                    {getInitials(c.student_name)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">

@@ -17,7 +17,11 @@ export function getClient(): Client {
   if (client) return client;
   const url = process.env.TURSO_DATABASE_URL;
   if (!url) throw new Error("TURSO_DATABASE_URL must be configured");
-  client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  client = createClient({
+    url,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+    ...(url.startsWith("file:") ? { timeout: 3000 } : {}),
+  });
   return client;
 }
 
@@ -607,6 +611,11 @@ async function readSchemaVersion(
 
 async function initialize() {
   const database = getClient();
+  // Local stress/development files need readers and writers to coexist. Never
+  // issue SQLite-specific configuration writes against remote Turso.
+  if (process.env.TURSO_DATABASE_URL?.startsWith("file:")) {
+    await database.execute("PRAGMA journal_mode=WAL");
+  }
   const current = await readSchemaVersion(database);
   if (current > SCHEMA_VERSION)
     throw new Error("Database schema is newer than this application release");
@@ -642,6 +651,12 @@ export async function migrate(): Promise<void> {
   await ensureMigrated();
 }
 
+function queuedWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const result = writeQueue.then(operation);
+  writeQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
 export async function withTransaction<T>(
   operation: (tx: Transaction) => Promise<T>,
 ): Promise<T> {
@@ -649,7 +664,7 @@ export async function withTransaction<T>(
   // SQLite has a single writer. Queue this process's transactions rather than
   // starting a second local BEGIN IMMEDIATE while the first is awaiting work.
   // The database write lock still protects callers from other server processes.
-  const result = writeQueue.then(async () => {
+  return queuedWrite(async () => {
     const tx = await getClient().transaction("write");
     try {
       const value = await operation(tx);
@@ -662,15 +677,12 @@ export async function withTransaction<T>(
       tx.close();
     }
   });
-  writeQueue = result.then(
-    () => undefined,
-    () => undefined,
-  );
-  return result;
 }
 
 function rowToObject<T>(row: Row): T {
-  return row as unknown as T;
+  // libSQL rows carry non-enumerable positional fields. Keep the browser-facing
+  // result a plain record of named columns, rather than leaking SDK row objects.
+  return { ...row } as unknown as T;
 }
 export async function queryAll<T>(
   sql: string,
@@ -689,7 +701,7 @@ export async function queryOne<T>(
 }
 export async function execute(sql: string, args: InValue[] = []) {
   await ensureMigrated();
-  return getClient().execute({ sql, args });
+  return queuedWrite(() => getClient().execute({ sql, args }));
 }
 export async function getSettings(
   keys: readonly string[],

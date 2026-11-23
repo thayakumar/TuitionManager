@@ -53,6 +53,12 @@ export default async function StudentSchedulePage({
     [id],
   );
 
+  const requests = await queryAll<{class_id:number;status:string;admin_note:string|null}>(
+    "SELECT class_id,status,admin_note FROM reschedule_requests WHERE student_id=? ORDER BY id DESC", [id],
+  );
+  const latestRequest = new Map<number,(typeof requests)[number]>();
+  for (const request of requests) if (!latestRequest.has(request.class_id)) latestRequest.set(request.class_id,request);
+
   const monthKey = (date: Date) =>
     new Intl.DateTimeFormat("en-CA", {
       year: "numeric",
@@ -176,10 +182,11 @@ export default async function StudentSchedulePage({
                           />
                           {c.status === "scheduled" && (
                             <>
-                              <RescheduleRequestDialog
-                                classId={c.id}
-                                studentId={id}
-                              />
+                              {latestRequest.get(c.id)?.status === "pending" ? (
+                                <Badge variant="outline">Reschedule pending</Badge>
+                              ) : (
+                                <RescheduleRequestDialog classId={c.id} studentId={id} />
+                              )}
                               {c.meeting_room && (
                                 <Link href={`/meeting/${c.id}`}>
                                   <Button
@@ -195,6 +202,12 @@ export default async function StudentSchedulePage({
                           )}
                         </div>
                       </div>
+
+                      {latestRequest.get(c.id)?.status === "rejected" && (
+                        <p className="mt-3 break-words text-sm text-muted-foreground">
+                          Previous request declined{latestRequest.get(c.id)?.admin_note ? `: ${latestRequest.get(c.id)?.admin_note}` : ". Your original time remains scheduled."}
+                        </p>
+                      )}
 
                       {c.is_trial ? (
                         <div className="mt-2 ml-12">

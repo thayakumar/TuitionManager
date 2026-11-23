@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "id": "B01",
+      "status": "external verification",
+      "item": "Real Google Drive upload/permissions and large PDF internet transfer latency require live provider evidence; controlled tests are not a provider guarantee."
+    },
+    {
+      "id": "B02",
+      "status": "configuration check",
+      "item": "Automatic monthly billing requires deployment CRON_SECRET. This audit did not activate missing deployment secrets."
+    },
+    {
+      "id": "B03",
+      "status": "user selection",
+      "item": "Choose one architecture deepening candidate before the separate large refactor: invoice generation (recommended), attachment authority, or submitted-work retrieval."
+    },
+    {
+      "id": "B04",
+      "status": "Traced UX limitation",
+      "item": "Whiteboard home navigation retains pending session drafts for recovery; it does not guarantee a flush acknowledgement before navigation."
+    }
+  ]
+}

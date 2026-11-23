@@ -95,7 +95,10 @@ export function ScheduleClassDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={(event) => {
+              event.preventDefault();
+              void handleSubmit(new FormData(event.currentTarget));
+            }} className="space-y-6">
             <fieldset disabled={isPending} className="min-w-0 border-0 p-0">
               <ScheduleFields
                 students={students}

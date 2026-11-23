@@ -35,12 +35,11 @@ export function GradeSubmissionForm({
       return;
     }
     if (
-      maxPoints !== null &&
       (!Number.isFinite(Number(value)) ||
         Number(value) < 0 ||
-        Number(value) > maxPoints)
+        (maxPoints !== null && Number(value) > maxPoints))
     ) {
-      setError(`Enter a score from 0 to ${maxPoints}.`);
+      setError(maxPoints === null ? "Enter a nonnegative numeric score." : `Enter a score from 0 to ${maxPoints}.`);
       return;
     }
     setBusy(true);
@@ -94,11 +93,11 @@ export function GradeSubmissionForm({
             <input
               id={`grade-${submission.id}`}
               name="grade"
-              type={maxPoints !== null ? "number" : "text"}
+              type="number"
               value={grade}
               onChange={(event) => setGrade(event.target.value)}
               required
-              min={maxPoints !== null ? 0 : undefined}
+              min={0}
               max={maxPoints ?? undefined}
               step="any"
               maxLength={100}
@@ -113,7 +112,7 @@ export function GradeSubmissionForm({
           <p className="mt-3 text-sm text-muted-foreground">
             {maxPoints !== null
               ? `Choose a score from 0 to ${maxPoints}.`
-              : "Add the result you want your student to see."}
+              : "Enter a nonnegative numeric score."}
           </p>
         </section>
         <section className="form-section space-y-3">

@@ -22,6 +22,7 @@ test('actionable dashboard counts all tasks, limits glance lists, uses current w
     '@/lib/finance': load('lib/finance.ts'),
     '@/lib/domain/business-time':load('lib/domain/business-time.ts', {'../action-errors':load('lib/action-errors.ts')}),
     '@/lib/format':load('lib/format.ts'),
+    '@/lib/initials':load('lib/initials.ts'),
     'next/link': ({children,href,...p})=>React.createElement('a',{...p,href},children),
     '@/components/ui/card':{Card:Pass,CardHeader:Pass,CardTitle:Pass,CardContent:Pass,CardDescription:Pass},
     '@/components/ui/badge':{Badge:Pass},

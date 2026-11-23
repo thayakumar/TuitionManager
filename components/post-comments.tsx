@@ -43,29 +43,45 @@ export function PostComments({
     [uploadError, setUploadError] = useState(false),
     [editing, setEditing] = useState<number | null>(null),
     [deleting, setDeleting] = useState<number | null>(null),
+    [historyBusy, setHistoryBusy] = useState(false),
     [more, setMore] = useState(false);
+  const historyPending = useRef(false);
   const submitting = useRef(false);
   const commentForm = useRef<HTMLFormElement>(null);
   useActionBusy(busy, "Saving comment…");
   const load = useCallback(
     async (before?: number) => {
-      const query = new URLSearchParams();
-      if (viewerRole === "student") query.set("viewer", "student");
-      if (before) query.set("before", String(before));
-      const response = await fetch(
-        "/api/classroom/posts/" +
-          postId +
-          "/comments" +
-          (query.size ? "?" + query.toString() : ""),
-        { cache: "no-store" },
-      );
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Could not load comments");
-      setComments((old) =>
-        before ? [...data.comments, ...old] : data.comments,
-      );
-      setMore(data.hasMore);
+      if (before && historyPending.current) return;
+      if (before) {
+        historyPending.current = true;
+        setHistoryBusy(true);
+      }
+      try {
+        const query = new URLSearchParams();
+        if (viewerRole === "student") query.set("viewer", "student");
+        if (before) query.set("before", String(before));
+        const response = await fetch(
+          "/api/classroom/posts/" +
+            postId +
+            "/comments" +
+            (query.size ? "?" + query.toString() : ""),
+          { cache: "no-store" },
+        );
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Could not load comments");
+        setComments((old) =>
+          before
+            ? Array.from(new Map<number, Comment>([...data.comments, ...old].map((comment: Comment) => [comment.id, comment])).values())
+            : data.comments,
+        );
+        setMore(data.hasMore);
+      } finally {
+        if (before) {
+          historyPending.current = false;
+          setHistoryBusy(false);
+        }
+      }
     },
     [postId, viewerRole],
   );
@@ -171,11 +187,12 @@ export function PostComments({
           type="button"
           variant="outline"
           className="mb-4"
+          disabled={historyBusy}
           onClick={() =>
             void load(comments[0]?.id).catch((e) => setError(e.message))
           }
         >
-          Load older comments
+          {historyBusy ? "Loading older comments…" : "Load older comments"}
         </Button>
       )}
       {!loading && !comments.length && (

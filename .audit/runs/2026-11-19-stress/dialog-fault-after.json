@@ -1,0 +1,30 @@
+{
+  "base": "http://localhost:4710",
+  "results": [
+    {
+      "dialog": "add-student",
+      "errorShown": true,
+      "draftRetained": true
+    },
+    {
+      "dialog": "edit-student",
+      "errorShown": true,
+      "draftRetained": true
+    },
+    {
+      "dialog": "recurring",
+      "errorShown": true,
+      "draftRetained": true
+    },
+    {
+      "dialog": "invoice",
+      "errorShown": true,
+      "draftRetained": true
+    },
+    {
+      "dialog": "report",
+      "errorShown": true,
+      "draftRetained": true
+    }
+  ]
+}

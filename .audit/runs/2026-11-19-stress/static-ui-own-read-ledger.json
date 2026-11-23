@@ -1,0 +1,178 @@
+[
+  {
+    "path": "app/api/chats/[studentId]/route.ts",
+    "lines": 18,
+    "sha256": "3324df37344b4115282f73af04c7680f352d9c19ca2e9f66c377bc5b4b1266ce",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/chats/route.ts",
+    "lines": 7,
+    "sha256": "611e9d5356d436e53ba72c6bfa3f77c8da0980216c936e17c3acf9d2d460115e",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/classroom/posts/[postId]/attachments/route.ts",
+    "lines": 31,
+    "sha256": "b8ab0e13100c3494826c37de30db169d5c5cd290f33ee2b381016c44bcd9ea29",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/classroom/posts/[postId]/comments/route.ts",
+    "lines": 70,
+    "sha256": "2e095fc245685325782a5156dee13b21c04a15b6b5d710843dae9b5640760aa3",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/cron/monthly-invoices/route.ts",
+    "lines": 27,
+    "sha256": "24f785ee3f253b8a88f7a32839ea55b6e63bd39f4fb5727012ab6fad02ed0fd5",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/diagnostics/[studentId]/route.ts",
+    "lines": 15,
+    "sha256": "960284de18c648ac9226f3d3de4432e0b1c36483812def61b252dee47b30e6df",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/diagnostics/route.ts",
+    "lines": 4,
+    "sha256": "a35a350175daf30331640e8dadc117a3c0c5953c89994afe3a9492aa6151086e",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/diagnostics/template/route.ts",
+    "lines": 12,
+    "sha256": "d91bf458122a354b626ac6f37e940e4cc85153b3eb65ef3b2713464709d44abe",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/files/[fileId]/route.ts",
+    "lines": 258,
+    "sha256": "c7b370ac26935bd3a4cfef5f6402d54cee626767fe1fc1eeb3022e89ec00aba4",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/storage/setup/route.ts",
+    "lines": 23,
+    "sha256": "c16f1158a86e293e3caca44cd6ef65748ed3193e29efa407dc333f730bb4f9ca",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/upload/chunk/route.ts",
+    "lines": 165,
+    "sha256": "fe78698954521e3d41cade958f71fcd601b2326984dc55ac5e7b4257711e0cf0",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/upload/recent/route.ts",
+    "lines": 121,
+    "sha256": "e5cf58b99fc58f67925628c40cc9a09e097fb15737e84d860cf7bbd7b395ff29",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/upload/route.ts",
+    "lines": 358,
+    "sha256": "ef7e721758d6e51e7a2909b11ec9b8e1a1d29e8c92bce640a0e38ffb06695b19",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/api/whiteboards/[boardId]/route.ts",
+    "lines": 146,
+    "sha256": "ec86f3e9495b1353ad7b599a8db5fe4208775b0663a4ea89e20e0a87a7a1d9c9",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/students/[id]/edit/page.tsx",
+    "lines": 181,
+    "sha256": "335d1345b48f4c7decf664688586162b5b9d7f0aa7c55e80f3970821562899f5",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/students/[id]/history/page.tsx",
+    "lines": 255,
+    "sha256": "c463355ee4939a09d5e68c71e60b35b327b49d8c9f2a2ce0659e5c49b07ec55e",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/students/[id]/page.tsx",
+    "lines": 837,
+    "sha256": "b10964b49319847d2ef2d536332ffd87bd207eda0f6e9b61443c8319c45e0313",
+    "coverage": "full source read",
+    "followup": "Root changed upcoming comparison/order to julianday at112; changed lines108-116 re-read."
+  },
+  {
+    "path": "app/students/new/page.tsx",
+    "lines": 129,
+    "sha256": "559d2fad7ba53a149a0db9ebf77e5e8cf53143b8bc45a2cf89dcefedf0fe6559",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/students/page.tsx",
+    "lines": 259,
+    "sha256": "6fdb03aaa5ebdc43837b8adb7becac5203664e3715dee2e2054d8cf3509a79db",
+    "coverage": "full source read"
+  },
+  {
+    "path": "app/globals.css",
+    "lines": 626,
+    "sha256": "08533fd3b2768b3ef9d712d018953ba3309e90f3d6d4e2224f926418003130ca",
+    "coverage": "full source read"
+  },
+  {
+    "path": "styles/shadcn.css",
+    "lines": 637,
+    "sha256": "4c371f7a1ff5d219ae2f7ff28bd256b4346fd546fe46fbae22092e57db2f0fae",
+    "coverage": "full source read"
+  },
+  {
+    "path": "middleware.ts",
+    "lines": 91,
+    "sha256": "871105231073a20e03cbd33463db2bbbd4190461ebd8c3f57179eab8e7cf4f38",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/use-chat-outbox.ts",
+    "lines": 39,
+    "sha256": "b24f58c9c30d570f4abd50b69f15f2e592376839672cc555dff0af880a3c371c",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/note-save-queue.ts",
+    "lines": 36,
+    "sha256": "741f93a77ff53d41d5e0b28a18cc979db110b1447d33875661f837d3d39a1252",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/post-comments.tsx",
+    "lines": 346,
+    "sha256": "003c8af5667bc44bad105d3a0b077f1946a212a210835683b7c06a8043a3b1ee",
+    "coverage": "full source read",
+    "followup": "Root modified history pending guard and deduplication after full read; changed load45-110 re-read; root owns regression evidence."
+  },
+  {
+    "path": "components/notification-read-link.tsx",
+    "lines": 62,
+    "sha256": "766166e8743021e65c5a1cb772d865306ba24e6b45508f9de78728bc3b1385c5",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/lesson-action-form.tsx",
+    "lines": 72,
+    "sha256": "7e73263c509dfa10340ce6481ca455608e28a0b891f3c120077ac89ee5fe39aa",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/rich-text.tsx",
+    "lines": 78,
+    "sha256": "fdbc424d38240ad3ee6c1de1c2ccac86e11aaddcf1b7a5dedd11190a076a7e63",
+    "coverage": "full source read"
+  },
+  {
+    "path": "components/family-chat-unread.ts",
+    "lines": 21,
+    "sha256": "b8e71b115d0bb33952045a5d4aa4b0433670c1681b5e4348885a013fe7a3a5bb",
+    "coverage": "full source read"
+  }
+]

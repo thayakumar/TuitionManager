@@ -1,0 +1,366 @@
+{
+  "base": "http://localhost:4710",
+  "dataset": "dataset.json",
+  "routes": [
+    {
+      "path": "/dashboard",
+      "role": "admin",
+      "status": 200,
+      "ms": 299,
+      "bytes": 120388
+    },
+    {
+      "path": "/overview",
+      "role": "admin",
+      "status": 200,
+      "ms": 39,
+      "bytes": 75964
+    },
+    {
+      "path": "/students",
+      "role": "admin",
+      "status": 200,
+      "ms": 242,
+      "bytes": 1208704
+    },
+    {
+      "path": "/students/1",
+      "role": "admin",
+      "status": 200,
+      "ms": 54,
+      "bytes": 177533
+    },
+    {
+      "path": "/students/1/history",
+      "role": "admin",
+      "status": 200,
+      "ms": 31,
+      "bytes": 83678
+    },
+    {
+      "path": "/classes/12001",
+      "role": "admin",
+      "status": 200,
+      "ms": 20,
+      "bytes": 86303
+    },
+    {
+      "path": "/schedule?month=2026-11",
+      "role": "admin",
+      "status": 200,
+      "ms": 274,
+      "bytes": 593875
+    },
+    {
+      "path": "/classroom",
+      "role": "admin",
+      "status": 200,
+      "ms": 164,
+      "bytes": 835093
+    },
+    {
+      "path": "/classroom/1",
+      "role": "admin",
+      "status": 200,
+      "ms": 17,
+      "bytes": 59876
+    },
+    {
+      "path": "/classroom/1/post/1",
+      "role": "admin",
+      "status": 200,
+      "ms": 15,
+      "bytes": 50155
+    },
+    {
+      "path": "/classroom/1/post/501",
+      "role": "admin",
+      "status": 200,
+      "ms": 17,
+      "bytes": 67046
+    },
+    {
+      "path": "/invoices",
+      "role": "admin",
+      "status": 200,
+      "ms": 218,
+      "bytes": 1351555
+    },
+    {
+      "path": "/invoices/1",
+      "role": "admin",
+      "status": 200,
+      "ms": 22,
+      "bytes": 68310
+    },
+    {
+      "path": "/financial-history",
+      "role": "admin",
+      "status": 200,
+      "ms": 240,
+      "bytes": 1355795
+    },
+    {
+      "path": "/requests",
+      "role": "admin",
+      "status": 200,
+      "ms": 18,
+      "bytes": 34467
+    },
+    {
+      "path": "/notifications",
+      "role": "admin",
+      "status": 200,
+      "ms": 33,
+      "bytes": 240993
+    },
+    {
+      "path": "/settings",
+      "role": "admin",
+      "status": 200,
+      "ms": 14,
+      "bytes": 47556
+    },
+    {
+      "path": "/whiteboard",
+      "role": "admin",
+      "status": 200,
+      "ms": 9,
+      "bytes": 14006
+    },
+    {
+      "path": "/diagnostics",
+      "role": "admin",
+      "status": 200,
+      "ms": 9,
+      "bytes": 29907
+    },
+    {
+      "path": "/diagnostics/1",
+      "role": "admin",
+      "status": 200,
+      "ms": 17,
+      "bytes": 29557
+    },
+    {
+      "path": "/chats",
+      "role": "admin",
+      "status": 200,
+      "ms": 9,
+      "bytes": 32523
+    },
+    {
+      "path": "/portal/student/1",
+      "role": "student",
+      "status": 200,
+      "ms": 20,
+      "bytes": 85326
+    },
+    {
+      "path": "/portal/student/1/schedule",
+      "role": "student",
+      "status": 200,
+      "ms": 56,
+      "bytes": 378928
+    },
+    {
+      "path": "/portal/student/1/classroom",
+      "role": "student",
+      "status": 200,
+      "ms": 16,
+      "bytes": 51687
+    },
+    {
+      "path": "/portal/student/1/classroom/post/1",
+      "role": "student",
+      "status": 200,
+      "ms": 12,
+      "bytes": 39764
+    },
+    {
+      "path": "/portal/student/1/classroom/post/501",
+      "role": "student",
+      "status": 200,
+      "ms": 15,
+      "bytes": 61808
+    },
+    {
+      "path": "/portal/student/1/notes",
+      "role": "student",
+      "status": 200,
+      "ms": 38,
+      "bytes": 53847
+    },
+    {
+      "path": "/portal/student/1/profile",
+      "role": "student",
+      "status": 200,
+      "ms": 12,
+      "bytes": 47132
+    },
+    {
+      "path": "/portal/student/1/notifications",
+      "role": "student",
+      "status": 200,
+      "ms": 30,
+      "bytes": 207161
+    },
+    {
+      "path": "/portal/student/1/diagnostic",
+      "role": "student",
+      "status": 200,
+      "ms": 10,
+      "bytes": 23857
+    },
+    {
+      "path": "/portal/student/1/chat",
+      "role": "student",
+      "status": 200,
+      "ms": 9,
+      "bytes": 32854
+    },
+    {
+      "path": "/share/stress-parent-1",
+      "role": "none",
+      "status": 200,
+      "ms": 13,
+      "bytes": 50734
+    },
+    {
+      "path": "/share/stress-parent-1/schedule",
+      "role": "none",
+      "status": 200,
+      "ms": 20,
+      "bytes": 92054
+    },
+    {
+      "path": "/share/stress-parent-1/attendance",
+      "role": "none",
+      "status": 200,
+      "ms": 21,
+      "bytes": 112637
+    },
+    {
+      "path": "/share/stress-parent-1/reports",
+      "role": "none",
+      "status": 200,
+      "ms": 30,
+      "bytes": 68812
+    },
+    {
+      "path": "/share/stress-parent-1/invoices",
+      "role": "none",
+      "status": 200,
+      "ms": 13,
+      "bytes": 40076
+    },
+    {
+      "path": "/share/stress-parent-1/invoices/1",
+      "role": "none",
+      "status": 200,
+      "ms": 12,
+      "bytes": 40198
+    },
+    {
+      "path": "/share/stress-parent-1/chat",
+      "role": "none",
+      "status": 200,
+      "ms": 9,
+      "bytes": 31637
+    }
+  ],
+  "authorizationChecks": 7,
+  "readWaves": [
+    {
+      "concurrency": 1,
+      "count": 200,
+      "min": 2,
+      "p50": 3,
+      "p95": 5,
+      "max": 9
+    },
+    {
+      "concurrency": 10,
+      "count": 200,
+      "min": 7,
+      "p50": 35,
+      "p95": 95,
+      "max": 150
+    },
+    {
+      "concurrency": 50,
+      "count": 200,
+      "min": 15,
+      "p50": 161,
+      "p95": 392,
+      "max": 750
+    },
+    {
+      "concurrency": 100,
+      "count": 200,
+      "min": 38,
+      "p50": 141,
+      "p95": 528,
+      "max": 548
+    }
+  ],
+  "writes": {
+    "requests": 100,
+    "uniqueMessages": 50
+  },
+  "diagnosticRace": {
+    "requests": 20,
+    "accepted": 1,
+    "conflicts": 19
+  },
+  "malformed": [
+    {
+      "route": "/api/chats/1",
+      "status": 400
+    },
+    {
+      "route": "/api/chats/1",
+      "status": 400
+    },
+    {
+      "route": "/api/chats/1",
+      "status": 400
+    },
+    {
+      "route": "/api/chats/1",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/1",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/1",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/1",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/1",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/template",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/template",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/template",
+      "status": 400
+    },
+    {
+      "route": "/api/diagnostics/template",
+      "status": 400
+    }
+  ]
+}

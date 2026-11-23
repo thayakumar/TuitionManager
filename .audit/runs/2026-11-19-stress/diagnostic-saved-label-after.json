@@ -1,0 +1,6 @@
+{
+  "immediateLabel": "Unsaved changes",
+  "storedAnswers": {},
+  "expected": "Unsaved changes or Saving, never Saved before the answer is persisted",
+  "base": "http://localhost:4702"
+}

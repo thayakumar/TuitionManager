@@ -26,7 +26,7 @@ export default async function SchedulePage({
   const query = await searchParams;
   const currentMonth = fmtISODate(new Date().toISOString()).slice(0, 7);
   const month =
-    query.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(query.month)
+    query.month && /^\d{4}-(0[1-9]|1[0-2])$/.test(query.month) && Number(query.month.slice(0,4)) >= 1 && Number(query.month.slice(0,4)) <= 9998
       ? query.month
       : currentMonth;
   const center = new Date(`${month}-15T00:00:00Z`);
@@ -42,8 +42,8 @@ export default async function SchedulePage({
       `SELECT c.id, c.student_id, c.scheduled_at, c.duration_minutes, c.subject, c.location, c.status, c.attendance, c.recurrence_id, c.is_trial, c.cancel_reason, c.rescheduled_from, c.meeting_room, c.created_at, s.name AS student_name, s.hourly_rate, cn.content AS teacher_notes
        FROM classes c JOIN students s ON s.id = c.student_id
        LEFT JOIN class_notes cn ON cn.class_id = c.id AND cn.scope = 'teacher'
-       WHERE c.scheduled_at >= ? AND c.scheduled_at < ?
-       ORDER BY c.scheduled_at`,
+       WHERE julianday(c.scheduled_at) >= julianday(?) AND julianday(c.scheduled_at) < julianday(?)
+       ORDER BY julianday(c.scheduled_at)`,
       [startISO, endISO],
     ),
     queryAll<Student>(

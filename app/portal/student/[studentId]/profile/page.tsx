@@ -1,3 +1,4 @@
+import { getInitials } from "@/lib/initials";
 import { StudentProfileForm } from "@/components/student-profile-form";
 import { ownStudentContext } from "@/lib/portal-context";
 import { notFound } from "next/navigation";
@@ -92,11 +93,11 @@ export default async function StudentProfilePage({
 
         <div className="relative flex items-center gap-4 min-w-0">
           <div className="flex size-16 shrink-0 overflow-hidden items-center justify-center rounded-2xl bg-secondary text-primary text-3xl font-bold">
-            {student.profile_photo_url ? <img src={student.profile_photo_url} alt={`${student.name} profile`} className="size-full rounded-2xl object-cover" /> : student.name.charAt(0).toUpperCase()}
+            {student.profile_photo_url ? <img src={student.profile_photo_url} alt={`${student.name} profile`} className="size-full rounded-2xl object-cover" /> : getInitials(student.name,1)}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-xl font-bold break-words">{student.name}</h2>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
               {student.subject && (
                 <span className="flex items-center gap-1">
                   <BookOpen size={14} /> {student.subject}

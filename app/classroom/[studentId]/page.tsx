@@ -36,12 +36,14 @@ export default async function StudentClassroomPage({
     ),
     queryAll<{
       post_id: number;
+      max_points: number | null;
       grade: string | null;
       graded_at: string | null;
       submitted_at: string;
     }>(
-      `SELECT post_id, grade, graded_at, submitted_at
-       FROM submissions WHERE student_id = ? ORDER BY submitted_at DESC`,
+      `SELECT s.post_id, s.grade, s.graded_at, s.submitted_at, v.max_points
+       FROM submissions s LEFT JOIN submission_versions v ON v.submission_id=s.id AND v.version=s.version
+       WHERE s.student_id = ? ORDER BY s.submitted_at DESC`,
       [studentId],
     ),
   ]);

@@ -13,7 +13,9 @@ export function signUpload(value: unknown, secret: string): string {
 }
 export function verifyUpload<T>(token: string, secret: string): T | null {
   if (!secret || token.length > 16000) return null;
-  const [body, mac] = token.split(".");
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [body, mac] = parts;
   if (!body || !mac) return null;
   const expected = crypto
     .createHmac("sha256", secret)
@@ -57,7 +59,15 @@ export function pendingFiles(headers: Headers, secret: string): UploadTicket[] {
     .map((s) => s.trim())
     .find((s) => s.startsWith(UPLOAD_RECEIPT_COOKIE + "="))
     ?.slice(UPLOAD_RECEIPT_COOKIE.length + 1);
-  return value ? verifyUpload<UploadTicket[]>(value, secret) || [] : [];
+  const parsed = value ? verifyUpload<unknown>(value, secret) : null;
+  // A signed resumable-session object is not a receipt list. Signatures prove
+  // integrity, not the shape/purpose of arbitrary cookie input.
+  return Array.isArray(parsed) ? parsed.filter((ticket): ticket is UploadTicket =>
+    !!ticket && typeof ticket === "object" &&
+    typeof ticket.fileId === "string" && /^[A-Za-z0-9_-]{10,}$/.test(ticket.fileId) &&
+    typeof ticket.actor === "string" &&
+    typeof ticket.expires === "number" && Number.isFinite(ticket.expires)
+  ) : [];
 }
 export function receiptHeader(tickets: UploadTicket[], secret: string): string {
   return (

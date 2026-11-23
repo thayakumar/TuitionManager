@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, UserRound, UserRoundX } from "lucide-react";
 import { queryOne } from "@/lib/db";
-import { updateStudent, deleteStudent } from "@/lib/actions";
+import { updateStudentQuick, deleteStudent } from "@/lib/actions";
+import { LessonActionForm } from "@/components/lesson-action-form";
+import { ConfirmAction } from "@/components/confirm-action";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Field, TextAreaField } from "@/components/form-field";
@@ -23,7 +25,7 @@ export default async function EditStudentPage({
     [id],
   );
   if (!student) notFound();
-  const update = updateStudent.bind(null, id);
+  const update = updateStudentQuick.bind(null, id);
   const del = deleteStudent.bind(null, id);
   return (
     <>
@@ -37,10 +39,8 @@ export default async function EditStudentPage({
         title={`Edit ${student.name}`}
         subtitle="Keep learning information, family contacts and portal access in one place."
       />
-      <form
-        action={update}
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]"
-      >
+      <LessonActionForm action={update} successPath={`/students/${id}`}>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-5">
           <section className="form-section">
             <div className="mb-6 flex items-center gap-3">
@@ -171,19 +171,11 @@ export default async function EditStudentPage({
               Deactivate the student to end portal access while keeping their
               history.
             </p>
-            <Button
-              className="mt-5 w-full"
-              type="submit"
-              formAction={del}
-              variant="outline"
-              formNoValidate
-              disabled={!student.active}
-            >
-              Deactivate student
-            </Button>
+            {student.active ? <div className="mt-5"><ConfirmAction action={del} label="Deactivate student" message="This removes portal access immediately while preserving lesson, invoice and work history."/></div> : <p className="mt-4 text-sm text-muted-foreground">This student is already inactive.</p>}
           </section>
         </aside>
-      </form>
+      </div>
+      </LessonActionForm>
     </>
   );
 }

@@ -1,0 +1,12 @@
+{
+  "during": {
+    "buttonDisabled": true,
+    "ariaBusy": null
+  },
+  "after": {
+    "draftRetained": true,
+    "inlineErrors": 2,
+    "errors": []
+  },
+  "base": "http://localhost:4709"
+}

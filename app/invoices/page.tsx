@@ -157,7 +157,7 @@ export default async function InvoicesPage({
                     </td>
                     <td className="p-3">{i.student_name}</td>
                     <td className="hidden p-3 text-xs text-muted-foreground md:table-cell">
-                      {fmtDate(i.period_start)} – {fmtDate(i.period_end)}
+                      {fmtDate(i.period_start)} – {fmtDate(/T16:00:00(?:\.000)?Z$/.test(i.period_end) ? new Date(Date.parse(i.period_end) - 1).toISOString() : i.period_end)}
                     </td>
                     <td className="whitespace-nowrap p-3 text-right font-semibold">
                       {currency(Number(i.total_amount), symbol)}

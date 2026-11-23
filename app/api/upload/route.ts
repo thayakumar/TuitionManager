@@ -125,7 +125,11 @@ export async function POST(request: NextRequest) {
         ?.toLowerCase()
         .startsWith("application/json")
     ) {
-      const input = await request.json();
+      let input;
+      try { input=await request.json(); }
+      catch { return NextResponse.json({error:"Invalid upload JSON"},{status:400}); }
+      if(!input || typeof input!=="object" || Array.isArray(input))
+        return NextResponse.json({error:"Upload request must be an object"},{status:400});
       if (!secret)
         return NextResponse.json(
           {
@@ -238,10 +242,10 @@ export async function POST(request: NextRequest) {
           signal: AbortSignal.timeout(30000),
         });
         if (!response.ok) throw new Error("Drive could not finish this upload");
-        return registered(
-          storageFile(await response.json()),
-          String(input.fileName || "Attachment"),
-        );
+        const result = storageFile(await response.json());
+        if ((result.fileId || driveFileId(result.fileUrl)) !== ticket.fileId)
+          throw new Error("Drive returned a different file from the upload session");
+        return registered(result, String(input.fileName || "Attachment"));
       }
       return NextResponse.json(
         { error: "Unknown upload action" },

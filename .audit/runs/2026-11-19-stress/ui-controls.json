@@ -1,0 +1,37 @@
+[
+  {
+    "role": "admin",
+    "control": "sidebar collapse and expand",
+    "passed": true
+  },
+  {
+    "role": "admin",
+    "control": "table search, empty results, column selection, next and previous",
+    "passed": true
+  },
+  {
+    "role": "admin",
+    "control": "classroom search, clear, and all three tabs",
+    "passed": true
+  },
+  {
+    "role": "admin",
+    "control": "mobile navigation and logo returns home",
+    "passed": true
+  },
+  {
+    "role": "student",
+    "control": "classroom search, clear, and all three tabs",
+    "passed": true
+  },
+  {
+    "role": "student",
+    "control": "mobile navigation and logo returns home",
+    "passed": true
+  },
+  {
+    "role": "parent",
+    "control": "mobile navigation and logo returns home",
+    "passed": true
+  }
+]

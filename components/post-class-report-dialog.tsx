@@ -1,4 +1,5 @@
 "use client";
+import { getInitials } from "@/lib/initials";
 import { actionError } from "@/lib/action-errors";
 
 import { useState, useEffect } from "react";
@@ -84,15 +85,13 @@ export function PostClassReportDialog({
             what to practise and what comes next.
           </DialogDescription>
         </DialogHeader>
-        <form action={handleSubmit} className="space-y-6" aria-busy={isPending}>
+        <form onSubmit={(event) => {
+              event.preventDefault();
+              void handleSubmit(new FormData(event.currentTarget));
+            }} className="space-y-6" aria-busy={isPending}>
           <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-secondary px-5 py-4">
             <span className="flex size-11 items-center justify-center rounded-full bg-card font-semibold text-primary">
-              {studentName
-                .trim()
-                .split(/\s+/)
-                .map((word) => word[0])
-                .slice(0, 2)
-                .join("")}
+              {getInitials(studentName)}
             </span>
             <div className="min-w-0">
               <p className="font-semibold">{studentName}</p>

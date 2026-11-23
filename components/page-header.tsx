@@ -10,11 +10,11 @@ export function PageHeader({
 }) {
   return (
     <div className="page-heading mb-7 flex min-w-0 flex-col gap-4 pb-2 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="eyebrow mb-3">
           Your learning workspace
         </p>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="break-words text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {title}
         </h1>
         {subtitle && (

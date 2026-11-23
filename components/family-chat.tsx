@@ -31,7 +31,7 @@ export function FamilyChat({ role, studentId, parentToken }: { role: ChatRole; s
   const [messages, setMessages] = useState<ChatMessage[]>([]), [loading, setLoading] = useState(true), [historyBusy, setHistoryBusy] = useState(false), [hasMore, setHasMore] = useState(false), [roomsLoading, setRoomsLoading] = useState(true);
   const [error, setError] = useState(""), [body, setBody] = useState(""), [attachments, setAttachments] = useState<FileAttachment[]>([]), [reply, setReply] = useState<ChatMessage | null>(null), [editing, setEditing] = useState<ChatMessage | null>(null), [deleting, setDeleting] = useState<ChatMessage | null>(null);
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [editorBusy, setEditorBusy] = useState(false), [editorError, setEditorError] = useState(false), [progress, setProgress] = useState(0);
-  const list = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null), drafts = useRef(new Map<number, Draft>()), latest = useRef(0), read = useRef(0), requestKey = useRef<string | null>(null), sending = useRef(false), loadedIds = useRef<number[]>([]), atBottom = useRef(true);
+  const list = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null), drafts = useRef(new Map<number, Draft>()), latest = useRef(0), read = useRef(0), requestKey = useRef<string | null>(null), sending = useRef(false), loadedIds = useRef<number[]>([]), atBottom = useRef(true), historyRequest = useRef<AbortController | null>(null);
   useEffect(() => { loadedIds.current = messages.map(m => m.id); }, [messages]);
   useEffect(() => { requestKey.current = null; }, [body, attachments, reply, editing]);
   const selectedRef=useRef(selected);selectedRef.current=selected;
@@ -94,6 +94,7 @@ export function FamilyChat({ role, studentId, parentToken }: { role: ChatRole; s
           const oldResponse = await fetch("/api/chats/" + selected + "?" + olderQuery, { cache: "no-store", signal: controller.signal });
           if (oldResponse.ok) incoming.push(...((await oldResponse.json()).messages || []));
         }
+        if (!live || controller.signal.aborted || selectedRef.current !== selected) return;
         setMessages(old => merge(old, incoming).map(m=>data.readPositions?{...m,readBy:data.readPositions.filter((r:{role:ChatRole;lastReadId:number})=>r.lastReadId>=m.id).map((r:{role:ChatRole})=>r.role)}:m)); if (!latest.current) setHasMore(!!data.hasMore); latest.current = Math.max(latest.current, ...incoming.map(m => m.id), 0); setLoading(false);
         if (atBottom.current) requestAnimationFrame(() => { if (list.current) list.current.scrollTop = list.current.scrollHeight; });
         if (latest.current > read.current && !document.hidden && atBottom.current) {
@@ -103,18 +104,27 @@ export function FamilyChat({ role, studentId, parentToken }: { role: ChatRole; s
       } catch (e) { if (live && !controller.signal.aborted) { setLoading(false); setError(e instanceof Error ? e.message : "Messages could not be loaded."); } } finally { pending = false; }
     }
     void update(); const timer = setInterval(() => void update(), 2000); const focus = () => void update(); window.addEventListener("focus", focus); document.addEventListener("visibilitychange", focus);
-    return () => { live = false; controller.abort(); clearInterval(timer); window.removeEventListener("focus", focus); document.removeEventListener("visibilitychange", focus); };
+    return () => { live = false; controller.abort(); historyRequest.current?.abort(); clearInterval(timer); window.removeEventListener("focus", focus); document.removeEventListener("visibilitychange", focus); };
   }, [selected, role, parentToken, action]);
   function chooseRoom(id: number | null) {
     if (locked) return;
+    historyRequest.current?.abort();historyRequest.current=null;setHistoryBusy(false);selectedRef.current=id;
     if (selected) drafts.current.set(selected, { body, attachments, reply });
     const next = id ? drafts.current.get(id) : null; setBody(next?.body || ""); setAttachments(next?.attachments || []); setReply(next?.reply || null); setEditing(null); setSelected(id); setEditorError(false); requestKey.current = null;
   }
   async function older() {
     if (!selected || !messages.length || historyBusy) return;
-    setHistoryBusy(true); const oldHeight = list.current?.scrollHeight || 0;
-    try { const q = query(role, parentToken); q.set("before", String(messages[0].id)); const r = await fetch(endpoint + "?" + q, { cache: "no-store" }); const data = await r.json(); if (!r.ok) throw new Error(data.error || "Earlier messages could not be loaded."); setMessages(old => merge(old, data.messages || [])); setHasMore(!!data.hasMore); requestAnimationFrame(() => { if (list.current) list.current.scrollTop += list.current.scrollHeight - oldHeight; }); }
-    catch (e) { setError(e instanceof Error ? e.message : "Earlier messages could not be loaded."); } finally { setHistoryBusy(false); }
+    const student=selected,controller=new AbortController();historyRequest.current?.abort();historyRequest.current=controller;
+    setHistoryBusy(true);const oldHeight=list.current?.scrollHeight||0;
+    try {
+      const q=query(role,parentToken);q.set("before",String(messages[0].id));
+      const r=await fetch("/api/chats/"+student+"?"+q,{cache:"no-store",signal:controller.signal});const data=await r.json();
+      if(controller.signal.aborted||selectedRef.current!==student)return;
+      if(!r.ok)throw new Error(data.error||"Earlier messages could not be loaded.");
+      setMessages(old=>merge(old,data.messages||[]));setHasMore(!!data.hasMore);
+      requestAnimationFrame(()=>{if(selectedRef.current===student&&list.current)list.current.scrollTop+=list.current.scrollHeight-oldHeight});
+    }catch(e){if(!controller.signal.aborted&&selectedRef.current===student)setError(e instanceof Error?e.message:"Earlier messages could not be loaded.")}
+    finally{if(historyRequest.current===controller){historyRequest.current=null;setHistoryBusy(false)}}
   }
   async function attach(files: FileList | null) {
     if (!files?.length || locked || sending.current) return;

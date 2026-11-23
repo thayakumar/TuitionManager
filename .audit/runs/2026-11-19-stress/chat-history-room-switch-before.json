@@ -1,0 +1,5 @@
+{
+  "base": "http://localhost:4694",
+  "roomBHasRoomAHistory": true,
+  "expected": false
+}

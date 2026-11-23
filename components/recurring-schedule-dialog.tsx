@@ -249,7 +249,10 @@ export function RecurringScheduleDialog({
             Malaysia time.
           </DialogDescription>
         </DialogHeader>
-        <form action={submit} className="space-y-6" aria-busy={pending}>
+        <form onSubmit={(event) => {
+              event.preventDefault();
+              void submit(new FormData(event.currentTarget));
+            }} className="space-y-6" aria-busy={pending}>
           <RecurringScheduleFields
             students={students}
             defaultStudentId={defaultStudentId}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminSession } from "@/lib/auth";
 import { execute } from "@/lib/db";
 import { getStorageSecret } from "@/lib/storage-config";
+import { driveFileId } from "@/lib/attachment-url";
 import { storageFile } from "@/lib/storage-response";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store" };
@@ -69,8 +70,22 @@ export async function POST(request: NextRequest) {
       { status: 403, headers },
     );
   }
+  let payload: unknown;
   try {
-    const { fileId } = await request.json();
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Choose a Drive file" },
+      { status: 400, headers },
+    );
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload))
+    return NextResponse.json(
+      { error: "Choose a Drive file" },
+      { status: 400, headers },
+    );
+  try {
+    const { fileId } = payload as { fileId?: unknown };
     if (typeof fileId !== "string" || !/^[A-Za-z0-9_-]{10,}$/.test(fileId))
       return NextResponse.json(
         { error: "Choose a Drive file" },
@@ -78,6 +93,8 @@ export async function POST(request: NextRequest) {
       );
     const stored = await connect("finish", { fileId });
     const result = storageFile(stored);
+    if ((result.fileId || driveFileId(result.fileUrl)) !== fileId)
+      throw new Error("Drive returned a different file from the selected attachment");
     const fileType =
       typeof stored.fileType === "string"
         ? stored.fileType

@@ -1,0 +1,192 @@
+[
+  {
+    "id": "F01",
+    "problem": "Delayed chat history crossed rooms",
+    "source": "components/family-chat.tsx",
+    "evidence_level": "Executed",
+    "before": "chat-history-room-switch-before.json",
+    "regression": "chat-history-room-switch-after.json",
+    "change": "Abort old history requests and guard state updates by selected student.",
+    "status": "fixed"
+  },
+  {
+    "id": "F02",
+    "problem": "Diagnostic showed Saved before persistence",
+    "source": "components/diagnostics/questionnaire.tsx",
+    "evidence_level": "Executed",
+    "before": "diagnostic-saved-label-before.json",
+    "regression": "diagnostic-saved-label-after.json",
+    "change": "Show Unsaved changes immediately; Saved requires acknowledgement.",
+    "status": "fixed"
+  },
+  {
+    "id": "F03",
+    "problem": "Failed profile saves lost draft and allowed repeat submit",
+    "source": "app/students/[id]/edit/page.tsx",
+    "evidence_level": "Executed",
+    "before": "edit-form-before.json",
+    "regression": "edit-form-after.json",
+    "change": "Reuse pending-aware LessonActionForm and preserve fields on errors.",
+    "status": "fixed"
+  },
+  {
+    "id": "F04",
+    "problem": "Long names overflowed profile on mobile",
+    "source": "components/page-header.tsx; app/students/[id]/page.tsx; app/portal/student/[studentId]/profile/page.tsx",
+    "evidence_level": "Executed",
+    "before": "ui-matrix-before.json; ui-focused.json",
+    "regression": "ui-matrix-final.json; ui-focused.json",
+    "change": "Constrain flex children and wrap name text.",
+    "status": "fixed"
+  },
+  {
+    "id": "F05",
+    "problem": "Emoji initials broke server/client text hydration",
+    "source": "lib/initials.ts",
+    "evidence_level": "Executed",
+    "before": "ui-matrix-before.json",
+    "regression": "tests/stress-ui-pages.test.cjs",
+    "change": "Extract initials using Unicode code points and use consistently.",
+    "status": "fixed"
+  },
+  {
+    "id": "F06",
+    "problem": "Repeated no-op edits produced duplicate notifications",
+    "source": "lib/actions.ts",
+    "evidence_level": "Executed",
+    "before": "tests/stress-business.test.cjs",
+    "regression": "tests/stress-business.test.cjs",
+    "change": "Detect unchanged profile, lesson, cancellation and report writes.",
+    "status": "fixed"
+  },
+  {
+    "id": "F07",
+    "problem": "Legacy assignments accepted invalid numeric grades",
+    "source": "lib/actions.ts; components/classroom/grade-submission.tsx",
+    "evidence_level": "Executed (backend); Traced (input)",
+    "before": "tests/stress-business.test.cjs",
+    "regression": "tests/stress-business.test.cjs",
+    "change": "Require finite nonnegative numbers; enforce maximum only when defined; align input guidance.",
+    "status": "fixed"
+  },
+  {
+    "id": "F08",
+    "problem": "Pending reschedule still offered another request",
+    "source": "app/portal/student/[studentId]/schedule/page.tsx",
+    "evidence_level": "Executed (SSR semantics)",
+    "before": "tests/stress-ui-pages.test.cjs",
+    "regression": "tests/stress-ui-pages.test.cjs",
+    "change": "Show latest pending/declined state instead of impossible duplicate request action.",
+    "status": "fixed"
+  },
+  {
+    "id": "F09",
+    "problem": "Calendar missed legacy timestamp formats and extreme URLs failed",
+    "source": "app/schedule/page.tsx",
+    "evidence_level": "Executed (SQL/SSR)",
+    "before": "tests/stress-ui-pages.test.cjs",
+    "regression": "tests/stress-ui-pages.test.cjs",
+    "change": "Compare julianday values and reject unsupported calendar-year query ranges.",
+    "status": "fixed"
+  },
+  {
+    "id": "F10",
+    "problem": "Malformed JSON or Origin produced server errors",
+    "source": "app/api/chats/[studentId]/route.ts; app/api/diagnostics/[studentId]/route.ts; app/api/diagnostics/template/route.ts; app/api/upload/route.ts; app/api/upload/recent/route.ts",
+    "evidence_level": "Executed",
+    "before": "tests/http-input-stress.test.cjs",
+    "regression": "tests/http-input-stress.test.cjs; tests/files-stress.test.cjs",
+    "change": "Return structured400/403 before mutations/provider calls.",
+    "status": "fixed"
+  },
+  {
+    "id": "F11",
+    "problem": "File transfer completion and receipts were insufficiently checked",
+    "source": "lib/upload-client.ts; lib/upload-authority.ts; app/api/upload/route.ts; app/api/files/[fileId]/route.ts",
+    "evidence_level": "Executed (controlled provider)",
+    "before": "tests/files-stress.test.cjs",
+    "regression": "tests/files-stress.test.cjs",
+    "change": "Bound timeouts/retry same finish ticket; check terminal offset/file identity, receipt shape and pre-aborted reads.",
+    "status": "fixed"
+  },
+  {
+    "id": "F12",
+    "problem": "Database rows retained SDK-only positional properties",
+    "source": "lib/db.ts",
+    "evidence_level": "Executed",
+    "before": "tests/db-serialization.test.cjs",
+    "regression": "tests/db-serialization.test.cjs",
+    "change": "Return plain named-column records for browser serialization.",
+    "status": "fixed"
+  },
+  {
+    "id": "F13",
+    "problem": "Local SQLite requests failed under competing reads/writes",
+    "source": "lib/db.ts",
+    "evidence_level": "Executed",
+    "before": "SQLITE_BUSY in isolated concurrent run",
+    "regression": "tests/db-serialization.test.cjs; http-load-results.json",
+    "change": "Queue standalone writes with transactions; enable local-only WAL and busy timeout. No remote SQLite PRAGMA writes.",
+    "status": "fixed"
+  },
+  {
+    "id": "F14",
+    "problem": "Queued student writes could outlive deactivation",
+    "source": "lib/actions.ts",
+    "evidence_level": "Executed",
+    "before": "static-domain-review.md",
+    "regression": "tests/stress-business.test.cjs",
+    "change": "Recheck active student inside notes/reschedule transactions before saving.",
+    "status": "fixed"
+  },
+  {
+    "id": "F15",
+    "problem": "Failed dialog actions reset user input",
+    "source": "components/add-student-dialog.tsx; components/edit-student-dialog.tsx; components/recurring-schedule-dialog.tsx; components/schedule-class-dialog.tsx; components/generate-invoice-dialog.tsx; components/post-class-report-dialog.tsx; components/schedule-calendar-wrapper.tsx",
+    "evidence_level": "Executed (add dialog); Traced (same pattern elsewhere)",
+    "before": "add-student-dialog-fault-before.json",
+    "regression": "dialog-fault-after.json",
+    "change": "Submit client-controlled forms via onSubmit/preventDefault, preserving drafts until confirmed success.",
+    "status": "fixed"
+  },
+  {
+    "id": "F16",
+    "problem": "Repeated comment-history clicks duplicate older comments",
+    "source": "components/post-comments.tsx",
+    "evidence_level": "Executed",
+    "before": "comments-history-before.json",
+    "regression": "comments-history-after.json",
+    "change": "Guard pending history synchronously and merge by comment ID.",
+    "status": "fixed"
+  },
+  {
+    "id": "F17",
+    "problem": "Initial streamed UI hydration could fail while page wrapper/loading ancestor updated",
+    "source": "components/main-wrapper.tsx",
+    "evidence_level": "Executed",
+    "before": "ui-matrix-instrumented-detail.json",
+    "regression": "ui-matrix-final.json",
+    "change": "Keep page wrapper stable and explicitly suspend streamed page children during hydration; verify actual browser runtime errors.",
+    "status": "fixed"
+  },
+  {
+    "id": "F18",
+    "problem": "Gradebook ratio changed after editing assignment points",
+    "source": "components/classroom/classroom-tabs.tsx; admin/student classroom queries",
+    "evidence_level": "Executed",
+    "before": "gradebook-snapshot-before.json",
+    "regression": "gradebook-snapshot-after.json",
+    "change": "Project current attempt maximum snapshot into gradebook and render recorded denominator.",
+    "status": "fixed"
+  },
+  {
+    "id": "F19",
+    "problem": "Invoice cancellation copy and month-end labels disagree with behavior",
+    "source": "app/invoices/page.tsx; app/invoices/[id]/page.tsx",
+    "evidence_level": "Traced",
+    "before": "static-ui-app-full.md",
+    "regression": "Traced presentation fix",
+    "change": "Explain retained canceled history and display exclusive period endpoints consistently.",
+    "status": "fixed"
+  }
+]

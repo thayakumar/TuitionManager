@@ -76,7 +76,10 @@ export function EditStudentDialog({
           </DialogHeader>
 
           <form
-            action={handleSubmit}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSubmit(new FormData(event.currentTarget));
+            }}
             className="space-y-6"
             aria-busy={isPending}
           >

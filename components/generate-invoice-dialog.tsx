@@ -110,7 +110,10 @@ export function GenerateInvoiceDialog({
               </p>
             </div>
           ) : (
-            <form action={generate} className="space-y-6" aria-busy={busy}>
+            <form onSubmit={(event) => {
+              event.preventDefault();
+              void generate(new FormData(event.currentTarget));
+            }} className="space-y-6" aria-busy={busy}>
               <fieldset
                 disabled={busy}
                 className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_240px]"

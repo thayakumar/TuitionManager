@@ -1,3 +1,4 @@
+import { getInitials } from "@/lib/initials";
 import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
 import {
@@ -59,7 +60,7 @@ export default async function ClassroomPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {students.map((student, index) => <Link key={student.id} href={`/classroom/${student.id}`} className="classroom-home-card">
             <div className={`classroom-home-cover classroom-cover-${index % 3}`}><h2 className="text-2xl font-semibold leading-snug">{student.subject || "Learning together"}</h2><p className="mt-3 text-lg">{student.name}</p><BookOpen className="absolute bottom-5 right-6 size-16 text-white/20" /></div>
-            <div className="relative min-h-28 px-6 pb-6 pt-10"><div className="classroom-home-avatar">{student.name.split(/\s+/).map((word) => word[0]).slice(0, 2).join("")}</div><p className="text-base text-muted-foreground">{student.post_count} classroom {student.post_count === 1 ? "post" : "posts"}</p></div>
+            <div className="relative min-h-28 px-6 pb-6 pt-10"><div className="classroom-home-avatar">{getInitials(student.name)}</div><p className="text-base text-muted-foreground">{student.post_count} classroom {student.post_count === 1 ? "post" : "posts"}</p></div>
             <div className="flex items-center justify-between border-t border-border px-6 py-4 font-medium text-primary">Open classroom <BookOpen size={21} /></div>
           </Link>)}
         </div>

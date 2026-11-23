@@ -91,9 +91,14 @@ test("a cold process with a prepared schema uses one version read and zero DDL o
     const cold = load("lib/db.ts");
     const client = cold.getClient();
     let calls = 0,
+      localConfiguration = 0,
       transactions = 0;
     const original = client.execute.bind(client);
     client.execute = async (statement) => {
+      if (statement === "PRAGMA journal_mode=WAL") {
+        localConfiguration++;
+        return original(statement);
+      }
       calls++;
       assert.equal(statement, "SELECT value FROM settings WHERE key='app_schema_version'");
       return original(statement);
@@ -105,6 +110,7 @@ test("a cold process with a prepared schema uses one version read and zero DDL o
     };
     await Promise.all(Array.from({ length: 8 }, () => cold.ensureMigrated()));
     assert.equal(calls, 1);
+    assert.equal(localConfiguration, 1);
     assert.equal(transactions, 0);
     client.close();
   } finally {

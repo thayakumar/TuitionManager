@@ -1,0 +1,56 @@
+[
+  {
+    "path": "/students/new",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  {
+    "path": "/requests",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring/new",
+    "errors": []
+  },
+  {
+    "path": "/students/new",
+    "errors": []
+  },
+  {
+    "path": "/requests",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring/new",
+    "errors": []
+  },
+  {
+    "path": "/students/new",
+    "errors": []
+  },
+  {
+    "path": "/requests",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring",
+    "errors": []
+  },
+  {
+    "path": "/schedule/recurring/new",
+    "errors": []
+  },
+  {
+    "path": "/portal/student/4/profile",
+    "overflow": false
+  }
+]

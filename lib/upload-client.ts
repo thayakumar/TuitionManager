@@ -43,6 +43,7 @@ export async function uploadFile(
   const begin = await fetch("/api/upload", {
     method: "POST",
     headers: jsonHeaders,
+    signal: AbortSignal.timeout(45000),
     body: JSON.stringify({
       action: "begin",
       fileName: file.name,
@@ -64,6 +65,7 @@ export async function uploadFile(
     body.set("file", file);
     const r = await fetch("/api/upload", {
         method: "POST",
+        signal: AbortSignal.timeout(45000),
         headers: { "X-Upload-Role": role, ...(parentToken ? { "X-Parent-Token": parentToken } : {}) },
         body,
       }),
@@ -85,6 +87,7 @@ export async function uploadFile(
     try {
       response = await fetch("/api/upload/chunk", {
         method: "PUT",
+        signal: AbortSignal.timeout(60000),
         headers: {
           "Content-Type": "application/octet-stream",
           "X-Upload-Ticket": session.ticket,
@@ -114,6 +117,8 @@ export async function uploadFile(
         !!result.retryable,
       );
     if (
+      typeof result.complete !== "boolean" ||
+      (result.complete && result.nextOffset !== file.size) ||
       !Number.isSafeInteger(result.nextOffset) ||
       result.nextOffset < 0 ||
       result.nextOffset > file.size
@@ -165,21 +170,34 @@ export async function uploadFile(
       }
     }
   }
-  const finish = await fetch("/api/upload", {
-      method: "POST",
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        action: "finish",
-        ticket: session.ticket,
-        fileName: file.name,
-      }),
-    }),
-    result = await finish.json();
-  if (!finish.ok || !result.fileUrl)
-    throw new ActionValidationError(
-      result.error ||
-        "Drive received the file but could not finish registering it. Keep this page open and retry.",
-    );
-  onProgress?.(100);
-  return { ...result, fileName: result.fileName || file.name, fileType: mime };
+  // Finishing reads the already-created Drive file; retry the same session,
+  // rather than uploading those bytes into a second file after a lost reply.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let finish: Response;
+    try {
+      finish = await fetch("/api/upload", {
+        method: "POST",
+        headers: jsonHeaders,
+        signal: AbortSignal.timeout(45000),
+        body: JSON.stringify({ action: "finish", ticket: session.ticket, fileName: file.name }),
+      });
+    } catch {
+      if (attempt < 2) { await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1))); continue; }
+      throw new ActionValidationError("Drive received the bytes but the connection interrupted registration. Your work is still here; retry or use Add from Drive to recover the file.");
+    }
+    const retryable = finish.status === 429 || finish.status >= 500;
+    let result: UploadedFile & {error?:string};
+    try { result = await finish.json(); }
+    catch {
+      if (retryable && attempt < 2) { await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1))); continue; }
+      throw new ActionValidationError("Drive received the bytes but registration returned an unreadable response. Your work is still here; please retry.");
+    }
+    if (finish.ok && result.fileUrl) {
+      onProgress?.(100);
+      return { ...result, fileName: result.fileName || file.name, fileType: mime };
+    }
+    if (retryable && attempt < 2) { await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1))); continue; }
+    throw new ActionValidationError(result.error || "Drive received the file but could not finish registering it. Keep this page open and retry.");
+  }
+  throw new ActionValidationError("Drive could not confirm this upload. Please retry.");
 }

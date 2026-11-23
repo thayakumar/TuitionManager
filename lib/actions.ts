@@ -114,6 +114,7 @@ type Lesson = {
   attendance: string | null;
   is_trial: number;
   recurrence_id: number | null;
+  cancel_reason?: string | null;
 };
 async function lesson(tx: Transaction, classId: number) {
   const c = await row<Lesson>(tx, "SELECT * FROM classes WHERE id=?", [
@@ -308,10 +309,12 @@ export async function updateStudentQuick(studentId: number, f: FormData) {
     values = studentValues(f),
     active = f.get("active") === "on" ? 1 : 0;
   await withTransaction(async (tx) => {
-    const previous = await row<{
-      active: number;
-    }>(tx, "SELECT active FROM students WHERE id=?", [sid]);
+    const previous = await row<Record<string, InValue> & {active: number}>(
+      tx, "SELECT name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,active FROM students WHERE id=?", [sid],
+    );
     if (!previous) throw new ActionValidationError("Student not found");
+    const fields = ["name","subject","grade_level","phone","email","guardian_name","guardian_contact","hourly_rate","notes"] as const;
+    if (Number(previous.active) === active && fields.every((field,index) => !changed(previous[field],values[index]))) return;
     await tx.execute({
       sql: "UPDATE students SET name=?,subject=?,grade_level=?,phone=?,email=?,guardian_name=?,guardian_contact=?,hourly_rate=?,notes=?,active=? WHERE id=?",
       args: [...values, active, sid],
@@ -447,14 +450,18 @@ export async function updateClass(classId: number, f: FormData) {
     );
   const sid = await withTransaction(async (tx) => {
     const c = await lesson(tx, classId);
+    const subject = text(f.get("subject"), "Subject", 500) || null,
+      location = text(f.get("location"), "Location", 500) || null;
+    if ([at,minutes,subject,location,status,attendance].every((value,index) =>
+      !changed(value,[c.scheduled_at,c.duration_minutes,c.subject,c.location,c.status,c.attendance][index]))) return c.student_id;
     if (status !== "canceled") await overlap(tx, at, minutes, c.id);
     await tx.execute({
       sql: "UPDATE classes SET scheduled_at=?,duration_minutes=?,subject=?,location=?,status=?,attendance=? WHERE id=?",
       args: [
         at,
         minutes,
-        text(f.get("subject"), "Subject", 500) || null,
-        text(f.get("location"), "Location", 500) || null,
+        subject,
+        location,
         status,
         attendance,
         c.id,
@@ -561,6 +568,7 @@ export async function cancelClass(classId: number, f: FormData) {
       text(f.get("cancel_reason"), "Reason", 1000) || "Cancelled in advance";
   const sid = await withTransaction(async (tx) => {
     const c = await lesson(tx, classId);
+    if (!at && c.status === "canceled" && !c.attendance && !changed(c.cancel_reason,reason)) return c.student_id;
     if (at) await replacement(tx, c, at);
     else
       await tx.execute({
@@ -607,6 +615,8 @@ async function report(classId: number, f: FormData) {
         ? numberIn(f.get("rating"), 1, 5, "Rating", true)
         : null
       : (old?.rating ?? null);
+    if (old && (c.status === "completed" || c.status === "canceled") &&
+      fields.every((field,index) => !changed(old[field],values[index])) && !changed(old.rating,rating)) return c.student_id;
     await tx.execute({
       sql: `INSERT INTO reports(class_id,topics_covered,homework,performance,strengths,areas_to_improve,next_focus,rating) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(class_id) DO UPDATE SET topics_covered=excluded.topics_covered,homework=excluded.homework,performance=excluded.performance,strengths=excluded.strengths,areas_to_improve=excluded.areas_to_improve,next_focus=excluded.next_focus,rating=excluded.rating,updated_at=datetime('now')`,
       args: [c.id, ...values, rating],
@@ -1407,8 +1417,8 @@ export async function gradeSubmissionAction(
       throw new ActionValidationError(
         "Newer work has arrived. Reload and grade only the latest attempt.",
       );
-    if (submission.max_points !== null)
-      numberIn(score, 0, submission.max_points, "Grade");
+    // An omitted rubric maximum does not permit nonnumeric or negative grades.
+    numberIn(score, 0, submission.max_points ?? Number.MAX_SAFE_INTEGER, "Grade");
     if (
       submission.grade === score &&
       submission.feedback === comments &&
@@ -1709,6 +1719,7 @@ async function upsertNote(
     const c = await lesson(tx, cid);
     if (sid !== null && c.student_id !== sid)
       throw new ActionValidationError("Not authorized for this lesson");
+    if (sid !== null) await activeStudent(tx, sid);
     await tx.execute({
       sql: "INSERT INTO class_notes(class_id,scope,content,updated_at) VALUES(?,?,?,?) ON CONFLICT(class_id,scope) DO UPDATE SET content=excluded.content,updated_at=excluded.updated_at",
       args: [cid, scope, value, new Date().toISOString()],
@@ -1777,6 +1788,7 @@ async function submitRescheduleRequest(
         sid = parent.student_id;
       }
       if (!sid) throw new ActionValidationError("Unauthorized");
+      await activeStudent(tx, sid);
       const c = await lesson(tx, classId);
       if (c.student_id !== sid)
         throw new ActionValidationError("This lesson does not belong to you");

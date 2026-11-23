@@ -405,7 +405,9 @@ export function ScheduleCalendarWrapper({
             </DialogDescription>
           </DialogHeader>
           <form
-            action={(f) => {
+            onSubmit={(event) => {
+              event.preventDefault();
+              const f = new FormData(event.currentTarget);
               const date = String(f.get("reschedule_date") || "");
               if (rescheduleId !== null)
                 run(
@@ -521,13 +523,15 @@ export function ScheduleCalendarWrapper({
           {add && (
             <form
               key={add.date}
-              action={(f) =>
-                run(
+              onSubmit={(event) => {
+                event.preventDefault();
+                const f = new FormData(event.currentTarget);
+                void run(
                   () => createClassQuick(f),
                   "Class scheduled",
                   () => setAdd(null),
-                )
-              }
+                );
+              }}
               className="space-y-4"
             >
               <fieldset disabled={pending} className="min-w-0 border-0 p-0">

@@ -382,17 +382,17 @@ export default async function InvoiceDetailPage({
             Danger Zone
           </CardTitle>
           <CardDescription>
-            Irreversible actions for this invoice
+            Manage invoice status
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 p-4">
             <div>
               <div className="text-sm font-medium text-foreground">
-                Delete this invoice
+                Cancel this invoice
               </div>
               <div className="text-xs text-muted-foreground">
-                Once deleted, this invoice cannot be recovered.
+                Canceling removes this amount from revenue and outstanding balances. Invoice history is retained.
               </div>
             </div>
             <ConfirmAction

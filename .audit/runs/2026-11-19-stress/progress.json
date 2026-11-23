@@ -1,0 +1,1602 @@
+{
+  "started": "2026-11-19",
+  "baseline_commit": "2dcf1d7",
+  "mode": "dynamic isolated SQLite + production-build browser + controlled storage faults; production read-only smoke only",
+  "approval": "User authorized breaking isolated app workflows and fixing demonstrated defects; architecture proposals await candidate selection per requested skill.",
+  "coverage_plan": [
+    {
+      "owner": "primary",
+      "scope": "auth, middleware, db migrations/transactions, config, HTTP concurrency/load, error handling and aggregation"
+    },
+    {
+      "owner": "business",
+      "scope": "students, lessons, recurring schedules, attendance, reports, submissions, grades, invoicing and notifications"
+    },
+    {
+      "owner": "state",
+      "scope": "diagnostics, family chat/outbox, whiteboards, revision conflicts and retries"
+    },
+    {
+      "owner": "files",
+      "scope": "storage, resumable/legacy transfers, authenticated previews, profiles and parent file scope"
+    },
+    {
+      "owner": "ui",
+      "scope": "all role pages, nonvendor UI, large data/mobile semantics and visible action states"
+    },
+    {
+      "owner": "architecture",
+      "scope": "fresh-context hotspot scan, dependency/deletion-test candidates and visual temp report"
+    }
+  ],
+  "files": {
+    "app/api/chats/[studentId]/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "3324df37344b4115282f73af04c7680f352d9c19ca2e9f66c377bc5b4b1266ce",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/chats/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "611e9d5356d436e53ba72c6bfa3f77c8da0980216c936e17c3acf9d2d460115e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/classroom/posts/[postId]/attachments/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "b8ab0e13100c3494826c37de30db169d5c5cd290f33ee2b381016c44bcd9ea29",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/classroom/posts/[postId]/comments/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "2e095fc245685325782a5156dee13b21c04a15b6b5d710843dae9b5640760aa3",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/cron/monthly-invoices/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "24f785ee3f253b8a88f7a32839ea55b6e63bd39f4fb5727012ab6fad02ed0fd5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/diagnostics/[studentId]/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "960284de18c648ac9226f3d3de4432e0b1c36483812def61b252dee47b30e6df",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/diagnostics/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "a35a350175daf30331640e8dadc117a3c0c5953c89994afe3a9492aa6151086e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/diagnostics/template/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "d91bf458122a354b626ac6f37e940e4cc85153b3eb65ef3b2713464709d44abe",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/files/[fileId]/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "c7b370ac26935bd3a4cfef5f6402d54cee626767fe1fc1eeb3022e89ec00aba4",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/storage/setup/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "c16f1158a86e293e3caca44cd6ef65748ed3193e29efa407dc333f730bb4f9ca",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/upload/chunk/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "fe78698954521e3d41cade958f71fcd601b2326984dc55ac5e7b4257711e0cf0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/upload/recent/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "e5cf58b99fc58f67925628c40cc9a09e097fb15737e84d860cf7bbd7b395ff29",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/upload/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "ef7e721758d6e51e7a2909b11ec9b8e1a1d29e8c92bce640a0e38ffb06695b19",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/api/whiteboards/[boardId]/route.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "ec86f3e9495b1353ad7b599a8db5fe4208775b0663a4ea89e20e0a87a7a1d9c9",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/chats/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "62621efc63c7ebc7471bb966cac040e546b631bf05916517cc3916f65bebe2ca",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/classes/[id]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "db8f6b78e4e100b5ce1301151124806642cda4ffe863d10878cf522bb7d4754e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/classroom/[studentId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "af4da461910c611c76e6c5f79ffbf5c5b28441cda683a084aca672efb666d2e0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/classroom/[studentId]/post/[postId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "a69021b1bcf5cb656cd911589ea3ab9e4d646e91ae852146ea1d92756c6ade6e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/classroom/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "13aa800258526ad441548329f302ee4d3842479de644fb50fe00330bb73cd064",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/dashboard/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "11e021029d6beed91898d0ecc01669065b4cd47b9ee086c62bddc782a8f47215",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/diagnostics/[studentId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "e65dd223c55e37bb9c3cfd25a333c59e036f4cba69bbca1e6d8ef32a3b8ce8c5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/diagnostics/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "53cd050956bd5700096e123c27d657b272e88bb40e0bde3fd4c8a7a03f17fa7b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/error.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "dc9824d50dba8f87567483eb6a1160ebd11c48f85cba90423676f62081194d65",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/financial-history/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "b5a7dfc4cf75f9ea6bb91a7ff8ea6831495dde9858a19040a7820530f218b2f7",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/globals.css": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "08533fd3b2768b3ef9d712d018953ba3309e90f3d6d4e2224f926418003130ca",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/invoices/[id]/PrintButton.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "505459fa065eecb605b97ba01a6f3745afc43680f7e29ddbf29cd9b8a02ab3f1",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/invoices/[id]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "25838d076d580fc071e6d7855a5490da760d58a0fa052c5dbe15a2eb272ed45a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/invoices/new/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "8ce66cd35af0e43f06a4bb52c5fd96c7246b058248782d49aad1c4b88eb0df33",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/invoices/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "04643348db5f4260edab53ff510eef12738ca75f66fd14a920a1813b09e99d8b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/layout.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "752539c400d604994993b470754fe889f04eb3dc8da1f8cc1e1202adb684cff5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/loading.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "221180dfe59fffae688706edfc6c1f61b1d47abd62cae119bd07938f74035734",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/login/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "fa17db57f0b35a87f80008f995416e9f0398a90c03cc76606d1c9b039ebbd9d5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/meeting/[classId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "706d880365c7ac8d2850bb1751ef2caf6ff2d623531451114e2a1c8f625d3b76",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/meeting/[classId]/whiteboard/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "682ad6430d347ecd8caef7d5db1e42978ba267b1e951d24fa6b7cb26ee71953d",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/notifications/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "8bf7e1c7bab3fbc598360d5fe4835f11b82e36b1c2d26447fa7195fd2e2a8441",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/overview/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "d222abd931831f2d3d280fbaef3ac842ede05a15b128f5649c88f515cae804a4",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "ea03288859c3777df7473aab3bc0fd470d2d34d323b66b0406a8a799f404c274",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/[studentId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "bc213c8fc33aca11818816ac487a09073bfed9c5219ab25d6ab7e607f3178784",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/admin/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "8d821d25aa4cbc8bfb94d290b26647265d3be3178fc79261b799cff62b3e3df0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "2a21333d038f0f1ec161a1bbac29625d6e511777cec4663907082b27689ee7a7",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/chat/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "ae05142274137647d75aca6d2b7b8d0105ae2a5f3d9f0cfda0df1634cbe69bdc",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/classroom/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "b1119ced273c83030f0b40104f7580950ea6c5ab8c59ea8b40177cc0f39f285e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/classroom/post/[postId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "81608dead2ef49eb28b65f46c8715db84bc487bf550d6b719349cae09bf25a0b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/diagnostic/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "acaa49cb79a65bfe8e3c6d178d34521b2b5622f5786fc46d6f3aa9004b4babfa",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/layout.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "34195f1d988b69879d04f5b95ec58c9c1ce74ee3564ff442e75fea568a3fb02a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/notes/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "71437163eec617e741cbfc66a3c7464cb727fb102f0e7fcc18d35691b28dd0bc",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/notifications/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "1406253f81e17add0a5c4575ae2c1e9cc68aaec507cebeaa70e69b91aa27c97a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "44e58995d5d6743df5f1e174cef6641bda4c2178509bcd58952bcc1ad667d0cd",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/profile/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "b9977dc2602ffc97c7a1db0c20c32d960ef8976796acdea8b0be72e102ddef0f",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/[studentId]/schedule/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "28e08e18491dcd54a74b11950f231f28e81fa24354241c5a7b03d0102ec23b57",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/portal/student/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "fda875e4dbd23a4c3c191089a1066931271de901b700f9556a2cbd40b0fedfe5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/requests/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "786795116b01f3102a8ded80be632d271013f4cf96cf6acb76e473f349c5475c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/schedule/new/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "841973495a64039fccea5a42194cb6cdb3e1e5a4acd6df7e8119c0c057526482",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/schedule/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "7db3040d1e42516dc67863cdc99ab1d4074d4b3a09a08822c3ecbd633d808bb1",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/schedule/recurring/new/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "dddde3dffb764be9cf0afebe6c6de2c634a53d435f00cf2320a6e4f6afec003c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/schedule/recurring/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "7fef3690de9eef1ea32d8878ab0d606a4f4365c52ce5c088da85e8f9aadb732b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/settings/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "e7ced51f5c7a553b0d7dbd58804a575237352956da98bcbb4277a9bbe3a7c728",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/attendance/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "81d98cb3da3bd570d6bce8717e4d512dca92574dc985266b717396bc48bde3aa",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/chat/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "a463c4e3c991c25d4d6ef703fbf9002452f8beaf34da84742bc689eff4113225",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/invoices/[invoiceId]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "71dcf63a405f71facf01435d0bd2751af187e2bdc480cb56122970bff4109a87",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/invoices/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "ed63f2cb99c6d28d53d3402b38525d7f21e3a8a7d524e3caef3089e3556e72ec",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/layout.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "90a9f9bee68329e209af1f4b857d26be0b43292f792edf29bd27cd68a74b079f",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "4744bae54b903749d80d11012b9839dd8bf5d35316aa0299fbbd64042e7a7399",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/reports/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "fa3c5a1985215bcd003b48b1e3fe25c5059876e8d77a5e8fe865bab500c5f5f0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/share/[token]/schedule/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "f2622bd2736cb9be8e9a8ded98dd01d0a1426a647cf3e2cb55bf77c8abdb8485",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/students/[id]/edit/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "335d1345b48f4c7decf664688586162b5b9d7f0aa7c55e80f3970821562899f5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/students/[id]/history/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "c463355ee4939a09d5e68c71e60b35b327b49d8c9f2a2ce0659e5c49b07ec55e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/students/[id]/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "b10964b49319847d2ef2d536332ffd87bd207eda0f6e9b61443c8319c45e0313",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/students/new/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "559d2fad7ba53a149a0db9ebf77e5e8cf53143b8bc45a2cf89dcefedf0fe6559",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/students/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "6fdb03aaa5ebdc43837b8adb7becac5203664e3715dee2e2054d8cf3509a79db",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "app/whiteboard/page.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-app-full.md",
+      "sha256": "4b0ca162180840b50679638597e08e3910dbc54b60bd44a76d4082d74cd30851",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/Nav.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "ece1ff84d5878d5614cd8e9039d80252437958226e2a762ced5e7df86899fc16",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/action-busy.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "fe51bb243a4380d600243723907b721c27822ebfa4e4e815bac46326b2024142",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/add-student-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "a1d01e1e35b0fff2ee0084f2dc8ea1af387cfe9693cc8775b59b6400b471dccd",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/attachment-preview.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "58b339976c46de9f81f053d03167337b674c1711be682d2e30dd1c10efc9b7eb",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/attendance-chart.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "fdb417d6a4aa0087a51f9851a68534c1bfc4bb7b05866cf529ef0493d464c30c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/brand-home-link.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "7ef22f7af5d5836e2c895551f6c25bc3ca82632d6714edd96ebf63b794cd9551",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/cancel-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "3d663e7623e45c9a974e6fb5c267b9cf70d18fb14f56dc0945563189ef7ea20b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom-post-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c44081b1e750d4b8949485c9e2741caebad86f49086a8c864042cae92c077509",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/assignment-status.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "cbca237823aad0f1d41dc883ad1197875ca794f0e5d4f19d4e5eb71b20fae704",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/classroom-banner.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "6086375c306c0bbe9afdda1c5d28ccb2883a3463b109152884d373d1c524bcac",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/classroom-tabs.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "97891311b68d3d8602e79a5c5a171f841bed7cb44111b09a3748bc928c69455a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/grade-submission.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "49af0825184e50503b91c5168785d27817a7cc95cb3fc0960de84d79787adbef",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/submission-form.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "73748f852f8296adb833cae7c8325ab586c7f475b6b6b0a3bf04975071fc5785",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/submission-history.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "e65638380481102f559f1f8321d14c51eec1b32c0d754cf5a8c7f3fd8eb0b4bb",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/classroom/topic-manager.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "872dc52ecf977b499b6997fef13dd950426516d6b03b9428e41c57a83ddba657",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/confirm-action.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "369c5f1b8dc16e8e1b9b888000bb54cb3295d1ad0f1d93089e453ed2b641dea0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/copy-link-button.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c9e88e63f92ffdf5417da48e34942dd27dfc006a3890d1ebb1230126768486f2",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/copy-login-button.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "59b9a7aa1a75da65a0e99ff181465dec4a968156dd02128b3744a19103e78a08",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/dashboard-actions.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "30a364ada74537c9cc5a1a1f13d134b8e775a48d896128580244e43ffb30470c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/diagnostics/questionnaire.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "eb73c752e9f2099d068d42ca673da9483033d4dbc939436af14d9faa13b50028",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/diagnostics/report.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "a3471ab8cf3a867e34b7fb91b45e6ab07e21be1f0373d19eb11411f76b5762c2",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/diagnostics/workspace.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "92555bdf981a3bbf15179bb3630d551f85a57c0d7c85e129c18f6508dc624a9c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/edit-student-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "47b5758bc48d5798d7fc2e2da5dba76122e62f5e86f6056ef2a5fa42995bfac4",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/empty-state.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "376e0e7231508bac032da7c9a2b4c7c46973a6974b6b6ec4edafee4ac658b345",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/export-button.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "987da9526b8b94e65db33fccadae564151fd97b62dfd9f1757b6fcf81260f5ac",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/family-chat-unread.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "b8e71b115d0bb33952045a5d4aa4b0433670c1681b5e4348885a013fe7a3a5bb",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/family-chat.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "b43d33c2091b53b0e414a2a72ce637b219bfbfcc0a07958b00815b86faebe100",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/form-field.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c0aa363c3ba9d2e02f74d2bf500a673b8a28e3dc45568d695fde467d4aa53951",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/generate-invoice-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "891034ed8a0034dfdc9ad7d768cdde5b9b951bcb386656aa36a77b0c78510341",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/jitsi-meeting.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "8c5254cc15929701cef9bea4721381193cad5ea641460d7f6a2473ccea966c97",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/layout-shell.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "5d8e3775374087c37d6701260d2346d476932436eeaa792d0d1f59f6ebddd348",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/lesson-action-form.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "7e73263c509dfa10340ce6481ca455608e28a0b891f3c120077ac89ee5fe39aa",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/lesson-status-badge.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "db9d2e8744d923b25a807123ccab167c0445a4acf48fc3fc4a8033ce1f26a64a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/main-wrapper.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "2229aaa835078d3d7b9b56df07ac671b21ebc2524d6bc17dac688563421d1757",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/meeting-room.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "b0d440d15557eb866bdece7d4a56c4b4550bc726a1b54de7ce398a1e16525ce9",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/note-save-queue.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "741f93a77ff53d41d5e0b28a18cc979db110b1447d33875661f837d3d39a1252",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/notes-table.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c8469d28b751cc82657d2832baafd21149c5c95ecbaaade4777aab446e23b2f1",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/notification-actions.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "e03d3fecaa8ac84e5103eca9fdbb7048c7e9bf1c94de9e13c055037ce133c721",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/notification-bell.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "1b868e02458c58c8c08e7f4a676e46b2553315d9310adc9f1f04b3c8326d137e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/notification-read-link.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "766166e8743021e65c5a1cb772d865306ba24e6b45508f9de78728bc3b1385c5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/notification-toggle.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c8b71e9793d8595ad4f46d7b77408cd7460875b7c1637b422597496f8a2b65f9",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/page-header.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "17de4af5d1b3f03e4a701e9a671ad6e6dd93cb7ee7237a162a98c0231b63dbc3",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/parent-nav.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c25cc867a729db07fbdc6514d7cf324e41f5019be47cb775e5573b2d7eabea2b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/parent-report-table.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "1b42f62ccfb45608eccac3379169b2ff697144a3ce5fbfdd504b7956a64c1ada",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/portal-nav.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "f0f60cc2c7b1e8421a19545c89e4538a115bbadd4d97033bff972350b0d6087b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/post-attachments-input.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "87b28ee643bc81c906ff221c7a298ee13ef952abce4df4350185081922c0e245",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/post-class-report-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "408ee4ded09085df8a78b6cb190fbc0778c3064c8c57ebcc1956e182b90c8d76",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/post-comments.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "ff319736d2e8bc81924132a03169beb4b932d833c6696af47f5555d417eead4c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/rating-badge.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "a2e4601d7dd08220741e86e47db552ce41ba23817af0b58b5dce95b92a1823d0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/recurrence-manager.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "7539c5a8958d5d4c87d059c490f567c7ebaf8bf62b1f68e14ae98463724a9b30",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/recurring-schedule-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "ced1fe889db745cdbde8bd7a40a5983a34acaa0f6e326a430649226e78a4ef06",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/report-details.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "8a07030fd7e33b1db57491620f190d2461258dc5515c509b739389696efa4e62",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/report-row.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "8421aa3295abfc84881fd46f4d23e9a837784debb68dd2d5943a5ff8bf41f960",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/reschedule-actions.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "15dc908c74e3a0dda7fee40a204d94adfa019952b30ddffcb07e7cb5a22ce9a6",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/reschedule-request-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "c8be18f219d9efa8b73ac456e8206a4e893badb0689f7985074dfe437df4ae72",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/reui/event-calendar/event-calendar-agenda-view.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-content.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-dnd.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-event.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-i18n.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-lib.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-month-view.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-nav.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-recurrence.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-resource-view.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-time-grid.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar-types.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/event-calendar/event-calendar.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/reui/icon-stack.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/revenue-chart.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "4ff4de64964cd2d80b488bd50cd519d0dc36dd16ed8f9e1c87cb695c30ba5006",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/rich-text-editor.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "e4d1a04344b62a6db8648d0b9d1b0ace956289ba2ce9c818cccf9ab2155158f5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/rich-text.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "fdbc424d38240ad3ee6c1de1c2ccac86e11aaddcf1b7a5dedd11190a076a7e63",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/schedule-calendar-wrapper.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "f4c619c0b16bc9c3bb555d216f1417f5e2c8e284e2255094d63b2d404d016c78",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/schedule-calendar.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "69a0dc9d38f6090be0187bf86b04a86af5cf5fdec47e6036c81637e9518368ee",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/schedule-class-dialog.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "5af2d226c7ba3165e488dd24c159cc738bf1aa53a43f57dcb4c37340a30eb431",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/scheduling-fields.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "af6c6998f11e461bb9c6c0f1e89174c7a9ea33091e7e3d1739b66557ee7bc499",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/share-token-button.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "e710dc67b8dfa14161fe320a7960b31ebd9771bc7d3a9e5d9a11bd8c1c803dc8",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/sign-in-shell.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "7659cbc1b9e27fa719fa8169eb6e05c57f27b7b03833cdfefeed72f0e4743b8a",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/storage-setup.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "638998c7219e35c92ab70d4ab557989ec1afadfeb3a91d4c071db47576356a6b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/student-profile-form.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "404e7ecca7746f44fab84ec095f6f4f535f41b7f9afb5bda2acbf8952824a045",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/table-explorer.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "54b2e94a981265b4e8b9043cfe6d6fde87a8b1d7bbe14f7881b526c446b9024b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/ui/alert-dialog.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/avatar.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/badge.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/button.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/calendar.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/card.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/checkbox.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/dialog.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/dropdown-menu.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/input.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/label.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/popover.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/progress.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/scroll-area.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/select.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/separator.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/sheet.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/skeleton.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/switch.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/table.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/tabs.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/textarea.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/ui/tooltip.tsx": {
+      "status": "excluded-vendor",
+      "reason": "Unchanged generated/standard primitives or vendored calendar; integration exercised by tests/browser."
+    },
+    "components/use-chat-outbox.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-own-read-ledger.json",
+      "sha256": "b24f58c9c30d570f4abd50b69f15f2e592376839672cc555dff0af880a3c371c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/whatsapp-share.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "ce3f9870cf07dbabf0f4fa16e9647690a48da7af041313ccfec4310ea54076c3",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/whiteboard-canvas.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "08051f319ef8e6b39213c3f506bd1222d3840ba27544a28cf927a28ba4fb5714",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "components/workspace-header.tsx": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-ui-components-full.md",
+      "sha256": "1a7de503c5f59ff60897601fb9f6b59e21cd1e5b7fb573c6dd33d9d4f66e3851",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/action-errors.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "5640405388731e0818e8a55cb8f2e6cc72d4fe516d832a93323904032c3feff4",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/actions.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "533155bbfbd94cc1c2a39749162a76fa8a416ef4acd7bda82d2bc18f10933e5c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/attachment-url.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "aba789261837f559486413526f85875ead3d9aa0a2ff21f006a45c22b363b0ad",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/auth.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "dff60caa9597bc884ef6aa81cc399c9faf2118e9f0bb825e85cb0d072b07be50",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/chat-outbox.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "d99ff1ca978548aad94903c992b5364a316e8cfd1674dc335143c6b4dc191c35",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/classroom-access.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "362347e85567b0e3ceea98bb66f5999ca39a7f51a2ce3d527dff4342beaa3e93",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/db.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "a85f031e7f329d4b98231de91e4527e48ea6b76d0c2e899956e99db14f836e16",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/diagnostic-bank.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "1d94acce74fa87a4f45bc46755816238219ee7ed5b9afd25c2c1cf2c5fa2a120",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/diagnostic-scoring.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "c9cbf1cfb904ec43a0035f2e39fe47dc3f7c92df77e5527c85c7a42cc005b413",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/diagnostic-types.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "8ff9cc3c23907db7c93c148c3edad63e6e0de4154590ead72117d5740bad7117",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/diagnostics.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "eb3959b3893632fe19fe57b1bf51157bb7b1dc0a74603f5cfa0ffc6795b36cd2",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/domain/business-time.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "ed2be53a215aaeffbf74cc356c597be18f9960a929ba6652bcfb2597a052b7c5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/domain/validation.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "03cd93ff932a3acff1e069cbdc17fc188b249315fe2e00a8278c84accfc89106",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/drive-connector-script.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "565391d071d93d9b472c41bcc309af2c3a32cb1e0372d2cd77ac5cc35fb29e69",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/export.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "cf5368d57dc1c77d1922917cbd33472c279b1af90cf58b0aadcbbb6dd54a0a8b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/family-chat-actions.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "69633ef843ff1159dec67bc2916415e8caaf6c3e5df31a443f09703345bf5997",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/family-chat.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "cc793611befe76e55315a5cb0bfa9e581c04592a329e9c756abf403e96501afc",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/finance.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "ac2d3c5ba11047d6ea668fb58eef742301a903b1ecfccf58d1fb3ec4ecc96976",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/format.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "241a3b94e1f3593da0570d1552bb53ec88dc8d1aa2b45f0896368332ca4218c0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/invoice-generation.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "625aa6fe03872d8a32e2dc1f01f7dc77c705a72652df3ee7877c7392ec06154c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/jaas.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "05f52513ba19677fd992e80c84025f72d897a2fbcd77ac557ab1f07fa7b3347e",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/lesson-status.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "c34fd4c8b0f3e79856f00d59e5a6eab0f2af505060396643daf3d826107ea741",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/monthly-invoices.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "dd7abec526ad59750fe526ee5cd4804ea2e0fb7e68966099f45f15ac53fc0c94",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/parent-upload.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "fb501fcbbeb3a09a6341f73cf0eb325d00bf01ad6b142ce9f295b3da1012246b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/portal-context.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "d31cf1ba1ef85372c88fd86710ebf0861969c5826cc3b5d376019a8670cf3f5c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/rich-text.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "3f9c6e7b99f4cb492a94542044e2dfa14ece452ecc23dad2936c908cf5e1aa59",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/storage-config.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "c6fa071c4b0e62dffd45bb017a2ac7f5fd5ba65fc75c8f582466525a179b4e7d",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/storage-response.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "33757a731333be2f4e97517c60c6da0371020b0fb76c2d8d9e3fd83ca597fee6",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/student-profile-actions.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "781bd059d5ac0da8c5457012d9e6ea1d5e9c57915698fb2ee8f943c27b356cf2",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/types.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "fec7e024de897e2fcb83ba78d3992eb6c0150d342e9a4fda95437a38d1e59b26",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/upload-authority.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "5db8ca43b362b93352b4007e85b6f495e65a2b2e418a2e08e363409486bc6741",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/upload-client.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "0d14f1fbc8721b9360dc285298f3d88ca8b789db8e7f52f2f3d08baa65500278",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/upload-limits.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "d1007e936b3060307696e03ac1c411bdc5cc722dd202d8e031ed9fcedfaa410d",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/utils.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/whiteboards.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-domain-review.md",
+      "sha256": "5dc4d1722a967b28a79064445d45f5080b76fdfb3f2d31df9db30dc4a12f7eb0",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/business.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "940d6bf15fd815cdb615cfa66a09e41ca766d60aeb2a37e447d2e959e8740293",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/chat-outbox.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "273ade6c9fd6f817b51b72313c1c33ed58129370a945c374a625cd422833718b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/classroom-views.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "c9a14c24449d0369f47ded0c3122b7aa975f179434737fa782f87d87d88b6ca4",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/dashboard.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "13882d76df72914e3a7d494253c2211517b3443452301ffdb11119df24ba9c34",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/diagnostics.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "ec62ba7cb272452cb00d0c3ef646cb256ad732fca7f25f9d0df55b55d34d1328",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/family-chat.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "a58f2fc17454bb63fafe6a20bc9cc575598b77d655edef878bbac41a9b8cf557",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/finance.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "8b5598d7a83b260bab091a774f1ac6bd4112c5f6222065335bc852a5d73d9c65",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/monthly-invoices.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "2d9114856b890b33dc32d876ba7f068891aee1faad3e17319f547ea8c58ea288",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/note-save-queue.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "5f00125ee25e7ededa1b3baece8cef1cb2739edc6ff9eabb14b138751c3d82c5",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/parent-time-views.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "7d50fc491ba5597c7c7702b01d793cf287306cc5bd234f1ca064d3a908dc6ca7",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/pdf-files.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "453425efddd9334115038fab781fb999d98d2d44f7d7527cc821e97ad5f4b0ff",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/rich-text.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "f00e9a7bb9e5f058a5839c9ac19fb66fda2c0236507a03ab41d40decfef2c275",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/security.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "6d274a77b821ed9979d023bf26cbf9bbee2bd20b2dea2ec9a8be8a53f2616d91",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/stress-business.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "3e4a6f013da551165e45c280110eeb93610a3f411454637dbd542a3db0c6cafc",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/student-profile.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "5b6e0f916cdc83969a0d384f56c9bc3b893db83f920f586061a6763abbab498b",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/upload-v2.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "094f4553b8c6ba9f6b1b0990319c567c959d1fe3c1ea4745523b977ddd8dc359",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/whiteboards.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "6862e7831265cb6f1999e910c069f60663a0b9d096c9adec30f8bb822d9198c2",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/http-input-stress.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "69178f76535f79ef5c918adad55f37f324d4bd3cffcdb97a016b908360e09185",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/db-serialization.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "af5d2c3b01379558c0a4029571939fa96a5f2756ec0e0222922977d56e568122",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/stress-ui-pages.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "3e3e96aba27023f92c3f893a7442fb7453d214063e17b1a2dd603cc0810b8888",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/files-stress.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "effea62456e7870bd46de3e8780b358b2409384cb9c10b99f10a7148277bd654",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "tests/stress-state.test.cjs": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "static-test-review.md",
+      "sha256": "8bd90853670a2185d51089456180ba2a7841d4d8b159c9008b80c3adb8e35b0c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    },
+    "lib/initials.ts": {
+      "status": "read",
+      "evidence_level": "Traced",
+      "review": "primary: authored/reviewed Unicode helper",
+      "sha256": "d06831a3c455fd0dea9e9d71f49df1713ff3129b035988426d11d75671fc4f9c",
+      "note": "Final repair diff reviewed by primary where changed after full-read inventory."
+    }
+  },
+  "exclusions": [
+    "node_modules, .next and .git generated/runtime content",
+    "public/vendor/excaliflow third-party implementation; integration remains tested",
+    "real Google/JaaS writes and destructive/load operations against production"
+  ],
+  "verification": {
+    "automated_tests": {
+      "tests": 132,
+      "passed": 132,
+      "failed": 0
+    },
+    "http_requests": 977,
+    "browser_views": 96,
+    "production_load_tests": false,
+    "architecture_candidate_selection": "pending",
+    "browser_runtime_errors": 0,
+    "browser_overflow_failures": 0
+  },
+  "phase": "Repair and verification complete; reviewed batch ready for push",
+  "updated": "2026-11-23"
+}

@@ -46,6 +46,7 @@ import type { Post, PostType, Topic } from "@/lib/types";
 
 type SubmissionInfo = {
   post_id: number;
+  max_points?: number | null;
   grade: string | null;
   graded_at: string | null;
   submitted_at: string;
@@ -851,6 +852,7 @@ function GradesTab({
             <tbody>
               {gradable.map((post) => {
                 const sub = submissionMap.get(post.id);
+                const gradedMaximum = sub?.max_points === undefined ? post.max_points : sub.max_points;
 
                 return (
                   <tr
@@ -873,7 +875,7 @@ function GradesTab({
                     </td>
                     <td className="p-3 text-center font-medium">
                       {sub?.graded_at && sub.grade !== null
-                        ? `${sub.grade}${post.max_points !== null ? `/${post.max_points}` : ""}`
+                        ? `${sub.grade}${gradedMaximum !== null ? `/${gradedMaximum}` : ""}`
                         : "—"}
                     </td>
                     <td className="p-3 text-center">

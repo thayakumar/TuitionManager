@@ -1,3 +1,4 @@
+import { getInitials } from "@/lib/initials";
 import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
 import {
@@ -41,14 +42,6 @@ import { AddStudentDialog } from "@/components/add-student-dialog";
 
 export const dynamic = "force-dynamic";
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export default async function StudentsPage() {
   await requireAdminPage();

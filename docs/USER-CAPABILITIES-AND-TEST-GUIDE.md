@@ -544,7 +544,7 @@ Admin manages the business. Students use their own schedule/classwork/notes/inbo
 
 **Reflects in:** Current submission; history; classwork state; tutor notification.
 
-**Manual check:** Use rich-text headings, bold/underline, lists and links directly in the answer. There is no separate link field. Empty paragraphs, whitespace and formatting alone cannot turn in. Attach supported documents/images/audio/video/archives up to 4 MB; failed upload does not create a false submission. Unsafe HTML and executable links are removed.
+**Manual check:** Use rich-text headings, bold/underline, lists and links directly in the answer. There is no separate link field. Empty paragraphs, whitespace and formatting alone cannot turn in. Attach supported documents/images/audio/video/archives without a total application file-size cap; resumable transfers use bounded requests and require the current storage connector. Failed upload does not create a false submission. Unsafe HTML and executable links are removed.
 
 **Evidence:** Browser verified with isolated fake data.
 

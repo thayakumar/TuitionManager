@@ -1,3 +1,4 @@
+import { getInitials } from "@/lib/initials";
 import { FormBusy } from "@/components/action-busy";
 import { RichText } from "@/components/rich-text";
 import { TableExplorer } from "@/components/table-explorer";
@@ -74,14 +75,6 @@ function statusVariant(status: string) {
   }
 }
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export default async function StudentDetailPage({
   params,
@@ -116,7 +109,7 @@ export default async function StudentDetailPage({
     statsRow,
   ] = await Promise.all([
     queryAll<ClassRow>(
-      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND scheduled_at >= ? ORDER BY scheduled_at LIMIT 5",
+      "SELECT * FROM classes WHERE student_id = ? AND status = 'scheduled' AND julianday(scheduled_at) >= julianday(?) ORDER BY julianday(scheduled_at) LIMIT 5",
       [id, new Date().toISOString()],
     ),
     queryAll<ClassRow>(
@@ -262,15 +255,15 @@ export default async function StudentDetailPage({
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar + Name */}
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 items-center gap-4">
               <Avatar className="size-16 border-4 border-orange-100">
                 {student.profile_photo_url && <AvatarImage src={student.profile_photo_url} alt={student.name} />}
                 <AvatarFallback className="bg-[#b82f25] text-white text-xl font-bold">
                   {getInitials(student.name)}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">
+              <div className="min-w-0 flex-1">
+                <h2 className="break-words text-xl font-bold text-foreground">
                   {student.name}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
