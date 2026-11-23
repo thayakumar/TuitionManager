@@ -1,19 +1,8 @@
-import { parentUploadIdentity } from "@/lib/parent-upload";
 import { NextRequest, NextResponse } from "next/server";
-import { getStudentSession, verifyAdminSession } from "@/lib/auth";
-import { queryOne, execute } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { storageFile } from "@/lib/storage-response";
 import { getStorageSecret } from "@/lib/storage-config";
-import { driveFileId } from "@/lib/attachment-url";
-import {
-  actorKey,
-  signUpload,
-  verifyUpload,
-  ticketAllows,
-  pendingFiles,
-  receiptHeader,
-  type UploadTicket,
-} from "@/lib/upload-authority";
+import { attachmentTransfer, currentUploadActor, uploadOrigin } from "@/lib/attachment-transfer";
 import {
   MAX_UPLOAD_BYTES,
   MAX_UPLOAD_LABEL,
@@ -41,39 +30,11 @@ function matchesType(bytes: Buffer, mime: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  const expectedHost =
-    request.headers.get("x-forwarded-host")?.split(",")[0].trim() ||
-    request.headers.get("host") ||
-    new URL(request.url).host;
-  if (origin) {
-    try {
-      if (new URL(origin).host !== expectedHost)
-        return NextResponse.json(
-          { error: "Upload origin is not allowed" },
-          { status: 403 },
-        );
-    } catch {
-      return NextResponse.json(
-        { error: "Upload origin is invalid" },
-        { status: 403 },
-      );
-    }
-  }
-  const [adminSession, studentId] = await Promise.all([
-    verifyAdminSession(),
-    getStudentSession(),
-  ]);
-  const requestedRole = request.headers.get("x-upload-role");
-  const studentView = requestedRole === "student";
-  const parentView = requestedRole === "parent";
-  const parent = parentView ? await parentUploadIdentity(request.headers.get("x-parent-token")) : null;
-  const admin = adminSession && !studentView && !parentView;
-  if ((parentView && !parent) || (!parentView && ((!admin && !studentId) || (studentView && !studentId))))
-    return NextResponse.json(
-      { error: "Sign in before uploading a file" },
-      { status: 401 },
-    );
+  const originError = uploadOrigin(request);
+  if (originError) return NextResponse.json({ error: originError === "invalid" ? "Upload origin is invalid" : "Upload origin is not allowed" }, { status: 403 });
+  const actor = await currentUploadActor(request);
+  if (!actor) return NextResponse.json({ error: "Sign in before uploading a file" }, { status: 401 });
+  const admin = actor.admin;
   const uploadUrl = process.env.APPS_SCRIPT_UPLOAD_URL;
   if (!uploadUrl)
     return NextResponse.json(
@@ -81,41 +42,12 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
 
-  const actor = { admin, studentId: parent?.studentId ?? (admin ? null : studentId), parentTokenHash: parent?.parentTokenHash };
   const secret = await getStorageSecret();
-  const registered = async (
-    result: ReturnType<typeof storageFile>,
-    fallback: string,
-  ) => {
-    const fileId = result.fileId || driveFileId(result.fileUrl);
-    if (fileId)
-      await execute(
-        "INSERT OR IGNORE INTO uploaded_files(file_id,owner_role,owner_student_id,file_name,mime_type,parent_token_hash) VALUES(?,?,?,?,?,?)",
-        [
-          fileId,
-          admin ? "admin" : "student",
-          actor.studentId,
-          result.fileName || fallback,
-          uploadMime({name:result.fileName || fallback,type:result.fileType || ""}) || "",
-          parent?.parentTokenHash ?? null,
-        ],
-      );
-    const response = NextResponse.json({
-      ...result,
-      fileName: result.fileName || fallback,
-      ...(fileId ? { inlineUrl: "/api/files/" + fileId + "?inline=1" + (parentView ? "&parent_token=" + encodeURIComponent(request.headers.get("x-parent-token") || "") : "") } : {}),
-    });
-    if (fileId && secret) {
-      const tickets = pendingFiles(request.headers, secret).filter(
-        (t) => t.expires > Date.now() && t.fileId !== fileId,
-      );
-      tickets.push({
-        fileId,
-        actor: actorKey(actor),
-        expires: Date.now() + 86400000,
-      });
-      response.headers.append("Set-Cookie", receiptHeader(tickets, secret));
-    }
+  const transfer = attachmentTransfer(request, actor, secret);
+  const registered = async (result: ReturnType<typeof storageFile>, fallback: string, expectedFileId?: string) => {
+    const completed = await transfer.complete(result, fallback, expectedFileId);
+    const response = NextResponse.json(completed.body);
+    if (completed.receipt) response.headers.append("Set-Cookie", completed.receipt);
     return response;
   };
   try {
@@ -199,34 +131,11 @@ export async function POST(request: NextRequest) {
             },
             { status: 502 },
           );
-        const target = new URL(result.uploadUrl);
-        if (
-          target.protocol !== "https:" ||
-          !["www.googleapis.com", "content.googleapis.com"].includes(
-            target.hostname,
-          ) ||
-          !target.pathname.startsWith("/upload/drive/")
-        )
-          throw new Error("Drive returned an invalid upload session");
-        const ticket: UploadTicket = {
-          fileId: result.fileId,
-          actor: actorKey(actor),
-          expires: Date.now() + 86400000,
-          uploadUrl: target.href,
-          size: input.size,
-          mimeType: mime,
-        };
-        return NextResponse.json({
-          uploadUrl: target.href,
-          ticket: signUpload(ticket, secret),
-        });
+        return NextResponse.json(transfer.begin({ fileId: result.fileId, uploadUrl: result.uploadUrl, size: input.size, mimeType: mime }));
       }
       if (input.action === "finish") {
-        const ticket = verifyUpload<UploadTicket>(
-          String(input.ticket || ""),
-          secret,
-        );
-        if (!ticket || !ticketAllows(ticket, actor, ticket.fileId))
+        const ticket = transfer.ticket(String(input.ticket || ""));
+        if (!ticket)
           return NextResponse.json(
             { error: "This upload session is no longer available." },
             { status: 403 },
@@ -243,9 +152,7 @@ export async function POST(request: NextRequest) {
         });
         if (!response.ok) throw new Error("Drive could not finish this upload");
         const result = storageFile(await response.json());
-        if ((result.fileId || driveFileId(result.fileUrl)) !== ticket.fileId)
-          throw new Error("Drive returned a different file from the upload session");
-        return registered(result, String(input.fileName || "Attachment"));
+        return await registered(result, String(input.fileName || "Attachment"), ticket.fileId);
       }
       return NextResponse.json(
         { error: "Unknown upload action" },
@@ -337,7 +244,7 @@ export async function POST(request: NextRequest) {
         { status: 502 },
       );
     }
-    return registered(result, file.name);
+    return await registered(result, file.name);
   } catch (error) {
     if (error instanceof TypeError)
       return NextResponse.json(

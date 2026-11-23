@@ -16,6 +16,7 @@ function fixture({
   maxPoints = 100,
   fileOnly = false,
   viewerAdmin = false,
+  latestGraded = false,
 } = {}) {
   const queries = [];
   const current = {
@@ -25,10 +26,11 @@ function fixture({
     student_id: 1,
     content: fileOnly ? null : "LATEST_WORK",
     file_url: fileOnly ? "https://example.com/attached-work.pdf" : null,
-    grade: null,
+    grade: latestGraded ? "8" : null,
+    max_points: latestGraded ? 10 : undefined,
     feedback: null,
     submitted_at: "2026-11-13T10:00:00Z",
-    graded_at: null,
+    graded_at: latestGraded ? "2026-11-13T11:00:00Z" : null,
   };
   const attempts = [
     current,
@@ -103,6 +105,12 @@ function fixture({
     const original = mod.require.bind(mod);
     mod.require = (name) => {
       if (name === "@/lib/db") return db;
+      if (name === "@/lib/submitted-work") return { loadPostWork: async (studentId, postId) => {
+        queries.push({ operation: "loadPostWork", args: [studentId, postId] });
+        return studentId === postOwner && postId === post.id
+          ? { post, attachments: [], submission: current, attempts, acceptsWork: true }
+          : null;
+      } };
       if (name === "next/server") return {NextResponse: Response};
       if (name === "@/lib/classroom-access") return {classroomAccess: async()=>({admin:viewerAdmin,studentId:viewerAdmin?null:1}),ClassroomAccessError:class extends Error{}};
       if (name === "@/components/attachment-preview") return load("components/attachment-preview.tsx");
@@ -180,19 +188,12 @@ const props = { params: Promise.resolve({ studentId: "1", postId: "5" }) };
 test("student route denies a foreign post before reading its files or submission history", async () => {
   const f = fixture({ postOwner: 2 });
   await assert.rejects(f.load(studentRoute).default(props), /NOT_FOUND/);
-  assert(
-    f.queries.some(
-      (q) =>
-        q.sql.includes("FROM posts") &&
-        q.sql.includes("AND student_id = ?") &&
-        q.args[1] === 1,
-    ),
-  );
+  assert.deepEqual(f.queries.find(q => q.operation === "loadPostWork").args, [1,5]);
   assert(
     !f.queries.some(
       (q) =>
-        q.sql.includes("FROM post_attachments") ||
-        q.sql.includes("submission_versions"),
+        q.sql?.includes("FROM post_attachments") ||
+        q.sql?.includes("submission_versions"),
     ),
   );
 });
@@ -225,7 +226,7 @@ test("student sees latest pending work plus read-only original graded and supers
     assert(html.includes(text), text);
   assert(!html.includes("data-gradable-version"));
   assert.equal(
-    f.queries.filter((q) => q.sql.includes("submission_versions")).length,
+    f.queries.filter((q) => q.operation === "loadPostWork").length,
     1,
   );
 });
@@ -296,4 +297,16 @@ test("image attachments are recognized from MIME or a recovered filename",()=>{
   assert.equal(imageAttachment("Tutor_20261118_image.PNG","File"),true);
   assert.equal(imageAttachment("picture","image/png"),true);
   assert.equal(imageAttachment("worksheet.pdf","application/pdf"),false);
+});
+
+test("current grade display uses its recorded maximum while grade controls keep the current rubric", async () => {
+  const student = fixture({maxPoints:200,latestGraded:true});
+  const html = renderToStaticMarkup(await student.load(studentRoute).default(props));
+  assert(html.includes("8/10"));
+  assert(!html.includes("8/200"));
+  const admin = fixture({maxPoints:200,latestGraded:true});
+  const tutorHtml = renderToStaticMarkup(await admin.load(adminRoute).default(props));
+  assert(tutorHtml.includes("/10"));
+  assert(!tutorHtml.includes("/200"));
+  assert(tutorHtml.includes('data-gradable-version="3"'));
 });

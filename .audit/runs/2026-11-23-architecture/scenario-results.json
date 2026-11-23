@@ -1,0 +1,865 @@
+{
+  "command": "npm test",
+  "passed": 143,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "MYT scheduling round-trips, global overlap rejects, and failed composite change rolls back",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 668.865522
+    },
+    {
+      "name": "invoices omit absence/cancellation, preserve trial price, use billing month and subject-free descriptions",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 365.554596
+    },
+    {
+      "name": "concurrent invoice generations cannot claim one lesson twice",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 229.217313
+    },
+    {
+      "name": "reschedule owns pending requests, preserves trial, prevents duplicate resolution and notifies correct student",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 230.036419
+    },
+    {
+      "name": "a conflicting reschedule does not cancel the original or resolve its request",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 157.714299
+    },
+    {
+      "name": "assignment lineage keeps work and grades; only newest attempt can be graded",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 138.516001
+    },
+    {
+      "name": "post edits notify its student once, no-op save is silent, inbox count is uncapped and scoped",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 187.581939
+    },
+    {
+      "name": "recurrences materialize through year end with usable rooms, no holiday skip and safe history-preserving stop",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 140.101727
+    },
+    {
+      "name": "classwork moves preserve work/history, enforce classroom boundaries and persist order",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 179.374744
+    },
+    {
+      "name": "saving a lesson report records unmarked attendance as Present without overriding absence/cancellation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 159.826107
+    },
+    {
+      "name": "parent reschedule credentials scope requests, revoke immediately and allow tutor's own time",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 181.330031
+    },
+    {
+      "name": "draft invoice generation stays private until a visible status is applied",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 231.961289
+    },
+    {
+      "name": "post files save atomically with all post kinds and attachment-only edits notify without losing content",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 242.009867
+    },
+    {
+      "name": "rich assignment work rejects visually empty HTML and preserves safe formatting across versions",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 170.461543
+    },
+    {
+      "name": "clearing rich meeting notes stores an empty note rather than an invisible HTML row",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 223.226663
+    },
+    {
+      "name": "image-only submitted work persists a safe inline reference and remains in attempt history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 104.079543
+    },
+    {
+      "name": "class comments keep author ownership, notify the other role and preserve classroom isolation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 94.516328
+    },
+    {
+      "name": "attachment removal and replacement are atomic and reject another post's files",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 99.228647
+    },
+    {
+      "name": "legacy quiz assignment file-only submissions preserve current grading and lineage",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 129.482364
+    },
+    {
+      "name": "expired student session returns a deliberate retry result and the same attachment can be submitted after sign-in",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 111.292035
+    },
+    {
+      "name": "interrupted outbox keeps exact retry identity, attachment and reply without falsely claiming sent",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 2.752128
+    },
+    {
+      "name": "poll-before-ack reconciliation removes only confirmed outgoing messages in that family",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 0.260863
+    },
+    {
+      "name": "local persistence strips parent bearer credentials from inline URLs",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 0.465672
+    },
+    {
+      "name": "student route denies a foreign post before reading its files or submission history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 392.555118
+    },
+    {
+      "name": "student authentication occurs before database reads",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 147.610364
+    },
+    {
+      "name": "admin authentication occurs before database reads",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 174.927676
+    },
+    {
+      "name": "student sees latest pending work plus read-only original graded and superseded history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 224.981719
+    },
+    {
+      "name": "admin grade control targets only latest version and old work remains visible as history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 76.178256
+    },
+    {
+      "name": "historical score keeps the original rubric maximum when current points change",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 106.337077
+    },
+    {
+      "name": "student file-only submissions have a visible full-width submitted-work section separate from submit form",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 138.308137
+    },
+    {
+      "name": "assignment status palette is consistent and avoids red for normal work states",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 6.200908
+    },
+    {
+      "name": "comment ownership is inverted for tutor and student chat viewers",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 52.298046
+    },
+    {
+      "name": "image attachments are recognized from MIME or a recovered filename",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 26.708699
+    },
+    {
+      "name": "current grade display uses its recorded maximum while grade controls keep the current rubric",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 160.513454
+    },
+    {
+      "name": "actionable dashboard counts all tasks, limits glance lists, uses current work and hides finances",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 722.544865
+    },
+    {
+      "name": "database query helpers return plain named-column records safe for server-to-client serialization",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 234.219964
+    },
+    {
+      "name": "local reads coexist with writes and standalone writes share the transaction queue",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 143.24219
+    },
+    {
+      "name": "accounts initialize one awaiting diagnostic; private template is immutable and never required for student creation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 533.28706
+    },
+    {
+      "name": "one attempt saves and submits, tutor reviews, locks and exposes only frozen results to its owner",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 256.124456
+    },
+    {
+      "name": "revision and request replay protect drafts, locks and concurrent tabs without duplicate notices",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 220.302386
+    },
+    {
+      "name": "students cannot cross accounts, forge grades, act as tutor, or keep access after deactivation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 330.139437
+    },
+    {
+      "name": "scores use 32 skills only, strict numeric parsing, all strands and skipped rows, with bounded optional timing",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 166.90312
+    },
+    {
+      "name": "retrying an acknowledged old save cannot label a conflicting newer tab draft as saved",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 194.850496
+    },
+    {
+      "name": "automatic family rooms migrate existing students and are created atomically for new students",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 636.868723
+    },
+    {
+      "name": "three roles share only their family; own-message identity and unread/read receipts follow the actual viewer",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 283.006497
+    },
+    {
+      "name": "chat validates content, retries once, paginates, protects replies, and preserves edit/delete history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 285.859107
+    },
+    {
+      "name": "attachments and inline images require uploader ownership; parent credentials are never stored in messages",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 243.356896
+    },
+    {
+      "name": "navbar unread summaries aggregate scoped counts without returning room names or message bodies",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 137.692599
+    },
+    {
+      "name": "send acknowledges the committed message in three SQL statements and exposes correlation IDs only to its author",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 133.714397
+    },
+    {
+      "name": "lost send acknowledgements replay canonical stored content before revalidating obsolete attachments",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 142.753908
+    },
+    {
+      "name": "attachment and inline image ownership lookups are batched into one database statement",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 122.737799
+    },
+    {
+      "name": "incremental polls include only role-level read positions without exposing identity keys or parent credentials",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 127.443681
+    },
+    {
+      "name": "completed bytes survive a transient finish failure without creating another upload session",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 351.004098
+    },
+    {
+      "name": "an inconsistent complete acknowledgement is rejected rather than finalizing incomplete bytes",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 39.299177
+    },
+    {
+      "name": "finish cannot register a different Drive file from the signed upload session",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 153.089503
+    },
+    {
+      "name": "replaying a signed upload object as the pending-files cookie cannot crash file reads or future uploads",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 7.047398
+    },
+    {
+      "name": "finish retries are bounded and expired credentials are not retried",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 662.160395
+    },
+    {
+      "name": "private range requests reject invalid ranges before transferring payloads and honor pre-aborted clients",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 95.730674
+    },
+    {
+      "name": "malformed upload JSON is a client error and never calls storage",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 85.013409
+    },
+    {
+      "name": "Drive recovery rejects malformed request bodies without contacting storage or writing metadata",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 13.542848
+    },
+    {
+      "name": "October invoice paid in November remains October revenue with paid/unpaid separated",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 3.29056
+    },
+    {
+      "name": "canceled invoices never increase revenue or outstanding, but remain countable history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 0.735288
+    },
+    {
+      "name": "time series includes empty intervening months and preserves year boundaries",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 6.91217
+    },
+    {
+      "name": "MYT midnight billing bounds use the business month, not previous UTC date",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 0.303738
+    },
+    {
+      "name": "chat rejects primitive JSON and invalid origins before invoking a mutation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 94.707817
+    },
+    {
+      "name": "diagnostic rejects primitive JSON and invalid origins before invoking a mutation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 17.114477
+    },
+    {
+      "name": "template rejects primitive JSON and invalid origins before invoking a mutation",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 10.522641
+    },
+    {
+      "name": "monthly billing window uses Malaysia last day including leap/year boundaries and delayed delivery",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 196.431008
+    },
+    {
+      "name": "automatic drafts include only attended unclaimed month lessons, preserve trial, skip RM0 and remain private drafts",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 113.669774
+    },
+    {
+      "name": "monthly retry/concurrent calls and manual claims never double bill",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 59.784536
+    },
+    {
+      "name": "failed monthly generation rolls back invoices and marker so a retry succeeds",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 63.209233
+    },
+    {
+      "name": "cron endpoint fails closed without secret and rejects wrong or query-string credentials",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 29.577193
+    },
+    {
+      "name": "manual range interface partitions Malaysian months, rounds each line and permits zero drafts",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 60.340374
+    },
+    {
+      "name": "manual and automatic interfaces race without sharing transaction choreography",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 82.241135
+    },
+    {
+      "name": "manual range rolls back earlier month documents and claims when a later month fails",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 252.697451
+    },
+    {
+      "name": "generation interface rejects an invalid student instead of widening a manual range to everyone",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 81.473009
+    },
+    {
+      "name": "legacy and offset timestamps retain Malaysian billing month independently of server timezone",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 63.820409
+    },
+    {
+      "name": "old acknowledgement cannot mark newer notes saved; leave waits for latest write",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 3.443341
+    },
+    {
+      "name": "failed save preserves dirty draft and retry writes latest text",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 0.787547
+    },
+    {
+      "name": "parent attendance and schedule enforce elapsed/upcoming roles with isolated real SQL",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 602.752058
+    },
+    {
+      "name": "private PDFs expose tiny HEAD metadata, byte ranges and bounded cancellable streaming without a duplicate full probe",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 520.331356
+    },
+    {
+      "name": "family PDF and image reads require matching chat references, parent upload hash or exact profile; revoked and foreign tokens fail closed",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 101.797153
+    },
+    {
+      "name": "rich text strips executable HTML and unsafe links while retaining supported formatting",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 7.031838
+    },
+    {
+      "name": "legacy plain text stays literal, gets safe clickable URLs, and formatted emptiness is detected",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 2.3817
+    },
+    {
+      "name": "pasted bare URLs inside formatted HTML become clickable without nested links or changed code",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 1.233809
+    },
+    {
+      "name": "inline images retain safe file references, reject embedded data and make image-only work nonempty",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 1.806603
+    },
+    {
+      "name": "fresh concurrent initialization applies one migration and creates actual constraints",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 175.098353
+    },
+    {
+      "name": "a cold process with a prepared schema uses one version read and zero DDL or write transactions",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 73.0991
+    },
+    {
+      "name": "legacy schema preserves all duplicate work and grades as version history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 268.439756
+    },
+    {
+      "name": "expired, forged, deactivated and legacy student sessions are denied; logout targets only caller token",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 112.894921
+    },
+    {
+      "name": "transaction rollback leaves no partial domain rows",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 93.957916
+    },
+    {
+      "name": "upload denies anonymous/malformed requests and derives student identity before the connector",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 258.521399
+    },
+    {
+      "name": "CSV export neutralizes formula cells while preserving ordinary row data",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 68.048935
+    },
+    {
+      "name": "JaaS token grants only its authorized room",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 188.329784
+    },
+    {
+      "name": "independent concurrent writers are serialized and a failed write does not poison the queue",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 70.688113
+    },
+    {
+      "name": "legacy migration attributes MYT midnight invoice/recurrence bounds to the local calendar month/day",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 169.267597
+    },
+    {
+      "name": "Turso-style PRAGMA write restrictions allow fresh migration, login data reads, and cold reuse",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 69.547058
+    },
+    {
+      "name": "version-2 upgrade adds stable classwork order without replaying history backfills",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 66.915912
+    },
+    {
+      "name": "storage response normalization accepts deployed connector variants and rejects unsafe or failed uploads",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 4.323948
+    },
+    {
+      "name": "navigation redirects preserve the public origin and legacy home resolves before rendering",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 5.71186
+    },
+    {
+      "name": "replayed identical profile save emits no extra student notification",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 467.789707
+    },
+    {
+      "name": "identical class detail saves do not produce new notifications",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 281.796513
+    },
+    {
+      "name": "replayed cancellation and identical report are silent but a real edit notifies",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 192.721427
+    },
+    {
+      "name": "maximum-absent legacy work still rejects nonnumeric, negative or infinite grades",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 145.013585
+    },
+    {
+      "name": "100 overlapping creates and 40 invoice/cron races preserve single-tutor and billing invariants",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 299.458574
+    },
+    {
+      "name": "100 duplicate submissions keep one attempt and stale grades never overwrite newer work",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 215.656164
+    },
+    {
+      "name": "independent Node processes cannot double-book or double-claim a lesson",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 2234.415367
+    },
+    {
+      "name": "deactivation after authentication blocks queued student note and reschedule writes",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 113.053219
+    },
+    {
+      "name": "100 simultaneous diagnostic saves permit one revision winner and no false-grade mutations",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 715.737613
+    },
+    {
+      "name": "simultaneous diagnostic lock and save finalize one consistent snapshot with stale work rejected",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 309.570735
+    },
+    {
+      "name": "200 duplicate chat sends and 100 separate sends remain atomic, scoped and replay-safe",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 599.022692
+    },
+    {
+      "name": "revoked parent and newly deactivated student are rechecked inside chat and diagnostic writes",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 411.738738
+    },
+    {
+      "name": "100 concurrent whiteboard writers produce one revision and cannot cross student rooms",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 439.953913
+    },
+    {
+      "name": "oversized, malformed and unauthorized state changes do not leave partial records",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 289.22279
+    },
+    {
+      "name": "student schedule reflects latest pending and declined requests instead of offering impossible duplicate requests",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 661.069931
+    },
+    {
+      "name": "calendar range includes elapsed legacy timestamps correctly and extreme month URLs cannot throw",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 99.409726
+    },
+    {
+      "name": "avatar initials preserve complete Unicode code points through server HTML and UTF-8 transport",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 5.857479
+    },
+    {
+      "name": "student profile uses session identity, whitelists fields and persists own registered photo",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 313.268655
+    },
+    {
+      "name": "profile edits reject admin-only, signed-out and deactivated student identities",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 303.996564
+    },
+    {
+      "name": "v5 upgrade adds photo storage without resetting student history",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 126.122604
+    },
+    {
+      "name": "post-work scope rejects foreign, invalid and inactive owners before reading attachments or work",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 179.82528
+    },
+    {
+      "name": "post-work returns one scoped current projection with ordered lineage and saved grade maxima",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 59.593611
+    },
+    {
+      "name": "material and announcement reads never expose stale submitted work, while legacy quizzes accept work",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 49.75458
+    },
+    {
+      "name": "legacy projection without a version remains readable, and a recorded null maximum stays null",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 48.06947
+    },
+    {
+      "name": "resumable upload uses bounded same-origin chunks for a file above4MB and reports progress",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 142.138475
+    },
+    {
+      "name": "legacy upload fallback is explicit and large files do not hit unsupported multipart path",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 32.126204
+    },
+    {
+      "name": "upload tickets bind created file, actor and expiry; private sharing warning retains createdmetadata",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 21.988544
+    },
+    {
+      "name": "begin/finish validates connector session target and binds registry ownership to the caller",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 123.967315
+    },
+    {
+      "name": "private attachments require registry ownership or tutor-authorized sharing, not student-pasted IDs",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 89.746445
+    },
+    {
+      "name": "recent Drive recovery is administrator-only and does not register foreign-origin selections",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 11.412292
+    },
+    {
+      "name": "storage setup secret creation requires admin and atomically reuses the existing value",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 4.627225
+    },
+    {
+      "name": "chunk relay authenticates signed sessions, bounds request size and forwards Google acknowledgements",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 71.8666
+    },
+    {
+      "name": "meeting editor can explicitly upload as student outside the portal URL",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 20.850828
+    },
+    {
+      "name": "parent upload binds a revocable bearer identity even with both session cookies",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 37.356046
+    },
+    {
+      "name": "parent client sends its bearer only to same-origin transfer endpoints",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 14.573758
+    },
+    {
+      "name": "parent chunk tickets reject another parent or revoked token before forwarding bytes",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 42.164384
+    },
+    {
+      "name": "transfer authority preserves parent lifecycle and registers both transports with real SQLite",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 103.697423
+    },
+    {
+      "name": "whiteboards require current sessions, class ownership and active students; parents cannot access",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 230.027246
+    },
+    {
+      "name": "class board changes round-trip between tutor and student; stale and concurrent saves preserve server work",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 93.300572
+    },
+    {
+      "name": "personal board is admin-only and class-board persistence cascades with its lesson",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 65.237041
+    },
+    {
+      "name": "whiteboard API rejects foreign origins, malformed JSON, invalid revisions and oversized workspaces",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 70.583401
+    },
+    {
+      "name": "version-three upgrade adds current tables and preserves existing history and classwork ordering",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 65.915123
+    },
+    {
+      "name": "whiteboard same-origin validation uses the browser-facing proxy host and protocol",
+      "status": "Pass",
+      "evidence_level": "Executed",
+      "duration_ms": 50.986001
+    }
+  ]
+}

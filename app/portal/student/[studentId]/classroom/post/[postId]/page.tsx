@@ -15,7 +15,7 @@ import {
   HelpCircle,
   Calendar,
 } from "lucide-react";
-import { queryAll, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { requireStudent } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,9 +26,9 @@ import { SubmissionForm } from "@/components/classroom/submission-form";
 import {
   AttemptWork,
   SubmissionHistory,
-  type SubmissionAttempt,
 } from "@/components/classroom/submission-history";
-import type { Post, PostAttachment, Submission, Student } from "@/lib/types";
+import { loadPostWork } from "@/lib/submitted-work";
+import type { CurrentSubmission, Student } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 const POST_TYPE_CONFIG = {
@@ -38,7 +38,6 @@ const POST_TYPE_CONFIG = {
   announcement: { icon: Megaphone, label: "Announcement" },
 };
 
-type CurrentSubmission = Submission & { version: number };
 export default async function StudentPostDetailPage({
   params,
 }: {
@@ -48,36 +47,15 @@ export default async function StudentPostDetailPage({
   const studentId = Number(resolvedParams.studentId);
   const postId = Number(resolvedParams.postId);
   await requireStudent(studentId);
-  if (!Number.isSafeInteger(postId) || postId <= 0) notFound();
-  const [student, post] = await Promise.all([
+  const [student, work] = await Promise.all([
     queryOne<Pick<Student, "id" | "name">>(
       "SELECT id, name FROM students WHERE id = ? AND active = 1",
       [studentId],
     ),
-    queryOne<Post>(
-      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at, sort_order FROM posts WHERE id = ? AND student_id = ?",
-      [postId, studentId],
-    ),
+    loadPostWork(studentId, postId),
   ]);
-  if (!student || !post) notFound();
-  const [attachments, submission] = await Promise.all([
-    queryAll<PostAttachment>(
-      "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
-      [postId],
-    ),
-    post.type === "assignment" || post.type === "quiz"
-      ? queryOne<CurrentSubmission>(
-          "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at, version FROM submissions WHERE post_id = ? AND student_id = ?",
-          [postId, studentId],
-        )
-      : Promise.resolve(undefined),
-  ]);
-  const attempts = submission
-    ? await queryAll<SubmissionAttempt>(
-        "SELECT version, content, file_url, grade, feedback, submitted_at, graded_at, max_points FROM submission_versions WHERE submission_id = ? ORDER BY version DESC",
-        [submission.id],
-      )
-    : [];
+  if (!student || !work) notFound();
+  const { post, attachments, submission, attempts, acceptsWork } = work;
   const config = POST_TYPE_CONFIG[post.type] ?? POST_TYPE_CONFIG.material;
   const Icon = config.icon;
   return (
@@ -85,7 +63,7 @@ export default async function StudentPostDetailPage({
       <Link href={`/portal/student/${studentId}/classroom`}>
         <Button variant="ghost" size="sm" className="gap-1.5">
           <ArrowLeft size={14} />
-          My Classroomroom
+          My Classroom
         </Button>
       </Link>
       <div className="space-y-6 min-w-0">
@@ -110,7 +88,7 @@ export default async function StudentPostDetailPage({
                 </p>
               </div>
             </div>
-            {(post.type === "assignment" || post.type === "quiz") && (
+            {acceptsWork && (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {post.max_points !== null && (
                   <Badge variant="outline">{post.max_points} points</Badge>
@@ -152,7 +130,7 @@ export default async function StudentPostDetailPage({
             )}
           </CardContent>
         </Card>
-        {(post.type === "assignment" || post.type === "quiz") && (
+        {acceptsWork && (
           <>
             <Card data-testid="submitted-work" className="min-w-0">
               <CardContent className="space-y-5 p-5 sm:p-7">

@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-23",
+  "baseline": "341aa9a",
+  "authorization": "User selected implementation of all three reviewed architecture candidates",
+  "implemented": [
+    "invoice generation",
+    "attachment transfer authority",
+    "submitted-work retrieval"
+  ],
+  "database_schema_change": false,
+  "tests_passed": 143,
+  "http_requests": 977,
+  "browser_views": 96,
+  "live_provider_load_tests": false
+}

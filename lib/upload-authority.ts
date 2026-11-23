@@ -40,6 +40,15 @@ export type UploadTicket = {
   size?: number;
   mimeType?: string;
 };
+/** Session tickets and pending receipt lists share a signer, but have distinct shapes. */
+export function uploadTicket(token: string, secret: string): UploadTicket | null {
+  const value = verifyUpload<UploadTicket>(token, secret);
+  return value && typeof value === "object" && !Array.isArray(value) &&
+    typeof value.fileId === "string" && /^[A-Za-z0-9_-]{10,}$/.test(value.fileId) &&
+    typeof value.actor === "string" && /^(admin|student:[1-9]\d*|parent:.+)$/.test(value.actor) &&
+    typeof value.expires === "number" && Number.isFinite(value.expires)
+    ? value : null;
+}
 export function ticketAllows(
   ticket: UploadTicket | null,
   actor: UploadActor,

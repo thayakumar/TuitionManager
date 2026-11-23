@@ -1,0 +1,14 @@
+[
+  {
+    "role": "admin",
+    "recordedGradeVisible": "75/100",
+    "currentRubric": 200,
+    "roleControlsPreserved": true
+  },
+  {
+    "role": "student",
+    "recordedGradeVisible": "75/100",
+    "currentRubric": 200,
+    "roleControlsPreserved": true
+  }
+]

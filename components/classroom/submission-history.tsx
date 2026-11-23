@@ -3,17 +3,7 @@ import { attachmentHref } from "@/lib/attachment-url";
 import { RichText } from "@/components/rich-text";
 import { fmtDateTime } from "@/lib/format";
 import { safeUrl } from "@/lib/domain/validation";
-
-export type SubmissionAttempt = {
-  version: number;
-  max_points?: number | null;
-  content: string | null;
-  file_url: string | null;
-  grade: string | null;
-  feedback: string | null;
-  submitted_at: string;
-  graded_at: string | null;
-};
+import type { SubmissionAttempt } from "@/lib/types";
 
 export function safeSubmissionHref(value: string | null): string | null {
   try {

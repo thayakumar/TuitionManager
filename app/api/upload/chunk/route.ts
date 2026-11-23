@@ -1,8 +1,6 @@
-import { parentUploadIdentity } from "@/lib/parent-upload";
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminSession, getStudentSession } from "@/lib/auth";
 import { getStorageSecret } from "@/lib/storage-config";
-import { verifyUpload, type UploadTicket } from "@/lib/upload-authority";
+import { currentUploadSession } from "@/lib/attachment-transfer";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 const LIMIT = 2 * 1024 * 1024;
@@ -11,68 +9,12 @@ const failure = (error: string, status: number, retryable = false) =>
   NextResponse.json({ error, retryable }, { status, headers });
 export async function PUT(request: NextRequest) {
   const secret = await getStorageSecret();
-  const ticket = secret
-    ? verifyUpload<UploadTicket>(
-        request.headers.get("x-upload-ticket") || "",
-        secret,
-      )
-    : null;
-  if (
-    !ticket ||
-    !ticket.uploadUrl ||
-    !ticket.size ||
-    ticket.expires <= Date.now()
-  )
-    return failure(
-      "This upload session has expired. Choose the file again to retry.",
-      403,
-    );
-  const [admin, sid] = await Promise.all([
-    verifyAdminSession(),
-    getStudentSession(),
-  ]);
-  const parent = ticket.actor.startsWith("parent:") ? await parentUploadIdentity(request.headers.get("x-parent-token")) : null;
-  if (
-    ticket.actor.startsWith("parent:")
-      ? !parent || ticket.actor !== "parent:" + parent.parentTokenHash
-      : ticket.actor === "admin"
-        ? !admin
-        : !sid || ticket.actor !== "student:" + sid
-  )
-    return failure(
-      "Sign in to the same account before retrying this upload.",
-      401,
-    );
-  const origin = request.headers.get("origin"),
-    host =
-      request.headers.get("x-forwarded-host")?.split(",")[0].trim() ||
-      request.headers.get("host") ||
-      new URL(request.url).host;
-  try {
-    if (!origin || new URL(origin).host !== host)
-      return failure("Upload origin is not allowed.", 403);
-  } catch {
-    return failure("Upload origin is not allowed.", 403);
-  }
-  let target: URL;
-  try {
-    target = new URL(ticket.uploadUrl);
-    if (
-      target.protocol !== "https:" ||
-      target.username ||
-      target.password ||
-      !["www.googleapis.com", "content.googleapis.com"].includes(
-        target.hostname,
-      ) ||
-      !target.pathname.startsWith("/upload/drive/")
-    )
-      throw new Error();
-  } catch {
-    return failure(
-      "The upload session is invalid. Choose the file again.",
-      403,
-    );
-  }
+  const session = await currentUploadSession(request, request.headers.get("x-upload-ticket") || "", secret);
+  if (session.error === "expired") return failure("This upload session has expired. Choose the file again to retry.", 403);
+  if (session.error === "actor") return failure("Sign in to the same account before retrying this upload.", 401);
+  if (session.error === "origin") return failure("Upload origin is not allowed.", 403);
+  if (session.error === "target") return failure("The upload session is invalid. Choose the file again.", 403);
+  const { ticket, target } = session;
   const range = request.headers.get("content-range") || "",
     match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(range),
     probe = /^bytes \*\/(\d+)$/.exec(range);

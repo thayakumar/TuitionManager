@@ -582,6 +582,12 @@ test("chunk relay authenticates signed sessions, bounds request size and forward
         .status,
       403,
     );
+    for (const uploadUrl of [
+      "https://user:password@www.googleapis.com/upload/drive/v3/files",
+      "https://www.googleapis.com/drive/v3/files",
+      "https://www.googleapis.com.attacker.test/upload/drive/v3/files",
+    ]) assert.equal((await route.PUT(req(ticket({ uploadUrl })))).status, 403);
+    assert.equal((await route.PUT(req(ticket({ actor: null })))).status, 403, "signed malformed sessions are rejected before actor lookup");
     assert.equal(
       (
         await route.PUT(
@@ -688,4 +694,72 @@ test('parent chunk tickets reject another parent or revoked token before forward
   const request=(token)=>new Request('https://app.test/api/upload/chunk',{method:'PUT',headers:{Origin:'https://app.test','X-Upload-Ticket':ticket,'X-Parent-Token':token,'Content-Range':'bytes 0-2/3'},body:'abc'});
   const prev=global.fetch;let forwarded=0;global.fetch=async()=>{forwarded++;return Response.json({},{status:201})};
   try {assert.equal((await route.PUT(request('other'))).status,401);assert.equal((await route.PUT(request('valid-parent'))).status,200);assert.equal(forwarded,1);revoked=true;assert.equal((await route.PUT(request('valid-parent'))).status,401);assert.equal(forwarded,1)}finally{global.fetch=prev}
+});
+
+test('transfer authority preserves parent lifecycle and registers both transports with real SQLite', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tuition-transfer-authority-'));
+  const saved = { db: process.env.TURSO_DATABASE_URL, url: process.env.APPS_SCRIPT_UPLOAD_URL, fetch: global.fetch };
+  process.env.TURSO_DATABASE_URL = 'file:' + path.join(dir, 'db.sqlite');
+  process.env.APPS_SCRIPT_UPLOAD_URL = 'https://connector.test';
+  let studentSession = 1, calls = 0, nextFile = 'resumableparentfile';
+  const load = loader({
+    '@/lib/auth': { verifyAdminSession: async () => true, getStudentSession: async () => studentSession },
+    '@/lib/storage-config': { getStorageSecret: async () => 'secret' },
+    'next/server': { NextResponse: Response },
+  });
+  const db = load('lib/db.ts'), route = load('app/api/upload/route.ts'), chunk = load('app/api/upload/chunk/route.ts');
+  const authority = load('lib/upload-authority.ts');
+  const headers = { origin: 'https://app.test', 'x-upload-role': 'parent', 'x-parent-token': 'family-token' };
+  const request = body => new Request('https://app.test/api/upload', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const multipart = () => {
+    const body = new FormData(); body.set('file', new File(['%PDF-1.7'], 'work.pdf', { type: 'application/pdf' }));
+    return new Request('https://app.test/api/upload', { method: 'POST', headers, body });
+  };
+  const chunkRequest = ticket => new Request('https://app.test/api/upload/chunk', { method: 'PUT', headers: { ...headers, 'x-upload-ticket': ticket, 'content-range': 'bytes 0-7/8' }, body: '%PDF-1.7' });
+  global.fetch = async (_url, options) => {
+    calls++;
+    if (options.method === 'PUT') return Response.json({}, { status: 201 });
+    const input = JSON.parse(options.body);
+    if (input.action === 'begin') {
+      assert.equal(input.studentName, 'Student', 'resumable parent remains usable when student is inactive');
+      return Response.json({ success: true, version: 2, fileId: nextFile, uploadUrl: 'https://www.googleapis.com/upload/drive/v3/files?upload_id=controlled' });
+    }
+    return Response.json({ success: true, version: 2, fileId: input.fileId || nextFile, fileUrl: 'https://drive.google.com/file/d/' + (input.fileId || nextFile) + '/view', fileName: 'work.pdf' });
+  };
+  try {
+    await db.ensureMigrated();
+    await db.execute("INSERT INTO students(id,name,active)VALUES(1,'Alice',0)");
+    await db.execute("INSERT INTO share_tokens(token,student_id,active)VALUES('family-token',1,1)");
+    const started = await route.POST(request({ action: 'begin', fileName: 'work.pdf', size: 8 }));
+    assert.equal(started.status, 200); const ticket = (await started.json()).ticket;
+    assert.equal((await chunk.PUT(chunkRequest(ticket))).status, 200);
+    const finished = await route.POST(request({ action: 'finish', ticket }));
+    assert.equal(finished.status, 200);
+    assert.equal(authority.pendingFiles(new Headers({ cookie: finished.headers.get('set-cookie') }), 'secret')[0].actor, authority.verifyUpload(ticket, 'secret').actor);
+    let row = await db.queryOne('SELECT * FROM uploaded_files WHERE file_id=?', ['resumableparentfile']);
+    assert.equal(row.owner_student_id, 1); assert.equal(row.owner_role, 'student'); assert.equal(row.mime_type, 'application/pdf'); assert(row.parent_token_hash);
+    const before = calls;
+    assert.equal((await route.POST(multipart())).status, 403, 'legacy parent still requires active student');
+    assert.equal(calls, before);
+    await db.execute('UPDATE students SET active=1 WHERE id=1');
+    nextFile = 'multipartparentfile';
+    const legacy = await route.POST(multipart()); assert.equal(legacy.status, 200);
+    row = await db.queryOne('SELECT * FROM uploaded_files WHERE file_id=?', [nextFile]);
+    assert.equal(row.parent_token_hash, authority.verifyUpload(ticket, 'secret').actor.slice(7));
+    assert.equal(authority.pendingFiles(new Headers({ cookie: legacy.headers.get('set-cookie') }), 'secret')[0].fileId, nextFile);
+    await db.execute('UPDATE share_tokens SET active=0');
+    const beforeRevoked = calls;
+    assert.equal((await chunk.PUT(chunkRequest(ticket))).status, 401);
+    assert.equal((await route.POST(request({ action: 'finish', ticket }))).status, 401);
+    assert.equal(calls, beforeRevoked);
+    studentSession = null;
+    const studentRequest = request({ action: 'finish', ticket }); studentRequest.headers.set('x-upload-role', 'student');
+    assert.equal((await route.POST(studentRequest)).status, 401, 'explicit student does not fall back to admin');
+  } finally {
+    global.fetch = saved.fetch;
+    if (saved.db === undefined) delete process.env.TURSO_DATABASE_URL; else process.env.TURSO_DATABASE_URL = saved.db;
+    if (saved.url === undefined) delete process.env.APPS_SCRIPT_UPLOAD_URL; else process.env.APPS_SCRIPT_UPLOAD_URL = saved.url;
+    db.getClient().close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

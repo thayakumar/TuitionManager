@@ -253,4 +253,13 @@ export type SubmissionVersion = {
   feedback: string | null;
   submitted_at: string;
   graded_at: string | null;
+  max_points?: number | null;
 };
+
+/** One retained attempt, independent of its rendering or grading controls. */
+export type SubmissionAttempt = Pick<SubmissionVersion,
+  "version" | "content" | "file_url" | "grade" | "feedback" |
+  "submitted_at" | "graded_at" | "max_points"
+>;
+
+export type CurrentSubmission = Submission & { max_points?: number | null };

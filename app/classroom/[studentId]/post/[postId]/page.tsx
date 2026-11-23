@@ -8,8 +8,8 @@ import { RichText } from "@/components/rich-text";
 import { requireAdminPage } from "@/lib/auth";
 import {
   SubmissionHistory,
-  type SubmissionAttempt,
 } from "@/components/classroom/submission-history";
+import { loadPostWork } from "@/lib/submitted-work";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -39,7 +39,8 @@ import {
 import type {
   Post,
   PostAttachment,
-  Submission,
+  CurrentSubmission,
+  SubmissionAttempt,
   Student,
   Topic,
 } from "@/lib/types";
@@ -88,38 +89,15 @@ export default async function PostDetailPage({
   const studentId = Number(resolvedParams.studentId);
   const postId = Number(resolvedParams.postId);
 
-  const [student, post] = await Promise.all([
+  const [student, work] = await Promise.all([
     queryOne<Student>(
       "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
       [studentId],
     ),
-    queryOne<Post>(
-      "SELECT id, type, title, body, student_id, due_at, topic_id, max_points, created_at, updated_at, sort_order FROM posts WHERE id = ? AND student_id = ?",
-      [postId, studentId],
-    ),
+    loadPostWork(studentId, postId),
   ]);
-
-  if (!student || !post) notFound();
-
-  const [attachments, submission] = await Promise.all([
-    queryAll<PostAttachment>(
-      "SELECT id, post_id, file_name, file_url, file_type FROM post_attachments WHERE post_id = ? ORDER BY id",
-      [postId],
-    ),
-    post.type === "assignment" || post.type === "quiz"
-      ? queryOne<Submission & { version: number }>(
-          "SELECT id, post_id, student_id, content, file_url, grade, feedback, submitted_at, graded_at, version FROM submissions WHERE post_id = ? AND student_id = ? ORDER BY submitted_at DESC",
-          [postId, studentId],
-        )
-      : Promise.resolve(undefined),
-  ]);
-
-  const attempts = submission
-    ? await queryAll<SubmissionAttempt>(
-        "SELECT version, content, file_url, grade, feedback, submitted_at, graded_at, max_points FROM submission_versions WHERE submission_id = ? ORDER BY version DESC",
-        [submission.id],
-      )
-    : [];
+  if (!student || !work) notFound();
+  const { post, attachments, submission, attempts, acceptsWork } = work;
   const topics = await queryAll<Topic>(
     "SELECT id, student_id, name, sort_order, created_at FROM topics WHERE student_id = ? ORDER BY sort_order, name",
     [studentId],
@@ -129,7 +107,6 @@ export default async function PostDetailPage({
     POST_TYPE_CONFIG[post.type as PostType] || POST_TYPE_CONFIG.material;
   const Icon = config.icon;
 
-  const isAssignment = post.type === "assignment" || post.type === "quiz";
 
   return (
     <>
@@ -147,7 +124,7 @@ export default async function PostDetailPage({
         </Link>
       </div>
 
-      {isAssignment ? (
+      {acceptsWork ? (
         <AssignmentDetail
           post={post}
           student={student}
@@ -264,11 +241,12 @@ function AssignmentDetail({
   config: (typeof POST_TYPE_CONFIG)[PostType];
   Icon: typeof BookOpen;
   attachments: PostAttachment[];
-  submission: (Submission & { version: number }) | undefined;
+  submission: CurrentSubmission | undefined;
   attempts: SubmissionAttempt[];
   topics: Topic[];
   studentId: number;
 }) {
+  const recordedMaximum = submission?.max_points === undefined ? post.max_points : submission.max_points;
   return (
     <div className="space-y-4">
       {/* Header Card */}
@@ -368,11 +346,11 @@ function AssignmentDetail({
                 </h3>
                 {submission?.graded_at &&
                   submission.grade !== null &&
-                  post.max_points !== null && (
+                  recordedMaximum !== null && (
                     <span className="text-lg font-bold text-foreground">
                       {submission.grade}
                       <span className="text-sm font-normal text-muted-foreground">
-                        /{post.max_points}
+                        /{recordedMaximum}
                       </span>
                     </span>
                   )}

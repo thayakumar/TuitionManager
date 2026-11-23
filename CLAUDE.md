@@ -6,6 +6,12 @@ Read README.md for setup and docs/USER-CAPABILITIES-AND-TEST-GUIDE.md for curren
 
 Next.js15 App Router + React/TypeScript + Tailwind4 + libSQL. lib/db.ts owns versioned, transactional migrations and query helpers. lib/actions.ts is the server mutation boundary; intentional validation errors use lib/action-errors.ts and safe structured action results where appropriate. lib/auth.ts validates real expiring sessions; middleware presence checks are only an early redirect optimization. Every private page must authorize before querying data.
 
+- `lib/invoice-generation.ts` owns manual-range and automatic-month generation, including write transactions, eligibility, billing-month groups, rounded lines and claims. Call its operations rather than selecting lessons or assembling drafts in callers. `lib/monthly-invoices.ts` retains the scheduler window and compatibility export.
+- `lib/attachment-transfer.ts` owns current upload actors, origin/session targets, ticket lifecycle and terminal registration/receipts. Upload routes retain multipart/resumable byte transport; `lib/upload-authority.ts` owns signed ticket/receipt primitives. Preserve their existing parent-link versus student-account distinctions.
+- `lib/submitted-work.ts` owns scoped post work retrieval, with current projection and attempt lineage read together. Tutor/student pages authorize first and keep their distinct controls. Attempt types belong to `lib/types.ts`, not presentation files.
+
+See `GLOSSARY.md` for business terms and `docs/ARCHITECTURE-REFACTOR.md` for these interfaces and verification.
+
 - Admin: dashboard, students, schedule/classes, recurring-series management, invoices, financial-history, classroom, requests, notifications, settings.
 - Student: /portal/student/{id}, own schedule/classroom/notes/notifications/profile. Own-post checks apply independently of the layout.
 - Parent: /share/{token} and attendance/schedule/reports/invoices; every route validates active scoped bearer token, not just its layout.

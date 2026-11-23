@@ -1,0 +1,12 @@
+[
+  {
+    "role": "admin",
+    "usesRecordedMaximum": true,
+    "usesEditedMaximum": false
+  },
+  {
+    "role": "student",
+    "usesRecordedMaximum": true,
+    "usesEditedMaximum": false
+  }
+]

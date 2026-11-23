@@ -1,6 +1,6 @@
 "use server";
 import { ActionValidationError } from "./action-errors";
-import { unclaimedLessons, createDraftInvoice } from "./invoice-generation";
+import { generateRangeDrafts } from "./invoice-generation";
 import { sanitizeRichText, hasRichTextContent } from "./rich-text";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -21,7 +21,6 @@ import {
   businessDateTime,
   businessDate,
   nextDate,
-  billingMonth,
 } from "./domain/business-time";
 async function requireAdmin() {
   if (!(await verifyAdminSession()))
@@ -654,27 +653,8 @@ export async function generateInvoiceQuick(f: FormData): Promise<number> {
     end = businessDate(f.get("period_end"));
   if (start > end)
     throw new ActionValidationError("Period end must follow start");
-  const ids = await withTransaction(async (tx) => {
-    const lessons = await unclaimedLessons(tx, sid,
-      businessDateTime(`${start}T00:00`),
-      businessDateTime(`${nextDate(end, 1)}T00:00`),
-    );
-    if (!lessons.length)
-      throw new ActionValidationError(
-        "No present, un-invoiced lessons in this period",
-      );
-    const groups = new Map<string, typeof lessons>();
-    for (const c of lessons) {
-      const key = billingMonth(String(c.scheduled_at));
-      groups.set(key, [...(groups.get(key) ?? []), c]);
-    }
-    const ids: number[] = [];
-    for (const [month, classes] of groups) {
-      ids.push(await createDraftInvoice(tx, sid, month, classes,
-        text(f.get("notes"), "Notes", 10000) || null));
-    }
-    return ids;
-  });
+  const ids = await generateRangeDrafts(sid, start, end,
+    text(f.get("notes"), "Notes", 10000) || null);
   refresh(sid);
   return ids[0];
 }

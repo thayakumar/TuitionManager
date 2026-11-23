@@ -279,7 +279,7 @@ test("upload denies anonymous/malformed requests and derives student identity be
     await f.db.ensureMigrated();
     await f.db.execute("INSERT INTO students(name) VALUES ('Alice')");
     process.env.APPS_SCRIPT_UPLOAD_URL = "https://example.invalid/connector";
-    const route = load("app/api/upload/route.ts", {
+    const uploadStubs = {
       "@/lib/parent-upload": {parentUploadIdentity: async()=>null},
       "@/lib/auth": {
         verifyAdminSession: async () => admin,
@@ -292,7 +292,9 @@ test("upload denies anonymous/malformed requests and derives student identity be
       "@/lib/attachment-url": load("lib/attachment-url.ts"),
       "@/lib/upload-authority": load("lib/upload-authority.ts"),
       "next/server": { NextResponse: Response },
-    });
+    };
+    uploadStubs["@/lib/attachment-transfer"] = load("lib/attachment-transfer.ts", uploadStubs);
+    const route = load("app/api/upload/route.ts", uploadStubs);
     const request = (file) => {
       const form = new FormData();
       form.set("studentName", "Spoofed Bob");
