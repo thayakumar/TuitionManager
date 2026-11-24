@@ -924,7 +924,7 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 
 ### 12.1. As an Admin, I can create a student → their one-time diagnostic is prepared and waits for me to open it.
 
-**Manual check:** Find the student in Diagnostics or their profile. The student sees an awaiting-tutor page, with their account name and level already supplied. During the first regular class after the trial, use Open diagnostic. Regular meetings include a Diagnostic shortcut in a new tab; trial meetings do not add this shortcut.
+**Manual check:** Find the student in Diagnostics or their profile. The student sees an awaiting-tutor page, with their account name and level already supplied. During the first regular class after the trial, use Open diagnostic. Open the assessment from the dedicated Diagnostics page. Meetings do not include a Diagnostic shortcut.
 
 ### 12.2. As a Student, I can start my opened diagnostic → I answer 35 bilingual questions in one saved attempt.
 
