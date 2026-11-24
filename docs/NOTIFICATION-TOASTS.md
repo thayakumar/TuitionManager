@@ -10,3 +10,7 @@ New notifications appear at the top right while TuitionHub is open. The visible 
 6. From a meeting, document editor or whiteboard, the popup opens the related page in another tab to preserve the teaching workspace.
 
 These are in-app alerts, not browser push notifications while the website is closed. No new hosting, database migration or secrets are required. Badges and popups share one feed.
+
+## Contrast and sound
+
+Notification cards use a dark charcoal surface with white text and an orange icon. A quiet two-note chime accompanies a newly displayed batch, with a short cooldown to avoid overlapping sounds. Duplicates, initial unread history and messages in the chat being viewed stay silent. The chime is generated locally without an audio download. Browsers allow it only after a click/tap or keypress on the site; unsupported or blocked audio does not prevent visual notifications.

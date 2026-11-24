@@ -1,0 +1,10 @@
+{
+  baseline_silent: true,
+  before_interaction_silent: true,
+  after_interaction_two_note_chime: true,
+  batch_one_chime: true,
+  duplicate_silent: true,
+  dark_surface: true,
+  mobile_fits: true,
+  page_errors: []
+}
