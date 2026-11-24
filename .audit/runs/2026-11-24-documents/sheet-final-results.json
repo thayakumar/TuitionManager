@@ -1,0 +1,7 @@
+{
+  "spreadsheet_edit_save": true,
+  "host_dialog_bridge": true,
+  "readonly_saved_snapshot": true,
+  "readonly_permission_enforced_after_reload": true,
+  "page_errors": []
+}

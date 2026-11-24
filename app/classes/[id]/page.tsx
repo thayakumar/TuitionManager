@@ -1,3 +1,4 @@
+import {DocumentLibrary} from "@/components/document-library";
 import { RichText } from "@/components/rich-text";
 import { LessonActionForm } from "@/components/lesson-action-form";
 import Link from "next/link";
@@ -304,6 +305,7 @@ export default async function ClassDetailPage({
         <p className="mt-1 text-sm text-muted-foreground">Shared with this student and saved with this lesson.</p>
         <Button asChild variant="outline" className="mt-3"><Link href={`/meeting/${id}/whiteboard`} target="_blank" rel="noopener noreferrer">Open whiteboard ↗</Link></Button>
       </div>
+      <div className="mb-6 rounded-xl border bg-card p-5"><DocumentLibrary admin classId={id} compact/></div>
       {/* Teacher Notes */}
       {teacherNote?.content && (
         <Card className="mb-6 border shadow-none">

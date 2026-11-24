@@ -15,6 +15,7 @@ type StudentNoteRow = {
   subject: string | null;
   content: string | null;
   has_whiteboard: number;
+  has_documents: number;
   updated_at: string;
 };
 
@@ -30,11 +31,11 @@ export default async function StudentNotesPage({
 
   // Only this student's own student-scope notes — teacher notes are never selected.
   const notes = await queryAll<StudentNoteRow>(
-    `SELECT c.id AS class_id, c.scheduled_at, c.subject, n.content, CASE WHEN n.updated_at IS NULL OR julianday(w.updated_at)>julianday(n.updated_at) THEN w.updated_at ELSE n.updated_at END AS updated_at, CASE WHEN w.class_id IS NOT NULL THEN 1 ELSE 0 END AS has_whiteboard
+    `SELECT c.id AS class_id, c.scheduled_at, c.subject, n.content, EXISTS(SELECT 1 FROM office_documents d JOIN office_document_grants g ON g.document_id=d.id WHERE d.class_id=c.id AND d.archived=0 AND g.student_id=c.student_id) has_documents, CASE WHEN n.updated_at IS NULL OR julianday(w.updated_at)>julianday(n.updated_at) THEN w.updated_at ELSE n.updated_at END AS updated_at, CASE WHEN w.class_id IS NOT NULL THEN 1 ELSE 0 END AS has_whiteboard
      FROM classes c
      LEFT JOIN class_notes n ON n.class_id=c.id AND n.scope='student'
      LEFT JOIN whiteboards w ON w.class_id=c.id
-     WHERE c.student_id = ? AND (TRIM(COALESCE(n.content,'')) != '' OR w.class_id IS NOT NULL)
+     WHERE c.student_id = ? AND (TRIM(COALESCE(n.content,'')) != '' OR w.class_id IS NOT NULL OR EXISTS(SELECT 1 FROM office_documents d JOIN office_document_grants g ON g.document_id=d.id WHERE d.class_id=c.id AND d.archived=0 AND g.student_id=c.student_id))
      ORDER BY c.scheduled_at DESC`,
     [id],
   );
@@ -43,7 +44,7 @@ export default async function StudentNotesPage({
     <>
       <PageHeader
         title="Student Notes"
-        subtitle="Your private written notes and shared lesson whiteboards"
+        subtitle="Your notes, lesson whiteboards and shared documents"
       />
 
       {notes.length === 0 ? (
@@ -76,6 +77,7 @@ export default async function StudentNotesPage({
                   </td>
                   <td className="p-4 align-top">
                     <RichText content={n.content} />
+                    {n.has_documents===1&&<Link href={`/meeting/${n.class_id}/documents`} target="_blank" rel="noopener noreferrer" className="mt-3 mr-4 inline-block font-medium text-primary">Open lesson documents ↗</Link>}
                     {n.has_whiteboard === 1 && (
                       <Link
                         href={`/meeting/${n.class_id}/whiteboard`}
@@ -88,7 +90,7 @@ export default async function StudentNotesPage({
                     )}
                   </td>
                   <td className="p-4 align-top text-muted-foreground">
-                    {fmtDateTime(n.updated_at)}
+                    {fmtDateTime(n.updated_at || n.scheduled_at)}
                   </td>
                 </tr>
               ))}

@@ -6,6 +6,7 @@ import { ChevronRight, Sparkles } from "lucide-react";
 
 const labels: Record<string, string> = {
   overview: "Overview",
+  documents: "Documents",
   dashboard: "Dashboard",
   diagnostic: "My diagnostic",
   diagnostics: "Diagnostics",

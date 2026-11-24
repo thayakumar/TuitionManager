@@ -22,6 +22,7 @@ import {
   BarChart3,
   MessagesSquare,
   BrainCircuit,
+  Files,
 } from "lucide-react";
 import { useUnreadFamilyChats } from "@/components/family-chat-unread";
 import { logoutAdmin } from "@/lib/actions";
@@ -37,6 +38,7 @@ const links = [
   { href: "/students", label: "Students", icon: Users },
   { href: "/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/classroom", label: "Classroom", icon: BookOpen },
+  { href: "/documents", label: "Documents", icon: Files },
   { href: "/diagnostics", label: "Diagnostics", icon: BrainCircuit },
   { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler },
   { href: "/invoices", label: "Invoices", icon: Receipt },
@@ -254,6 +256,8 @@ export default function Nav() {
     pathname.startsWith("/oauth/") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
+    pathname.startsWith("/documents/") ||
+    pathname.startsWith("/office-editor/") ||
     pathname === "/whiteboard" ||
     pathname === "/login"
   )

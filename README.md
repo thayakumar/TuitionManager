@@ -50,3 +50,7 @@ Use the existing checkout; cloud tasks are already isolated. Do not create a Git
 ## AI agent connection (MCP)
 
 Open **Settings → AI connections** to create/revoke a key or authorize an OAuth client. The server is `/api/mcp`. See [Hermes and other agent setup](docs/MCP-SETUP.md) for HTTP, OAuth and stdio instructions and the full admin tool workflow.
+
+## Documents and spreadsheets
+
+The Documents library uses the pinned CasualOffice Docs and Sheets editors with TuitionHub student access and automatic saving. Live collaboration is disabled; one active editor prevents overwrites. See [Documents guide](docs/DOCUMENTS.md) for lesson linking, storage, builds and permissions.

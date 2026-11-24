@@ -1,0 +1,2 @@
+import {defineConfig} from 'vite';
+export default defineConfig({base:'/office-editor/',plugins:[{name:'local-office-fonts',enforce:'pre',transform(code,id){if(id.includes('@casualoffice/docs')&&/\.(m?js|css)$/.test(id))return code.replaceAll('https://fonts.googleapis.com/css2?','/office-editor/fonts.css?');}}],worker:{format:'es'},build:{outDir:'../public/office-editor',emptyOutDir:true,target:'es2022'},define:{'process.env.NODE_ENV':JSON.stringify('production')}});

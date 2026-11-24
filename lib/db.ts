@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -430,6 +430,32 @@ async function migrateDiagnostics(tx: Transaction) {
   `);
 }
 
+async function migrateDocuments(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS office_documents (
+      id TEXT PRIMARY KEY,title TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('doc','sheet')),
+      class_id INTEGER REFERENCES classes(id),content TEXT,preview TEXT NOT NULL DEFAULT '',revision INTEGER NOT NULL DEFAULT 0,
+      archived INTEGER NOT NULL DEFAULT 0,creation_key TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_office_class ON office_documents(class_id);
+    CREATE TABLE IF NOT EXISTS office_document_grants (
+      document_id TEXT NOT NULL REFERENCES office_documents(id),student_id INTEGER NOT NULL REFERENCES students(id),
+      permission TEXT NOT NULL CHECK(permission IN ('view','edit')),PRIMARY KEY(document_id,student_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_office_grants_student ON office_document_grants(student_id,document_id);
+    CREATE TABLE IF NOT EXISTS office_save_parts (
+      document_id TEXT NOT NULL REFERENCES office_documents(id),save_id TEXT NOT NULL,owner_key TEXT NOT NULL,
+      part INTEGER NOT NULL,content TEXT NOT NULL,expires_at INTEGER NOT NULL,PRIMARY KEY(document_id,save_id,part)
+    );
+    CREATE TABLE IF NOT EXISTS office_edit_leases (
+      document_id TEXT PRIMARY KEY REFERENCES office_documents(id),owner_key TEXT NOT NULL,
+      owner_name TEXT NOT NULL,expires_at INTEGER NOT NULL
+    );
+  `);
+}
+
 async function migrateMcp(tx: Transaction) {
   await tx.executeMultiple(`
     CREATE TABLE IF NOT EXISTS mcp_connections (
@@ -473,6 +499,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
     await migrateFamilyChat(tx);
     await migrateDiagnostics(tx);
     await migrateMcp(tx);
+    await migrateDocuments(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -614,6 +641,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
   await migrateFamilyChat(tx);
   await migrateDiagnostics(tx);
   await migrateMcp(tx);
+    await migrateDocuments(tx);
   await writeSchemaVersion(tx);
 }
 

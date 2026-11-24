@@ -11,6 +11,8 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/oauth/") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
+    pathname.startsWith("/documents/") ||
+    pathname.startsWith("/office-editor/") ||
     pathname === "/whiteboard" ||
     pathname === "/login";
 

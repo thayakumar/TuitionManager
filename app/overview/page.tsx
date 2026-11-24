@@ -15,6 +15,7 @@ import {
   Repeat2,
   MessagesSquare,
   BrainCircuit,
+  Files,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
@@ -24,6 +25,7 @@ const sections = [
   { href: "/students", label: "Students", icon: Users },
   { href: "/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/classroom", label: "Classroom", icon: BookOpen },
+  { href: "/documents", label: "Documents", icon: Files },
   { href: "/diagnostics", label: "Diagnostics", icon: BrainCircuit },
   { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler },
   { href: "/invoices", label: "Invoices", icon: Receipt },

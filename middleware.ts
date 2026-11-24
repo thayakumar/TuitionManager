@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/share/",
   "/_next/",
   "/vendor/excaliflow/",
+  "/office-editor/",
   "/favicon.ico",
   "/manifest.json",
   "/icon-192.svg",
@@ -63,7 +64,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Meeting routes accept either admin or student session
-  if (pathname.startsWith("/meeting/")) {
+  if (pathname.startsWith("/meeting/") || pathname.startsWith("/documents/")) {
     const adminSession = request.cookies.get("admin_session")?.value;
     const studentSession = request.cookies.get("student_session")?.value;
     if (!adminSession && !studentSession) {

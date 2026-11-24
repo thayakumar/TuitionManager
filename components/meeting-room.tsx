@@ -231,6 +231,7 @@ export function MeetingRoom({
             )}
           </Button>
 
+          <Button asChild variant="outline" size="sm"><Link href={`/meeting/${classId}/documents`} target="_blank" rel="noopener noreferrer">Documents ↗</Link></Button>
           <Button asChild variant="outline" size="sm">
             <Link
               href={`/meeting/${classId}/whiteboard`}

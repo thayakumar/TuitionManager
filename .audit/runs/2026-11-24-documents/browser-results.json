@@ -1,0 +1,14 @@
+{
+  "results": [
+    "Grid/table toggle and remembered preference passed",
+    "New document opens new tab and remains standalone",
+    "Student-sharing dialog view permission passed",
+    "Word editing, automatic save, reopen and DOCX download passed",
+    "Student mobile library and simultaneous editor exclusion passed",
+    "Spreadsheet mutation/formula, Save now, XLSX download and reopen passed",
+    "Meeting-created sheet links class and shares with its student",
+    "All created files appear in the Documents library"
+  ],
+  "page_errors": [],
+  "external_collaboration": false
+}

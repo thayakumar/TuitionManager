@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/build-mcp-app.mjs && next build",
+    "build": "node scripts/build-office.mjs && node scripts/build-mcp-app.mjs && next build",
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

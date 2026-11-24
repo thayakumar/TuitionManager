@@ -31,3 +31,7 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# Built isolated Office editor assets
+public/office-editor/
+office-editor/node_modules/

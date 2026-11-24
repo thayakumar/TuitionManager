@@ -418,7 +418,7 @@ test("version-three upgrade adds current tables and preserves existing history a
     );
     cold = m.exports;
     await cold.ensureMigrated();
-    assert.equal(cold.SCHEMA_VERSION, 9);
+    assert.equal(cold.SCHEMA_VERSION, 10);
     assert.equal(
       (
         await cold.queryOne(

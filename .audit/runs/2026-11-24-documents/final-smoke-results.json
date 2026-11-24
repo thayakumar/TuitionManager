@@ -1,0 +1,9 @@
+{
+  "lesson_link_filter": true,
+  "sortable_type_column": true,
+  "mobile_table_no_overflow": true,
+  "class_details_documents": true,
+  "student_notes_link": true,
+  "explicit_view_only_student_editor": true,
+  "page_errors": []
+}
