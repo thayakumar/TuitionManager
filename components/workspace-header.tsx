@@ -19,6 +19,7 @@ const labels: Record<string, string> = {
   requests: "Requests",
   notifications: "Notifications",
   settings: "Settings",
+  agents: "AI connections",
   classes: "Lesson details",
   attendance: "Attendance",
   reports: "Class reports",

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StorageSetup } from "@/components/storage-setup";
 import { FormBusy } from "@/components/action-busy";
 import { Building2, QrCode, Trash2 } from "lucide-react";
@@ -30,6 +31,7 @@ export default async function SettingsPage() {
         title="Settings"
         subtitle="Your teaching business, with the details students and parents need."
       />
+      <Link href="/settings/agents" className="mb-6 block rounded-2xl border bg-card p-5 font-semibold text-primary hover:bg-accent">AI connections → Connect Hermes or another agent</Link>
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card>
           <CardHeader>

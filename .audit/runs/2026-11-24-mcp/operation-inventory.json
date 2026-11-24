@@ -1,0 +1,530 @@
+[
+  {
+    "operation": "dashboard",
+    "domain": "overview",
+    "write": false,
+    "description": "Quick overview: student counts, pending requests, next five lessons and unread chat totals."
+  },
+  {
+    "operation": "list_students",
+    "domain": "students",
+    "write": false,
+    "description": "Search student profiles by name, subject, level, contact, rate or active state. Passwords are excluded."
+  },
+  {
+    "operation": "get_student",
+    "domain": "students",
+    "write": false,
+    "description": "Get an admin-visible student profile, excluding the password."
+  },
+  {
+    "operation": "create_student",
+    "domain": "students",
+    "write": true,
+    "description": "Create a student with portal credentials, family chat and diagnostic readiness record."
+  },
+  {
+    "operation": "update_student",
+    "domain": "students",
+    "write": true,
+    "description": "Patch profile fields. Omitted fields, including active status, are preserved."
+  },
+  {
+    "operation": "deactivate_student",
+    "domain": "students",
+    "write": true,
+    "description": "Remove portal access immediately and preserve history."
+  },
+  {
+    "operation": "student_login_instructions",
+    "domain": "students",
+    "write": true,
+    "description": "Retrieve the selected student portal username/password for sharing. Sensitive: never request for an entire roster."
+  },
+  {
+    "operation": "student_notes",
+    "domain": "notes",
+    "write": false,
+    "description": "Search and paginate private admin student notes."
+  },
+  {
+    "operation": "add_student_note",
+    "domain": "notes",
+    "write": true,
+    "description": "Add a private student profile note."
+  },
+  {
+    "operation": "delete_student_note",
+    "domain": "notes",
+    "write": true,
+    "description": "Delete the specified private profile note."
+  },
+  {
+    "operation": "parent_link",
+    "domain": "students",
+    "write": false,
+    "description": "Get the current active parent share link, if present."
+  },
+  {
+    "operation": "create_parent_link",
+    "domain": "students",
+    "write": true,
+    "description": "Replace old parent links with a newly generated active link."
+  },
+  {
+    "operation": "revoke_parent_link",
+    "domain": "students",
+    "write": true,
+    "description": "Revoke this student’s parent links."
+  },
+  {
+    "operation": "check_availability",
+    "domain": "schedule",
+    "write": false,
+    "description": "Check the proposed Malaysia time against every non-canceled lesson. Creation/moving still rechecks atomically."
+  },
+  {
+    "operation": "attendance_summary",
+    "domain": "attendance",
+    "write": false,
+    "description": "Compute Present/(Present+Absent), excluding canceled/unmarked lessons. Legacy Late counts as Present."
+  },
+  {
+    "operation": "list_classes",
+    "domain": "schedule",
+    "write": false,
+    "description": "Search schedule/history, filter student/status and inclusive local dates. Status: scheduled/completed/canceled."
+  },
+  {
+    "operation": "get_class",
+    "domain": "schedule",
+    "write": false,
+    "description": "Get class details, report and tutor notes. Student-private notes are excluded."
+  },
+  {
+    "operation": "create_class",
+    "domain": "schedule",
+    "write": true,
+    "description": "Schedule one lesson. Malaysia local time; duration is 60,90 or120 minutes; global tutor overlap is checked."
+  },
+  {
+    "operation": "move_class",
+    "domain": "schedule",
+    "write": true,
+    "description": "Move/resize a scheduled lesson without making a replacement. Malaysia date/time."
+  },
+  {
+    "operation": "update_class",
+    "domain": "schedule",
+    "write": true,
+    "description": "Patch class details/status using the existing class validations."
+  },
+  {
+    "operation": "mark_attendance",
+    "domain": "attendance",
+    "write": true,
+    "description": "Mark Present or Absent using normal billing/report side effects."
+  },
+  {
+    "operation": "cancel_class",
+    "domain": "schedule",
+    "write": true,
+    "description": "Advance cancel a class; optional replacement time. Original history/trial classification are preserved."
+  },
+  {
+    "operation": "reschedule_class",
+    "domain": "schedule",
+    "write": true,
+    "description": "Create the linked replacement for a scheduled or advance-canceled class."
+  },
+  {
+    "operation": "save_class_report",
+    "domain": "reports",
+    "write": true,
+    "description": "Save/patch topics, homework, feedback and rating. Omitted fields are preserved; normal automatic attendance behavior applies."
+  },
+  {
+    "operation": "list_reports",
+    "domain": "reports",
+    "write": false,
+    "description": "Search class reports, optionally scoped to one student and date range."
+  },
+  {
+    "operation": "save_teacher_notes",
+    "domain": "notes",
+    "write": true,
+    "description": "Save formatted private teacher notes for a lesson."
+  },
+  {
+    "operation": "class_notes",
+    "domain": "notes",
+    "write": false,
+    "description": "Search private teacher meeting notes by student, lesson date or content."
+  },
+  {
+    "operation": "list_recurrences",
+    "domain": "schedule",
+    "write": false,
+    "description": "List recurring series and generation state."
+  },
+  {
+    "operation": "create_recurrence",
+    "domain": "schedule",
+    "write": true,
+    "description": "Create a finite series; default end is December31 of the start year. day_of_week uses0Sunday..6Saturday."
+  },
+  {
+    "operation": "extend_recurrence",
+    "domain": "schedule",
+    "write": true,
+    "description": "Extend the selected series through the given allowed end date."
+  },
+  {
+    "operation": "stop_recurrence",
+    "domain": "schedule",
+    "write": true,
+    "description": "Stop future scheduled lessons while keeping series/history."
+  },
+  {
+    "operation": "list_invoices",
+    "domain": "billing",
+    "write": false,
+    "description": "List/filter invoice documents including private drafts."
+  },
+  {
+    "operation": "get_invoice",
+    "domain": "billing",
+    "write": false,
+    "description": "Get invoice lines, amounts, status and printable browser link. Does not change payment status."
+  },
+  {
+    "operation": "compose_invoice_message",
+    "domain": "billing",
+    "write": false,
+    "description": "Prepare the invoice WhatsApp text/link for manual sharing. This does not send a message or change invoice status."
+  },
+  {
+    "operation": "generate_invoice",
+    "domain": "billing",
+    "write": true,
+    "description": "Generate draft invoice(s) from attended unclaimed lessons, split by billing month."
+  },
+  {
+    "operation": "set_invoice_status",
+    "domain": "billing",
+    "write": true,
+    "description": "Set Draft/Sent/Paid/Overdue/Cancelled using existing bookkeeping and notifications."
+  },
+  {
+    "operation": "cancel_invoice",
+    "domain": "billing",
+    "write": true,
+    "description": "Cancel invoice while preserving financial history."
+  },
+  {
+    "operation": "financial_history",
+    "domain": "billing",
+    "write": false,
+    "description": "Billing-month revenue totals and time series; optional student/status and inclusive date range."
+  },
+  {
+    "operation": "export_csv",
+    "domain": "exports",
+    "write": false,
+    "description": "Export formula-safe student/class/invoice CSV; browser print/save-PDF uses the invoice link."
+  },
+  {
+    "operation": "list_posts",
+    "domain": "classroom",
+    "write": false,
+    "description": "Search stream/classwork by student, title, content, type or topic."
+  },
+  {
+    "operation": "get_post_work",
+    "domain": "classroom",
+    "write": false,
+    "description": "Get post, attachments, current submission and retained attempt/grade history for its owning student."
+  },
+  {
+    "operation": "list_topics",
+    "domain": "classroom",
+    "write": false,
+    "description": "List classroom topics and ordering."
+  },
+  {
+    "operation": "create_topic",
+    "domain": "classroom",
+    "write": true,
+    "description": "Create a classroom topic."
+  },
+  {
+    "operation": "rename_topic",
+    "domain": "classroom",
+    "write": true,
+    "description": "Rename an existing owned topic."
+  },
+  {
+    "operation": "delete_topic",
+    "domain": "classroom",
+    "write": true,
+    "description": "Remove the topic organization while preserving posts/work."
+  },
+  {
+    "operation": "create_post",
+    "domain": "classroom",
+    "write": true,
+    "description": "Post material, assignment or announcement with formatted content, links and attachments."
+  },
+  {
+    "operation": "update_post",
+    "domain": "classroom",
+    "write": true,
+    "description": "Patch post content/rubric/topic. Existing files remain unless their IDs are explicitly removed; new attachments are appended."
+  },
+  {
+    "operation": "delete_post",
+    "domain": "classroom",
+    "write": true,
+    "description": "Delete a post and its dependent classroom data."
+  },
+  {
+    "operation": "move_post",
+    "domain": "classroom",
+    "write": true,
+    "description": "Move to a topic/ungrouped and/or before another post. Null before_post_id means end."
+  },
+  {
+    "operation": "add_post_attachment",
+    "domain": "files",
+    "write": true,
+    "description": "Attach a managed file or safe external learning link to a post."
+  },
+  {
+    "operation": "remove_post_attachment",
+    "domain": "files",
+    "write": true,
+    "description": "Remove/replace a post attachment reference."
+  },
+  {
+    "operation": "grade_submission",
+    "domain": "classroom",
+    "write": true,
+    "description": "Grade ONLY the current attempt; expected_version is required to reject stale forms."
+  },
+  {
+    "operation": "post_comments",
+    "domain": "classroom",
+    "write": false,
+    "description": "Read classroom discussion, including author and edit/delete history state."
+  },
+  {
+    "operation": "save_comment",
+    "domain": "classroom",
+    "write": true,
+    "description": "Create or edit your tutor comment. Formatted content and links use the same sanitizer."
+  },
+  {
+    "operation": "delete_comment",
+    "domain": "classroom",
+    "write": true,
+    "description": "Delete a classroom comment using admin permissions."
+  },
+  {
+    "operation": "reschedule_requests",
+    "domain": "requests",
+    "write": false,
+    "description": "Review pending/past student or parent requests with original/replacement details."
+  },
+  {
+    "operation": "approve_reschedule",
+    "domain": "requests",
+    "write": true,
+    "description": "Approve a proposed or your own future Malaysia date/time; existing overlap/trial/history rules apply."
+  },
+  {
+    "operation": "reject_reschedule",
+    "domain": "requests",
+    "write": true,
+    "description": "Reject a pending request and send the tutor explanation."
+  },
+  {
+    "operation": "notifications",
+    "domain": "notifications",
+    "write": false,
+    "description": "Read admin notification inbox and full unread count."
+  },
+  {
+    "operation": "mark_notification_read",
+    "domain": "notifications",
+    "write": true,
+    "description": "Mark one admin notification read."
+  },
+  {
+    "operation": "mark_all_notifications_read",
+    "domain": "notifications",
+    "write": true,
+    "description": "Mark the admin inbox read."
+  },
+  {
+    "operation": "chat_rooms",
+    "domain": "chat",
+    "write": false,
+    "description": "List family chats and unread counts."
+  },
+  {
+    "operation": "chat_messages",
+    "domain": "chat",
+    "write": false,
+    "description": "Read a family chat, with pagination or refreshed message IDs."
+  },
+  {
+    "operation": "chat_send",
+    "domain": "chat",
+    "write": true,
+    "description": "Send a tutor message with formatted content, reply or attachments. Stable client_id prevents duplicates."
+  },
+  {
+    "operation": "chat_edit",
+    "domain": "chat",
+    "write": true,
+    "description": "Edit your tutor message."
+  },
+  {
+    "operation": "chat_delete",
+    "domain": "chat",
+    "write": true,
+    "description": "Delete a family chat message using existing admin rules."
+  },
+  {
+    "operation": "chat_mark_read",
+    "domain": "chat",
+    "write": true,
+    "description": "Mark family chat messages read up to the selected message."
+  },
+  {
+    "operation": "diagnostic_overview",
+    "domain": "diagnostics",
+    "write": false,
+    "description": "Review all students’ diagnostic readiness states."
+  },
+  {
+    "operation": "get_diagnostic",
+    "domain": "diagnostics",
+    "write": false,
+    "description": "Read selected student answers, state, revision and report."
+  },
+  {
+    "operation": "diagnostic_open",
+    "domain": "diagnostics",
+    "write": true,
+    "description": "Open the one-time diagnostic when ready."
+  },
+  {
+    "operation": "diagnostic_lock",
+    "domain": "diagnostics",
+    "write": true,
+    "description": "Lock diagnostic results; revision must match."
+  },
+  {
+    "operation": "import_diagnostic_template",
+    "domain": "diagnostics",
+    "write": true,
+    "description": "Import a diagnostic question bank; existing template versions are immutable."
+  },
+  {
+    "operation": "read_whiteboard",
+    "domain": "whiteboard",
+    "write": false,
+    "description": "Read personal or lesson board with revision. board_id is personal or class-N."
+  },
+  {
+    "operation": "write_whiteboard",
+    "domain": "whiteboard",
+    "write": true,
+    "description": "Save board scene using expected revision; returns conflict/current snapshot on stale writes. Maximum scene size is1MiB."
+  },
+  {
+    "operation": "get_settings",
+    "domain": "settings",
+    "write": false,
+    "description": "Get business/currency/payment details and QR. Storage secrets/session records are excluded."
+  },
+  {
+    "operation": "update_settings",
+    "domain": "settings",
+    "write": true,
+    "description": "Patch the business details shown on invoices and shared pages."
+  },
+  {
+    "operation": "set_payment_qr",
+    "domain": "settings",
+    "write": true,
+    "description": "Upload a payment QR image from base64 (maximum500KB)."
+  },
+  {
+    "operation": "remove_payment_qr",
+    "domain": "settings",
+    "write": true,
+    "description": "Remove the invoice QR image without changing payments."
+  },
+  {
+    "operation": "storage_status",
+    "domain": "files",
+    "write": false,
+    "description": "Check whether the Drive upload connector is configured."
+  },
+  {
+    "operation": "storage_setup_script",
+    "domain": "files",
+    "write": true,
+    "description": "Generate the Drive connector deployment script. Sensitive: it includes its secret; keep private."
+  },
+  {
+    "operation": "upload_file",
+    "domain": "files",
+    "write": true,
+    "description": "Upload a small supported file (up to2MiB) from base64; for larger files use upload_begin/chunk/finish without a total file cap."
+  },
+  {
+    "operation": "upload_begin",
+    "domain": "files",
+    "write": true,
+    "description": "Start an uncapped resumable upload; send returned ticket with bounded chunks, then finish."
+  },
+  {
+    "operation": "upload_chunk",
+    "domain": "files",
+    "write": true,
+    "description": "Upload up to2MiB of file bytes (base64). Use returned nextOffset; replay identical ranges safely. A bytes */TOTAL range probes progress."
+  },
+  {
+    "operation": "upload_finish",
+    "domain": "files",
+    "write": true,
+    "description": "Finish the same upload ticket and register the managed file; use returned fileUrl in posts/messages."
+  },
+  {
+    "operation": "recent_files",
+    "domain": "files",
+    "write": false,
+    "description": "List recent recoverable uploads from the Drive connector."
+  },
+  {
+    "operation": "recover_file",
+    "domain": "files",
+    "write": true,
+    "description": "Recover/register an uploaded Drive file ID for attachment use."
+  },
+  {
+    "operation": "read_file_chunk",
+    "domain": "files",
+    "write": false,
+    "description": "Read a managed file in bounded chunks for download/inspection. No arbitrary remote URL fetching."
+  },
+  {
+    "operation": "operation_status",
+    "domain": "connection",
+    "write": false,
+    "description": "Inspect a previous write request by its request_id before retrying an uncertain result."
+  }
+]

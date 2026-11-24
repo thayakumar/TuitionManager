@@ -184,6 +184,7 @@ test("expired, forged, deactivated and legacy student sessions are denied; logou
     );
     const jar = new Map();
     const auth = load("lib/auth.ts", {
+      "./agent-context": {agentAdminAuthorized:async()=>false},
       "./db": f.db,
       "next/headers": {
         cookies: async () => ({

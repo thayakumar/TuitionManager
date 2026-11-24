@@ -251,6 +251,7 @@ export default function Nav() {
   const pathname = usePathname();
   if (
     pathname.startsWith("/portal") ||
+    pathname.startsWith("/oauth/") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
     pathname === "/whiteboard" ||

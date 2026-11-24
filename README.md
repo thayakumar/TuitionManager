@@ -46,3 +46,7 @@ The small vendored shadcn Tailwind utility stylesheet is retained in `styles/sha
 ## Repository work
 
 Use the existing checkout; cloud tasks are already isolated. Do not create a Git worktree unless explicitly requested. Do not push `main` casually: the repository is connected to a Vercel deployment. The reviewed changes here are local until a separate push/deployment instruction.
+
+## AI agent connection (MCP)
+
+Open **Settings → AI connections** to create/revoke a key or authorize an OAuth client. The server is `/api/mcp`. See [Hermes and other agent setup](docs/MCP-SETUP.md) for HTTP, OAuth and stdio instructions and the full admin tool workflow.

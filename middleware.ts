@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = [
   "/login",
+  "/oauth/authorize",
+  "/.well-known/",
   "/portal/admin",
   "/portal/student",
   "/portal",

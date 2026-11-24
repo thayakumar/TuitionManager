@@ -1,0 +1,5 @@
+import { OAuthError, publicOrigin } from "./auth";
+export async function boundedBody(request:Request,limit:number){if(Number(request.headers.get('content-length')||0)>limit)throw new OAuthError('invalid_request','Request is too large',413);const reader=request.body?.getReader(),parts:Uint8Array[]=[];let size=0;if(reader)for(;;){const p=await reader.read();if(p.done)break;size+=p.value.length;if(size>limit){await reader.cancel();throw new OAuthError('invalid_request','Request is too large',413);}parts.push(p.value);}return Buffer.concat(parts).toString('utf8');}
+export const noStore={'Cache-Control':'private, no-store','Pragma':'no-cache'};
+export function oauthFailure(error:unknown){return Response.json({error:error instanceof OAuthError?error.code:'server_error',error_description:error instanceof OAuthError?error.message:'The request could not be completed'},{status:error instanceof OAuthError?error.status:500,headers:noStore});}
+export function permittedOrigin(request:Request){const origin=request.headers.get('origin');return !origin||origin===publicOrigin();}

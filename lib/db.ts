@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -430,6 +430,39 @@ async function migrateDiagnostics(tx: Transaction) {
   `);
 }
 
+async function migrateMcp(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS mcp_connections (
+      id TEXT PRIMARY KEY,label TEXT NOT NULL,kind TEXT NOT NULL,scope TEXT NOT NULL,
+      created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,revoked_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS mcp_tokens (
+      hash TEXT PRIMARY KEY,connection_id TEXT NOT NULL REFERENCES mcp_connections(id),
+      kind TEXT NOT NULL,client_id TEXT,resource TEXT NOT NULL,expires_at INTEGER NOT NULL,used_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_mcp_tokens_connection ON mcp_tokens(connection_id);
+    CREATE TABLE IF NOT EXISTS mcp_clients (
+      id TEXT PRIMARY KEY,data TEXT NOT NULL,secret_hash TEXT,created_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS mcp_authorizations (
+      id TEXT PRIMARY KEY,data TEXT NOT NULL,session_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,used_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS mcp_codes (
+      hash TEXT PRIMARY KEY,data TEXT NOT NULL,expires_at INTEGER NOT NULL,used_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS mcp_limits (key TEXT PRIMARY KEY,window INTEGER NOT NULL,count INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS mcp_operations (
+      connection_id TEXT NOT NULL REFERENCES mcp_connections(id),request_id TEXT NOT NULL,
+      input_hash TEXT NOT NULL,operation TEXT NOT NULL,status TEXT NOT NULL,result TEXT,
+      created_at INTEGER NOT NULL,PRIMARY KEY(connection_id,request_id)
+    );
+    CREATE TABLE IF NOT EXISTS mcp_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,connection_id TEXT NOT NULL,operation TEXT NOT NULL,
+      status TEXT NOT NULL,created_at INTEGER NOT NULL
+    );
+  `);
+}
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
   // Prepared versions already have their history backfills. Never replay them.
   if (fromVersion >= 2) {
@@ -439,6 +472,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
     await migrateStudentProfile(tx);
     await migrateFamilyChat(tx);
     await migrateDiagnostics(tx);
+    await migrateMcp(tx);
     await writeSchemaVersion(tx);
     return;
   }
@@ -579,6 +613,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
   await migrateStudentProfile(tx);
   await migrateFamilyChat(tx);
   await migrateDiagnostics(tx);
+  await migrateMcp(tx);
   await writeSchemaVersion(tx);
 }
 

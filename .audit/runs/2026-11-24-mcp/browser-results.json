@@ -1,0 +1,9 @@
+{
+  "key_creation": true,
+  "key_hidden_before_screenshot": true,
+  "revocation": true,
+  "mobile_overflow": false,
+  "oauth_consent": true,
+  "oauth_callback_and_token_exchange": true,
+  "page_errors": []
+}

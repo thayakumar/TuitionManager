@@ -8,6 +8,7 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isFullscreen =
     pathname.startsWith("/portal") ||
+    pathname.startsWith("/oauth/") ||
     pathname.startsWith("/share/") ||
     pathname.startsWith("/meeting/") ||
     pathname === "/whiteboard" ||

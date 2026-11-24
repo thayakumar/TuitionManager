@@ -1,3 +1,4 @@
+import { agentAdminAuthorized } from "./agent-context";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { execute, queryOne, withTransaction } from "./db";
@@ -19,6 +20,10 @@ function hashToken(token: string): string {
 }
 
 export async function verifyAdminSession(): Promise<boolean> {
+  return (await agentAdminAuthorized()) || verifyBrowserAdminSession();
+}
+
+export async function verifyBrowserAdminSession(): Promise<boolean> {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token || !tokenPattern.test(token)) return false;
   return !!(await queryOne<{ id: number }>(
@@ -38,7 +43,7 @@ export async function requireAdmin(): Promise<void> {
 // Every administrator read entry calls this guard before its private queries.
 // Middleware's cookie-presence shortcut is navigation UX, never authorization.
 export async function requireAdminPage(): Promise<void> {
-  if (!(await verifyAdminSession())) redirect("/portal/admin");
+  if (!(await verifyBrowserAdminSession())) redirect("/portal/admin");
 }
 
 export async function requireStudent(expectedId: number): Promise<void> {

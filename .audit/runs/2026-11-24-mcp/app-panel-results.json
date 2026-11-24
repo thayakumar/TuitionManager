@@ -1,0 +1,8 @@
+{
+  "official_sdk_handshake": true,
+  "tool_result_rendering": true,
+  "local_filter": true,
+  "server_tool_refresh": true,
+  "page_errors": [],
+  "host": "Simulated MCP Apps host; not Hermes UI"
+}

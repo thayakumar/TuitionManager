@@ -10,6 +10,8 @@ Next.js15 App Router + React/TypeScript + Tailwind4 + libSQL. lib/db.ts owns ver
 - `lib/attachment-transfer.ts` owns current upload actors, origin/session targets, ticket lifecycle and terminal registration/receipts. Upload routes retain multipart/resumable byte transport; `lib/upload-authority.ts` owns signed ticket/receipt primitives. Preserve their existing parent-link versus student-account distinctions.
 - `lib/submitted-work.ts` owns scoped post work retrieval, with current projection and attempt lineage read together. Tutor/student pages authorize first and keep their distinct controls. Attempt types belong to `lib/types.ts`, not presentation files.
 
+- `lib/mcp/catalog.ts` maps authenticated agent operations to existing admin services; `lib/mcp/auth.ts` owns revocable keys, OAuth/PKCE and mutation deduplication. The request-local `lib/agent-context.ts` is established only after bearer validation. Browser connection management and page guards require the actual admin cookie. Never expose raw SQL or accept an admin identity from tool inputs. See `docs/MCP-SETUP.md` for Hermes and other clients. Schema version9 adds connector tables without replaying earlier data backfills.
+
 See `GLOSSARY.md` for business terms and `docs/ARCHITECTURE-REFACTOR.md` for these interfaces and verification.
 
 - Admin: dashboard, students, schedule/classes, recurring-series management, invoices, financial-history, classroom, requests, notifications, settings.
