@@ -85,6 +85,7 @@ function App() {
         setEditing(false);
         setError((e as Error).message);
     } }, 25000); return () => { cancelled = true; clearInterval(beat); removeEventListener('beforeunload', before); removeEventListener('pagehide', release); release(); }; }, []);
+    useEffect(() => { const rename = (event: MessageEvent) => { const m = event.data; if (event.origin === location.origin && event.source === window.parent && m?.type === 'tuitionhub:document-title' && m.id === id && typeof m.title === 'string' && m.title.trim() && m.title.length <= 200) setDoc((d: any) => d ? {...d, title: m.title} : d); }; addEventListener('message', rename); return () => removeEventListener('message', rename); }, []);
     const download = async () => { try {
         const result = await handle.current?.download();
         if (result) {

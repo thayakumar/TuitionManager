@@ -77,3 +77,7 @@ Saved Gridcraft workbooks use `{format:"xlsx",engine:"gridcraft",data:"<base64 X
 Compatibility is deliberate: existing JSON snapshots are not automatically converted or overwritten. They still open in CasualOffice; new sheets open in Gridcraft. View-only access (including a second editor blocked by a lease) uses the existing read-only spreadsheet preview. It can display/download saved XLSX work but is not guaranteed to render every advanced Gridcraft feature identically. Revoked editing blocks server writes immediately; the current Gridcraft canvas remains available for recovery download until reopening.
 
 Live collaboration remains disabled by owner agreement. The one-editor lease and revision checks continue to apply. Gridcraft's normal File tab is hidden so the TuitionHub file identity stays in control; use the surrounding Save now and Download a copy actions. Native XLSX saves use the same persistence path; PDF exports are downloaded and never stored over the workbook.
+
+## Rename while editing
+
+Admins can click the filename in the full-page document/sheet header, type a new name, and press Enter or the checkmark. Escape or X cancels. Names must contain1–200 characters. Errors keep the entered name available for retry. Renaming uses existing admin-only management permissions and notifications; it does not reload the editor or alter document content. The current editor's download filename updates as well. Other open library tabs refresh through the existing storage/focus mechanism.

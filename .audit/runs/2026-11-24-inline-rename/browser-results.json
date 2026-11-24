@@ -1,0 +1,12 @@
+{
+  "results": [
+    "doc: inline rename persisted, editor retained, export name updated",
+    "doc: blank name rejected and Escape cancels",
+    "sheet: inline rename persisted, editor retained, export name updated",
+    "sheet: blank name rejected and Escape cancels",
+    "Failure retains name and retry succeeds",
+    "Mobile rename fits viewport",
+    "Student rename remains forbidden"
+  ],
+  "page_errors": []
+}
