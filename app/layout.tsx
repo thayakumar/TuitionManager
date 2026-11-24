@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "TuitionHub",
   description: "Tuition management — schedule, attendance, reports, invoices",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      {url: "/favicon.ico", sizes: "any"},
+      {url: "/favicon.svg", type: "image/svg+xml", sizes: "any"},
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png"}],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
