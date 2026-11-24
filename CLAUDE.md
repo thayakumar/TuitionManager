@@ -12,7 +12,7 @@ Next.js15 App Router + React/TypeScript + Tailwind4 + libSQL. lib/db.ts owns ver
 
 - `lib/mcp/catalog.ts` maps authenticated agent operations to existing admin services; `lib/mcp/auth.ts` owns revocable keys, OAuth/PKCE and mutation deduplication. The request-local `lib/agent-context.ts` is established only after bearer validation. Browser connection management and page guards require the actual admin cookie. Never expose raw SQL or accept an admin identity from tool inputs. See `docs/MCP-SETUP.md` for Hermes and other clients. Schema version9 adds connector tables without replaying earlier data backfills.
 
-- `lib/documents.ts` owns file access, creation/linking, revision-checked snapshots, staged chunks and one-editor leases. CasualOffice SDKs live in the isolated `office-editor/` build; do not add their large bundles to the dashboard. Live collaboration is disabled by owner preference. Schema10 and behavior are documented in `docs/DOCUMENTS.md`.
+- `lib/documents.ts` owns file access, creation/linking, revision-checked snapshots, staged chunks and one-editor leases. CasualOffice Docs and legacy/view-only Sheets SDKs plus the pinned Gridcraft browser release live in the isolated `office-editor/` build; do not add their large bundles to the dashboard. Live collaboration is disabled by owner preference. Schema10 and behavior are documented in `docs/DOCUMENTS.md`.
 
 See `GLOSSARY.md` for business terms and `docs/ARCHITECTURE-REFACTOR.md` for these interfaces and verification.
 

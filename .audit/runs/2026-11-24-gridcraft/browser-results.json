@@ -1,0 +1,20 @@
+{
+  "new_sheet_gridcraft": true,
+  "formula_evaluates": true,
+  "uncommitted_draft_not_saved": true,
+  "save_now_commits_draft": true,
+  "autosave": true,
+  "lesson_link_and_grant": true,
+  "second_tab_view_only": true,
+  "download_xlsx": true,
+  "reopen_formula_preserved": true,
+  "failed_save_work_retained_and_retry": true,
+  "mobile_no_outer_overflow": true,
+  "asset": {
+    "status": 200,
+    "mime": "application/wasm",
+    "cache": "public, max-age=31536000, immutable"
+  },
+  "page_errors": [],
+  "id": "1f87f1e1-b016-4c89-9a68-5aa313e3c6af"
+}

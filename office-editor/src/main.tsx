@@ -12,15 +12,17 @@ function textPreview(data: any): string { if (!data)
     return Object.values(data.sheets).flatMap((s: any) => Object.values(s.cellData || {}).flatMap((r: any) => Object.values(r).map((c: any) => String(c.v ?? '')))).filter(Boolean).slice(0, 40).join(' · ').slice(0, 600); const walk = (n: any): string => Array.isArray(n) ? n.map(walk).join(' ') : n && typeof n === 'object' ? (typeof n.text === 'string' ? n.text : Object.entries(n).filter(([k]) => !['styles', 'marks', 'attributes'].includes(k)).map(([, v]) => walk(v)).join(' ')) : ''; return walk(data).replace(/\s+/g, ' ').trim().slice(0, 600); }
 function App() {
     const [doc, setDoc] = useState<any>(null), [error, setError] = useState(''), [status, setStatus] = useState('Opening…'), [editing, setEditing] = useState(false), [Engine, setEngine] = useState<any>(null);
+    const changes = useRef(0);
     const revision = useRef(0), dirty = useRef(false), pending = useRef<any>(null), saving = useRef(false), blocked = useRef(false), handle = useRef<any>(null), lastContent = useRef(''), permission = useRef(false), active = useRef(false);
-    const persist = async (content: string, preview: string) => { pending.current = { content, preview }; dirty.current = true; if (blocked.current)
+    const persist = async (content: string, preview: string) => { pending.current = { content, preview, generation: changes.current }; dirty.current = true; if (blocked.current)
         throw new Error('Save is paused. Retry saving or download a copy.'); if (saving.current)
         return; saving.current = true; try {
         while (pending.current) {
             const value = pending.current;
             pending.current = null;
             if (value.content === lastContent.current) {
-                dirty.current = false;
+                dirty.current = changes.current !== value.generation;
+                setStatus(dirty.current ? 'Unsaved changes' : 'All changes saved');
                 continue;
             }
             setStatus('Saving…');
@@ -34,9 +36,8 @@ function App() {
                 result = await api({ action: 'save', ...value, revision: revision.current, client_id: clientId });
             revision.current = result.revision;
             lastContent.current = value.content;
-            if (!pending.current)
-                dirty.current = false;
-            setStatus('All changes saved');
+            if (!pending.current) dirty.current = changes.current !== value.generation;
+            setStatus(dirty.current ? 'Unsaved changes' : 'All changes saved');
         }
     }
     catch (e) {
@@ -98,6 +99,6 @@ function App() {
     catch {
         setError('Could not export this file. Your changes remain in the editor.');
     } };
-    return <div className="office-shell"><div className="office-status"><span className="office-state" role="status">{status}</span><button onClick={() => handle.current?.save()} disabled={!editing}>Save now</button>{error && editing && <button onClick={() => { blocked.current = false; setError(''); void handle.current?.save(); }}>Retry save</button>}<button onClick={download} disabled={!doc}>Download a copy</button>{!editing && permission.current && <button onClick={() => location.reload()}>Try editing</button>}</div>{error && <div role="alert" className="office-error">{error}{blocked.current && ' Download a copy before reloading to protect your work.'}</div>}<div className="office-body">{Engine && doc ? <Engine doc={doc} editing={editing} handle={handle} onDirty={() => { dirty.current = true; setStatus('Unsaved changes'); }} onSave={persist} onError={(e: Error) => setError(e.message)} preview={textPreview} decode={decode} encode={encode}/> : <div className="office-loading">{error ? 'Unable to open editor' : 'Opening your workspace…'}</div>}</div></div>;
+    return <div className="office-shell"><div className="office-status"><span className="office-state" role="status">{status}</span><button onClick={() => handle.current?.save()} disabled={!editing}>Save now</button>{error && editing && <button onClick={() => { blocked.current = false; setError(''); void handle.current?.save(); }}>Retry save</button>}<button onClick={download} disabled={!doc}>Download a copy</button>{!editing && permission.current && <button onClick={() => location.reload()}>Try editing</button>}</div>{error && <div role="alert" className="office-error">{error}{blocked.current && ' Download a copy before reloading to protect your work.'}</div>}<div className="office-body">{Engine && doc ? <Engine doc={doc} editing={editing} handle={handle} onDirty={() => { changes.current++; dirty.current = true; setStatus('Unsaved changes'); }} onSave={persist} onError={(e: Error) => setError(e.message)} preview={textPreview} decode={decode} encode={encode}/> : <div className="office-loading">{error ? 'Unable to open editor' : 'Opening your workspace…'}</div>}</div></div>;
 }
 createRoot(document.getElementById('root')!).render(<App />);

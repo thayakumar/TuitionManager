@@ -1,6 +1,6 @@
 # Documents and spreadsheets
 
-TuitionHub uses the actual CasualOffice editors: `@casualoffice/docs@1.4.2` and `@casualoffice/sheets@0.20.0`, pinned in the isolated `office-editor/package-lock.json`. The Word surface uses the React SDK; Sheets uses its published self-contained iframe runtime and the documented snapshot/export API. Editors load only on the full-page file route, keeping their bundles out of dashboards/classrooms. Generated assets are served by TuitionHub, not a public demo.
+Docs remains on CasualOffice. New editable spreadsheets use the self-hosted Gridcraft 0.19.1 browser release. Existing CasualOffice spreadsheet snapshots retain their original editor, and view-only spreadsheets use the existing preview engine. The retained CasualOffice packages are: `@casualoffice/docs@1.4.2` and `@casualoffice/sheets@0.20.0`, pinned in the isolated `office-editor/package-lock.json`. The Word surface uses the React SDK; Sheets uses its published self-contained iframe runtime and the documented snapshot/export API. Editors load only on the full-page file route, keeping their bundles out of dashboards/classrooms. Generated assets are served by TuitionHub, not a public demo.
 
 ## Use
 
@@ -15,7 +15,7 @@ TuitionHub uses the actual CasualOffice editors: `@casualoffice/docs@1.4.2` and 
 
 Live collaboration is deliberately disabled at the owner’s request; no VPS or new hosting service is needed. One person/tab may edit a file at a time. Other viewers can read/download the last saved version and retry editing later. A 90-second server lease renews every25 seconds and is released on page exit; crashed tabs expire. Every save also checks the latest revision and permissions. Access changes invalidate editing leases immediately. A conflict never overwrites newer work; the editor retains changes for download.
 
-Autosave runs about every2 seconds after document edits and every1.5 seconds for spreadsheet snapshots. Save now and standard editor shortcuts are available. Pending/error states and a retry action make failures visible; unsaved work prompts before closing. DOCX bytes and spreadsheet JSON live in Turso/libSQL, independent of Google Drive. Previews are generated from saved content, not uploaded screenshots. Grid previews show a paper/grid representation of those excerpts, rather than a full-fidelity rendered thumbnail.
+Autosave runs about every2 seconds after document edits and for Gridcraft spreadsheet checks; legacy spreadsheet snapshots are checked every1.5 seconds. Save now and standard editor shortcuts are available. Pending/error states and a retry action make failures visible; unsaved work prompts before closing. DOCX bytes and spreadsheet snapshots live in Turso/libSQL, independent of Google Drive. Previews are generated from saved content, not uploaded screenshots. Grid previews show a paper/grid representation of those excerpts, rather than a full-fidelity rendered thumbnail.
 
 Snapshots travel in bounded chunks for larger files, and reopening reads revision-bound chunks to stay below response limits; there is no explicit total-file cap in the snapshot service. Hosting/database resource limits still apply. Incomplete staged chunks never replace a saved file and expire after30 minutes. Exports produce `.docx` / `.xlsx` downloads through the editor SDK. Live synchronization and document version-history UI are not enabled.
 
@@ -67,3 +67,13 @@ MCP’s `documents` domain includes discovery/listing, full reads, creation, man
 ### New-file opening and recovery
 
 New document and New sheet open a same-origin creation page directly, showing progress until the editor is ready. There is no blank placeholder window or redirect controlled by the original tab. If creation fails or takes too long, the new tab shows an error and Retry; the same creation identity is retained across retries/refreshes to avoid duplicate files after a lost acknowledgement. The library refreshes when a file is created or when you return to it. Pasted/external creation URLs ask for an explicit Create click instead of creating a file merely from an external navigation.
+
+## Gridcraft spreadsheets
+
+New editable sheets use Gridcraft 0.19.1, compiled upstream to WebAssembly and served from `/office-editor/gridcraft/`. The release ZIP is vendored in `office-editor/vendor/` and verified against its published SHA-256 during builds. The archive retains MIT/Apache-2.0 licences, attribution and notices. No Rust compiler, third-party runtime hosting, Google account or additional server is needed. Hashed JS/WASM assets have immutable cache headers. The roughly26MB WASM file makes a cold first load heavier; later visits can use the browser cache. Modern WebGPU or WebGL2 support is required; startup failures remain visible without overwriting saved work.
+
+Saved Gridcraft workbooks use `{format:"xlsx",engine:"gridcraft",data:"<base64 XLSX>"}` inside the existing snapshot column and chunk transport. Formulas and formatting remain XLSX data, not flattened cell values. The library preview contains sheet names and a bounded selection of displayed cell values. No schema migration occurs.
+
+Compatibility is deliberate: existing JSON snapshots are not automatically converted or overwritten. They still open in CasualOffice; new sheets open in Gridcraft. View-only access (including a second editor blocked by a lease) uses the existing read-only spreadsheet preview. It can display/download saved XLSX work but is not guaranteed to render every advanced Gridcraft feature identically. Revoked editing blocks server writes immediately; the current Gridcraft canvas remains available for recovery download until reopening.
+
+Live collaboration remains disabled by owner agreement. The one-editor lease and revision checks continue to apply. Gridcraft's normal File tab is hidden so the TuitionHub file identity stays in control; use the surrounding Save now and Download a copy actions. Native XLSX saves use the same persistence path; PDF exports are downloaded and never stored over the workbook.

@@ -145,7 +145,7 @@ async function saveInTransaction(tx: Transaction, id: string, input: {
     throw new DocumentError(409, 'A newer version was saved. Your changes are retained; download a copy before reloading.'); if (row.kind === 'sheet') {
     try {
         const data = JSON.parse(input.content);
-        if (!data || typeof data !== 'object' || Array.isArray(data) || !data.sheets)
+        if (!data || typeof data !== 'object' || Array.isArray(data) || !(data.format === 'xlsx' ? typeof data.data === 'string' && /^[A-Za-z0-9+/]+={0,2}$/.test(data.data) && Buffer.from(data.data, 'base64').subarray(0, 2).equals(Buffer.from('PK')) : data.sheets))
             throw Error();
     }
     catch {

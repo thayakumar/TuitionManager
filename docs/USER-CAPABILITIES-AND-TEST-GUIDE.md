@@ -943,3 +943,14 @@ The [readability/classroom review](../.audit/runs/2026-11-16-readable-classroom/
 **Manual check:** Lock results asks for confirmation and shows the saved-answer count. Locking an incomplete attempt excludes unsaved work and marks unanswered skill questions as skipped. Once locked, no reset, reopening or second attempt is available. The student's results appear automatically; the questionnaire disappears. Existing reports retain their question version and marks even if future templates change. Draft saves from another tab cannot overwrite a newer revision or a lock.
 
 The uploaded question bank and answer key are stored in the private database, outside this public repository. Diagnostic templates are immutable per version. Parents have no new diagnostic access in this release.
+
+### Documents — Gridcraft sheets (24 November 2026)
+
+1. As an Admin, I can choose New sheet → a full-page Gridcraft editor opens in a new tab; creating from a lesson links it and grants that student edit access.
+2. As an Admin or a student with edit access, I can enter values, formulas and formatting → work autosaves after committed edits and reopens as an XLSX workbook.
+3. As an editor, I can choose Save now while entering a cell → the cell is committed before saving. An uncommitted draft is not reported as saved by autosave.
+4. As an editor, I can retry a failed save or download a copy → current work remains available while an error is shown.
+5. As a second viewer, I can open a file another person is editing → the saved workbook opens in a read-only preview; I can try editing after the lease is released.
+6. As a student with view permission, I can read/download the saved workbook → server writes remain forbidden.
+7. As an owner of an existing CasualOffice sheet, I can open it → the original editor and data are retained without automatic conversion.
+8. As an Admin or student, I can continue using Docs → the document editor is unchanged. Live simultaneous editing is not enabled for sheets.

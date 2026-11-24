@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto';
+import {createRequire} from 'node:module';
 import {cp,mkdir,writeFile,readFile,readdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 if(!process.argv.includes('--skip-install'))execFileSync('npm',['ci','--prefix','office-editor','--ignore-scripts','--include=dev','--no-audit','--no-fund'],{stdio:'inherit'});
@@ -14,4 +16,18 @@ await mkdir('public/office-editor/licenses',{recursive:true});
 await cp('office-editor/licenses','public/office-editor/licenses',{recursive:true});
 await cp('office-editor/node_modules/@fontsource-variable/material-symbols-outlined/LICENSE','public/office-editor/licenses/material-symbols-LICENSE');
 for(const name of ['docs','sheets']){for(const file of ['LICENSE','NOTICE'])try{await cp(`office-editor/node_modules/@casualoffice/${name}/${file}`,`public/office-editor/licenses/${name}-${file}`)}catch{}}
-await writeFile('public/office-editor/licenses/README.txt','Editors: CasualOffice/docs 1.4.2 and CasualOffice/sheets 0.20.0. Apache-2.0 with retained upstream MIT/Apache attributions. See https://github.com/CasualOffice/docs and https://github.com/CasualOffice/sheets. No AI integrations or live collaboration enabled.');
+await writeFile('public/office-editor/licenses/README.txt','Docs: CasualOffice/docs 1.4.2. Legacy and view-only sheets: CasualOffice/sheets 0.20.0. New editable sheets: Gridcraft 0.19.1 (MIT OR Apache-2.0); its licences and notices are under ../gridcraft/. Retained upstream MIT/Apache attributions apply. See https://github.com/CasualOffice/docs and https://github.com/CasualOffice/sheets. No AI integrations or live collaboration enabled.');
+
+// Vendor the verified browser release: no Rust toolchain or build-time CDN dependency.
+const archive=await readFile('office-editor/vendor/gridcraft-web-0.19.1.zip');
+if(createHash('sha256').update(archive).digest('hex')!=='48c5d1b101befebb3c5ba3b7a14914f01c3207934813ed07dc4251b7ae116a78')throw new Error('Gridcraft archive checksum mismatch');
+const require=createRequire(import.meta.url),JSZip=require('../office-editor/node_modules/jszip');
+const zip=await JSZip.loadAsync(archive),prefix='gridcraft-web-0.19.1/';
+for(const [name,entry] of Object.entries(zip.files)){
+  if(entry.dir||!name.startsWith(prefix))continue;
+  const relative=name.slice(prefix.length);
+  if(relative.split('/').includes('..')||relative.startsWith('/'))throw new Error('Unsafe Gridcraft archive path');
+  const destination='public/office-editor/gridcraft/'+relative;
+  await mkdir(destination.slice(0,destination.lastIndexOf('/')),{recursive:true});
+  await writeFile(destination,await entry.async('nodebuffer'));
+}
