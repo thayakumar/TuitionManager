@@ -21,7 +21,7 @@ Snapshots travel in bounded chunks for larger files, and reopening reads revisio
 
 ## Build
 
-`npm run build` installs the isolated editor lockfile using `npm ci --ignore-scripts`, builds the browser bundle, prepares Sheets runtime/workers and local icon fonts, then builds MCP and Next.js. Native inference installation scripts are skipped because AI is disabled. No AI credentials are required. Generated `public/office-editor/` assets and nested node_modules are ignored. Use `node scripts/build-office.mjs --skip-install` for a local asset rebuild after dependencies are installed. Restart a production-mode Next server after rebuilding public assets; its public-file inventory is established at startup.
+`npm run build` installs the isolated editor lockfile using `npm ci --ignore-scripts --include=dev`, builds the browser bundle, prepares Sheets runtime/workers and local icon fonts, then builds MCP and Next.js. Build tools are explicitly included even when the host sets `NODE_ENV=production`. Native inference installation scripts are skipped because AI is disabled. No AI credentials are required. Generated `public/office-editor/` assets and nested node_modules are ignored. Use `node scripts/build-office.mjs --skip-install` for a local asset rebuild after dependencies are installed. Restart a production-mode Next server after rebuilding public assets; its public-file inventory is established at startup.
 
 Pinned upstream archives contain licence notices; `scripts/build-office.mjs` carries them to `/office-editor/licenses/`. Local font URL substitutions are explicit distribution modifications. Underlying Apache/MIT/SIL notices must be retained. See the pinned repositories and package notices for attribution.
 

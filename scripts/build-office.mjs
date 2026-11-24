@@ -1,6 +1,6 @@
 import {cp,mkdir,writeFile,readFile,readdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
-if(!process.argv.includes('--skip-install'))execFileSync('npm',['ci','--prefix','office-editor','--ignore-scripts','--no-audit','--no-fund'],{stdio:'inherit'});
+if(!process.argv.includes('--skip-install'))execFileSync('npm',['ci','--prefix','office-editor','--ignore-scripts','--include=dev','--no-audit','--no-fund'],{stdio:'inherit'});
 execFileSync('npm',['run','build','--prefix','office-editor'],{stdio:'inherit'});
 await mkdir('public/office-editor/sheets',{recursive:true});
 await cp('office-editor/node_modules/@schnsrw/core/wasm/s1engine_wasm_bg.wasm','public/office-editor/assets/s1engine_wasm_bg.wasm');
