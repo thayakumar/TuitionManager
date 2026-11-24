@@ -1,0 +1,15 @@
+✔ standalone creation stays unlinked; meeting creation binds lesson and its student atomically; identical retry creates once (276.232571ms)
+✔ student access is explicit, active and rechecked for every read, edit and listing (141.459847ms)
+✔ one editing lease prevents simultaneous overwrites, expires safely, and cannot be released by another tab (74.918854ms)
+✔ sharing view/edit, revocation and archive/restore preserve work and notify affected students (106.147193ms)
+✔ duplicate is private and standalone; rename, filters, paging and snapshot validation preserve original data (116.943402ms)
+✔ document HTTP guards reject cross-origin changes, primitive JSON and oversized payloads (125.542931ms)
+✔ chunked saves support large snapshots without exposing partial data or accepting missing/foreign chunks (497.933077ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1722.706293

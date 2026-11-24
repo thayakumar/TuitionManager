@@ -1,0 +1,10 @@
+{
+  "results": [
+    "doc: named new tab, loading, delayed creation, standalone file, library refresh",
+    "sheet: named new tab, loading, delayed creation, standalone file, library refresh",
+    "doc: failed acknowledgement visible; retry reopens same file without duplicates",
+    "sheet: failed acknowledgement visible; reload reopens same file without duplicates",
+    "Meeting creation preserves lesson link and owning student access"
+  ],
+  "page_errors": []
+}

@@ -63,3 +63,7 @@ MCP’s `documents` domain includes discovery/listing, full reads, creation, man
 1. As a student, I can see only files explicitly shared with me → private or other students’ files are inaccessible even with a known URL.
 2. As a student, I can open lesson documents from My notes → that lesson’s shared files appear alongside my notes/whiteboard history.
 3. As an inactive student, I cannot read or edit files → saved work remains available to the tutor as history.
+
+### New-file opening and recovery
+
+New document and New sheet open a same-origin creation page directly, showing progress until the editor is ready. There is no blank placeholder window or redirect controlled by the original tab. If creation fails or takes too long, the new tab shows an error and Retry; the same creation identity is retained across retries/refreshes to avoid duplicate files after a lost acknowledgement. The library refreshes when a file is created or when you return to it. Pasted/external creation URLs ask for an explicit Create click instead of creating a file merely from an external navigation.
