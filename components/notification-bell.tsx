@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import {useNotificationCounts} from "@/components/notification-context";
 import { Bell } from "lucide-react";
 import Link from "next/link";
-import { getNotificationSummary } from "@/lib/actions";
+
 export function UnreadBadge({ count }: { count: number }) {
   return count > 0 ? (
     <span
@@ -18,38 +18,10 @@ export function useUnreadNotifications(
   recipientId: number | null,
   initial = 0,
 ) {
-  const [count, setCount] = useState(initial);
-  useEffect(() => {
-    let live = true,
-      pending = false;
-    async function update() {
-      if (pending || document.hidden) return;
-      pending = true;
-      try {
-        const result = await getNotificationSummary(recipientType, recipientId);
-        if (live) setCount(result.unreadCount);
-      } catch {
-        /* Session guards own access; preserve current count on a temporary request failure. */
-      } finally {
-        pending = false;
-      }
-    }
-    void update();
-    const timer = window.setInterval(() => void update(), 15000);
-    const refresh = () => void update();
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    window.addEventListener("notifications-changed", refresh);
-    return () => {
-      live = false;
-      clearInterval(timer);
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-      window.removeEventListener("notifications-changed", refresh);
-    };
-  }, [recipientType, recipientId]);
-  return count;
+  const summary=useNotificationCounts();
+  return summary?.role===recipientType&&(recipientType==='admin'||summary.scope==='student:'+recipientId)?summary.unreadCount:initial;
 }
+
 export function NotificationBell({
   unreadCount = 0,
   href,

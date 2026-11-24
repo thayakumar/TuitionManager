@@ -1,0 +1,14 @@
+{
+  "results": [
+    "Existing unread notifications baseline without a toast",
+    "Polling displays new arrivals; dismissal stays unread; refresh does not replay",
+    "Toast click opens the related page and marks the notification read",
+    "Concurrent tabs share a deduplication watermark",
+    "Toast fits the mobile viewport",
+    "Student popup remains scoped and navigates within their portal",
+    "Parent family-chat toast opens only their family chat",
+    "Senders do not receive their own message popup",
+    "Unclicked toast closes automatically"
+  ],
+  "page_errors": []
+}
