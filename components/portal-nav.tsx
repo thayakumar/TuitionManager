@@ -110,11 +110,11 @@ function StudentNavigation({
     <>
       <aside
         aria-label="Student sidebar"
-        className="no-print fixed inset-y-0 left-0 z-30 hidden overflow-hidden w-60 flex-col border-r border-border bg-card md:flex"
+        className="no-print fixed inset-y-0 left-0 z-30 hidden overflow-hidden w-60 flex-col border-r border-sidebar-border bg-sidebar md:flex"
       >
         {content()}
       </aside>
-      <div className="mobile-nav-bar no-print sticky top-0 z-40 flex items-center gap-2 border-b border-border bg-card px-4 py-2.5 md:hidden">
+      <div className="mobile-nav-bar no-print sticky top-0 z-40 flex items-center gap-2 border-b border-border px-4 py-2.5 md:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             render={

@@ -65,10 +65,15 @@ export function SignInShell({
               Looking for the {role === "Admin" ? "student" : "admin"} space?
             </span>
             <Link
-              className="flex items-center gap-1 font-medium text-primary hover:underline"
+              className="group flex items-center gap-1 font-medium text-primary hover:underline"
               href={role === "Admin" ? "/portal/student" : "/portal/admin"}
             >
-              Go there <ArrowUpRight size={13} aria-hidden="true" />
+              Go there{" "}
+              <ArrowUpRight
+                size={13}
+                className="transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </div>
         </div>

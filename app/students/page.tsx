@@ -105,9 +105,9 @@ export default async function StudentsPage() {
       />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
         {statCards.map((card) => (
-          <Card key={card.label} className="border shadow-none">
+          <Card key={card.label}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div>

@@ -107,13 +107,13 @@ export default async function DashboardPage() {
       <section className="dashboard-intro page-heading mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-center">
         <div>
           <p className="eyebrow">Your teaching day</p>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-2.5 text-2xl font-bold tracking-tight sm:text-3xl">
             Dashboard
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Here’s what’s happening today, and what needs your attention.
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-xs font-medium text-muted-foreground tabular-nums">
             {new Intl.DateTimeFormat("en-MY", {
               timeZone: "Asia/Kuala_Lumpur",
               dateStyle: "full",
@@ -122,8 +122,16 @@ export default async function DashboardPage() {
         </div>
         <DashboardQuickActions students={students} />
       </section>
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-3.5 lg:grid-cols-3">
         {[
+          {
+            href: "/schedule",
+            label: "Today's lessons",
+            value: Number(stats?.today_classes ?? 0),
+            detail: "Your day at a glance",
+            Icon: BookOpen,
+            hero: true,
+          },
           {
             href: "/students",
             label: "Active students",
@@ -146,13 +154,6 @@ export default async function DashboardPage() {
             Icon: Clock,
           },
           {
-            href: "/schedule",
-            label: "Today's lessons",
-            value: Number(stats?.today_classes ?? 0),
-            detail: "Your day at a glance",
-            Icon: BookOpen,
-          },
-          {
             href: "/requests",
             label: "Pending reschedules",
             value: pendingCount,
@@ -168,41 +169,86 @@ export default async function DashboardPage() {
             Icon: FileText,
             warning: reportCount > 0,
           },
-        ].map(({ label, value, detail, Icon, href, warning }) => (
+        ].map(({ label, value, detail, Icon, href, warning, hero }) => (
           <Link
             key={label}
             href={href}
-            className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className={`metric-card h-full transition-colors hover:border-primary/40 ${warning ? "border-amber-300 bg-amber-50/60" : ""}`}>
+            <Card
+              className={`metric-card interactive-card h-full ${
+                hero
+                  ? "kpi-hero-surface"
+                  : warning
+                    ? "border-amber-300/90 bg-amber-50/70"
+                    : ""
+              }`}
+            >
               <CardContent className="relative p-5 sm:p-6">
-                <Icon className="metric-icon absolute right-5 top-5 size-9 rounded-xl bg-primary/5 p-2 text-primary" />
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="mt-3 break-words text-2xl font-bold">{value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                <Icon
+                  className={`metric-icon absolute right-5 top-5 size-9 rounded-xl p-2 ${
+                    hero
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : warning
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-primary/5 text-primary"
+                  }`}
+                  aria-hidden="true"
+                />
+                <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  {hero && (
+                    <span
+                      className="inline-block size-2 rounded-full bg-primary"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {label}
+                </p>
+                <p
+                  className={`mt-3 break-words font-bold tracking-tight tabular-nums ${
+                    hero ? "text-3xl text-primary" : "text-2xl text-foreground"
+                  }`}
+                >
+                  {value}
+                </p>
+                <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="truncate">{detail}</span>
+                  <ArrowRight
+                    size={12}
+                    className="shrink-0 opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:translate-x-0.5 group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
+                </p>
               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
-      <Card id="needs-attention" className="mb-6 scroll-mt-6">
+      <Card id="needs-attention" className="mb-6 scroll-mt-20">
         <CardHeader>
           <CardTitle>Needs Your Attention</CardTitle>
           <CardDescription>Teaching tasks ready for your next step</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {caughtUp && (
-            <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-5 text-emerald-800">
-              <CheckCircle2 size={22} aria-hidden="true" />
+            <div className="flex items-center gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/80 p-5 text-emerald-900">
+              <CheckCircle2 size={22} className="shrink-0 text-emerald-700" aria-hidden="true" />
               <p className="font-medium">You're all caught up!</p>
             </div>
           )}
           {pendingCount > 0 && (
-            <Link href="/requests" className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-              <RefreshCw size={20} className="shrink-0" aria-hidden="true" />
+            <Link
+              href="/requests"
+              className="group flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-4 text-amber-950 transition-[background-color,border-color] duration-150 hover:border-amber-300 hover:bg-amber-50"
+            >
+              <RefreshCw size={20} className="shrink-0 text-amber-700" aria-hidden="true" />
               <span className="min-w-0 flex-1 font-medium">Review reschedule requests</span>
-              <Badge className="bg-amber-100 text-amber-900">{pendingCount}</Badge>
-              <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+              <Badge className="bg-amber-100 text-amber-900 tabular-nums">{pendingCount}</Badge>
+              <ArrowRight
+                size={18}
+                className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           )}
           {reportCount > 0 && (
@@ -210,17 +256,37 @@ export default async function DashboardPage() {
               <div className="flex items-center gap-3">
                 <FileText size={20} className="shrink-0 text-amber-700" aria-hidden="true" />
                 <p className="flex-1 font-semibold">Reports to write</p>
-                <Badge className="bg-amber-100 text-amber-900">{reportCount}</Badge>
+                <Badge className="bg-amber-100 text-amber-900 tabular-nums">{reportCount}</Badge>
               </div>
               <div className="mt-3 divide-y divide-border/60">
                 {needsReport.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}?report=true`} className="flex items-center justify-between gap-3 py-3 text-sm hover:text-primary">
-                    <span className="min-w-0"><strong className="block">{c.student_name}</strong><span className="mt-1 block text-xs text-muted-foreground">{fmtDateTime(c.scheduled_at)}</span></span>
-                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  <Link
+                    key={c.id}
+                    href={`/classes/${c.id}?report=true`}
+                    className="group flex items-center justify-between gap-3 py-3 text-sm transition-colors duration-150 hover:text-primary"
+                  >
+                    <span className="min-w-0">
+                      <strong className="block">{c.student_name}</strong>
+                      <span className="mt-1 block text-xs text-muted-foreground tabular-nums">
+                        {fmtDateTime(c.scheduled_at)}
+                      </span>
+                    </span>
+                    <ArrowRight
+                      size={17}
+                      className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
                   </Link>
                 ))}
               </div>
-              {reportCount > 5 && <Link href="/schedule" className="mt-2 block text-sm font-medium text-primary">Showing 5 of {reportCount} · View schedule →</Link>}
+              {reportCount > 5 && (
+                <Link
+                  href="/schedule"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Showing 5 of {reportCount} · View schedule →
+                </Link>
+              )}
             </div>
           )}
           {unmarkedCount > 0 && (
@@ -228,25 +294,52 @@ export default async function DashboardPage() {
               <div className="flex items-center gap-3">
                 <CircleHelp size={20} className="shrink-0 text-blue-700" aria-hidden="true" />
                 <p className="flex-1 font-semibold">Unmarked lessons</p>
-                <Badge className="bg-blue-100 text-blue-900">{unmarkedCount}</Badge>
+                <Badge className="bg-blue-100 text-blue-900 tabular-nums">{unmarkedCount}</Badge>
               </div>
               <div className="mt-3 divide-y divide-border/60">
                 {unmarked.map((c) => (
-                  <Link key={c.id} href={`/classes/${c.id}`} className="flex items-center justify-between gap-3 py-3 text-sm hover:text-primary">
-                    <span className="min-w-0"><strong className="block">{c.student_name}</strong><span className="mt-1 block text-xs text-muted-foreground">{fmtDateTime(c.scheduled_at)}</span></span>
-                    <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
+                  <Link
+                    key={c.id}
+                    href={`/classes/${c.id}`}
+                    className="group flex items-center justify-between gap-3 py-3 text-sm transition-colors duration-150 hover:text-primary"
+                  >
+                    <span className="min-w-0">
+                      <strong className="block">{c.student_name}</strong>
+                      <span className="mt-1 block text-xs text-muted-foreground tabular-nums">
+                        {fmtDateTime(c.scheduled_at)}
+                      </span>
+                    </span>
+                    <ArrowRight
+                      size={17}
+                      className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
                   </Link>
                 ))}
               </div>
-              {unmarkedCount > 5 && <Link href="/schedule" className="mt-2 block text-sm font-medium text-primary">Showing 5 of {unmarkedCount} · View schedule →</Link>}
+              {unmarkedCount > 5 && (
+                <Link
+                  href="/schedule"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  Showing 5 of {unmarkedCount} · View schedule →
+                </Link>
+              )}
             </div>
           )}
           {ungradedCount > 0 && (
-            <Link href="/classroom" className="flex items-center gap-3 rounded-xl border border-border p-4 hover:border-primary/40">
+            <Link
+              href="/classroom"
+              className="group flex items-center gap-3 rounded-xl border border-border p-4 transition-[border-color,background-color] duration-150 hover:border-primary/40 hover:bg-secondary/40"
+            >
               <ClipboardCheck size={20} className="shrink-0 text-amber-700" aria-hidden="true" />
               <span className="min-w-0 flex-1 font-medium">Grade student submissions</span>
-              <Badge className="bg-amber-100 text-amber-900">{ungradedCount}</Badge>
-              <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+              <Badge className="bg-amber-100 text-amber-900 tabular-nums">{ungradedCount}</Badge>
+              <ArrowRight
+                size={18}
+                className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           )}
         </CardContent>
@@ -257,11 +350,11 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle>Today’s lessons</CardTitle>
-                <CardDescription className="mt-2">
+                <CardDescription className="mt-1.5">
                   A clear view of your day · Malaysia time
                 </CardDescription>
               </div>
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="tabular-nums">
                 {Number(stats?.today_classes ?? classes.length)} lessons
               </Badge>
             </div>
@@ -274,7 +367,7 @@ export default async function DashboardPage() {
                   key={c.id}
                   className="lesson-row flex min-w-0 items-center gap-4 border-b border-border/50 py-4 last:border-0"
                 >
-                  <div className="w-16 shrink-0">
+                  <div className="w-16 shrink-0 tabular-nums">
                     <strong className="text-xs">
                       {fmtTime(c.scheduled_at)}
                     </strong>
@@ -301,14 +394,33 @@ export default async function DashboardPage() {
                 </Link>
               ))
             ) : (
-              <p className="rounded-xl border border-dashed border-border bg-muted/40 p-8 text-center text-sm text-muted-foreground">
-                No lessons today. A little space to plan ahead.
-              </p>
+              <div className="rounded-xl border border-dashed border-border bg-muted/40 p-8 text-center">
+                <p className="text-sm font-medium text-foreground">
+                  No lessons today
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  A little space to plan ahead.
+                </p>
+                <Link
+                  href="/schedule"
+                  className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-sm font-semibold text-foreground shadow-2xs transition-[border-color,background-color] duration-150 hover:border-primary/40 hover:bg-secondary"
+                >
+                  Open schedule <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              </div>
             )}
           </CardContent>
           <div className="border-t border-border px-6 py-4">
-            <Link href="/schedule" className="font-medium text-primary">
-              View full schedule →
+            <Link
+              href="/schedule"
+              className="group inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              View full schedule
+              <ArrowRight
+                size={15}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </div>
         </Card>
@@ -334,15 +446,20 @@ export default async function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle>Upcoming lessons</CardTitle>
-              <CardDescription className="mt-1">
+              <CardDescription className="mt-1 tabular-nums">
                 {Number(stats?.upcoming ?? 0)} scheduled · showing the next 5
               </CardDescription>
             </div>
             <Link
               href="/schedule"
-              className="text-xs font-semibold text-primary hover:underline"
+              className="group inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
             >
-              View full schedule →
+              View full schedule
+              <ArrowRight
+                size={13}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </div>
         </CardHeader>
@@ -350,17 +467,21 @@ export default async function DashboardPage() {
           {upcoming.length ? (
             upcoming.map((c) => (
               <Link
-                className="flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0 hover:text-primary"
+                className="group flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0 transition-colors duration-150 hover:text-primary"
                 key={c.id}
                 href={`/classes/${c.id}`}
               >
                 <div className="min-w-0">
                   <p className="break-words text-sm font-semibold">{c.student_name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground tabular-nums">
                     {fmtDateTime(c.scheduled_at)}
                   </p>
                 </div>
-                <ArrowRight size={15} className="shrink-0 text-primary" aria-hidden="true" />
+                <ArrowRight
+                  size={15}
+                  className="shrink-0 text-primary transition-transform duration-150 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </Link>
             ))
           ) : (

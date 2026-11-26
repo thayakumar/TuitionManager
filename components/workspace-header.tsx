@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import { CommandPalette } from "@/components/command-palette";
 
 const labels: Record<string, string> = {
   overview: "Directory",
@@ -71,7 +72,7 @@ export function WorkspaceHeader({
       <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
         <Link
           href={home}
-          className="truncate text-muted-foreground hover:text-primary"
+          className="truncate text-muted-foreground transition-colors duration-150 hover:text-primary"
         >
           {name ? `${name}’s workspace` : "Workspace"}
         </Link>
@@ -91,7 +92,7 @@ export function WorkspaceHeader({
               ) : (
                 <Link
                   href={item.href}
-                  className="truncate text-muted-foreground hover:text-primary"
+                  className="truncate text-muted-foreground transition-colors duration-150 hover:text-primary"
                 >
                   {item.label}
                 </Link>
@@ -100,17 +101,20 @@ export function WorkspaceHeader({
           );
         })}
       </nav>
-      <div className="workspace-role">
-        {avatarSrc ? (
-          <img
-            src={avatarSrc}
-            alt={name ? `${name} profile` : "Profile photo"}
-            className="size-6 rounded-full object-cover"
-          />
-        ) : (
-          <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
-        )}
-        {role} workspace
+      <div className="flex shrink-0 items-center gap-2.5">
+        <CommandPalette role={role} basePath={home} />
+        <div className="workspace-role">
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              alt={name ? `${name} profile` : "Profile photo"}
+              className="size-6 rounded-full object-cover"
+            />
+          ) : (
+            <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+          )}
+          {role} workspace
+        </div>
       </div>
     </header>
   );

@@ -110,21 +110,47 @@ export default async function StudentDashboardPage({
         </Button>
       </header>
 
-      {diagnostic && <Link href={`/portal/student/${id}/diagnostic`} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-secondary/50 p-5 transition-colors hover:bg-secondary"><span><strong className="block text-lg">Your readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">{diagnostic.status==='locked'?'Your results are ready to view.':diagnostic.status==='in_progress'?'Continue your saved one-time assessment.':diagnostic.status==='open'?'Your tutor has opened your diagnostic.':diagnostic.status==='submitted'?'Submitted · waiting for tutor review.':'Your tutor will open this for your first regular class.'}</span></span><ArrowRight size={21} className="shrink-0 text-primary" aria-hidden="true"/></Link>}
+      {diagnostic && (
+        <Link
+          href={`/portal/student/${id}/diagnostic`}
+          className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-secondary/50 p-5 shadow-2xs transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-primary/40 hover:bg-secondary hover:shadow-xs"
+        >
+          <span>
+            <strong className="block text-lg">Your readiness diagnostic</strong>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              {diagnostic.status === "locked"
+                ? "Your results are ready to view."
+                : diagnostic.status === "in_progress"
+                  ? "Continue your saved one-time assessment."
+                  : diagnostic.status === "open"
+                    ? "Your tutor has opened your diagnostic."
+                    : diagnostic.status === "submitted"
+                      ? "Submitted · waiting for tutor review."
+                      : "Your tutor will open this for your first regular class."}
+            </span>
+          </span>
+          <ArrowRight
+            size={21}
+            className="shrink-0 text-primary transition-transform duration-150 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
+      )}
 
       {/* Next Class Highlight */}
       {nextClass && (
-        <Card className="student-next-class border-l-4 border-l-primary">
-          <CardContent className="p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <Card className="student-next-class kpi-hero-surface border-l-4 border-l-primary">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-base font-semibold text-primary mb-2">
+                <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
                   Next class
                 </p>
-                <p className="text-xl font-semibold text-foreground sm:text-2xl">
+                <p className="text-xl font-semibold text-foreground tabular-nums sm:text-2xl">
                   {fmtDateTime(nextClass.scheduled_at)}
                 </p>
-                <p className="text-base text-muted-foreground mt-0.5">
+                <p className="mt-1 text-sm text-muted-foreground tabular-nums sm:text-base">
                   {nextClass.duration_minutes} min ·{" "}
                   {nextClass.subject || student.subject || "Lesson"}
                   {nextClass.location ? ` · ${nextClass.location}` : ""}
@@ -143,13 +169,13 @@ export default async function StudentDashboardPage({
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3.5 xl:grid-cols-4">
         <Card className="student-metric">
-          <CardContent className="p-4">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base text-muted-foreground">All classes</p>
-                <p className="text-3xl font-bold tabular-nums text-foreground mt-1">
+                <p className="text-sm text-muted-foreground">All classes</p>
+                <p className="mt-1.5 text-3xl font-bold tabular-nums text-foreground">
                   {stats?.total_classes ?? 0}
                 </p>
               </div>
@@ -161,11 +187,11 @@ export default async function StudentDashboardPage({
         </Card>
 
         <Card className="student-metric">
-          <CardContent className="p-4">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base text-muted-foreground">Upcoming</p>
-                <p className="text-3xl font-bold tabular-nums text-foreground mt-1">
+                <p className="text-sm text-muted-foreground">Upcoming</p>
+                <p className="mt-1.5 text-3xl font-bold tabular-nums text-foreground">
                   {stats?.upcoming_count ?? 0}
                 </p>
               </div>
@@ -177,11 +203,11 @@ export default async function StudentDashboardPage({
         </Card>
 
         <Card className="student-metric">
-          <CardContent className="p-4">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base text-muted-foreground">Completed</p>
-                <p className="text-3xl font-bold tabular-nums text-foreground mt-1">
+                <p className="text-sm text-muted-foreground">Completed</p>
+                <p className="mt-1.5 text-3xl font-bold tabular-nums text-foreground">
                   {stats?.completed_count ?? 0}
                 </p>
               </div>
@@ -193,13 +219,13 @@ export default async function StudentDashboardPage({
         </Card>
 
         <Card className="student-metric">
-          <CardContent className="p-4">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-base text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Attended hours
                 </p>
-                <p className="text-3xl font-bold tabular-nums text-foreground mt-1">
+                <p className="mt-1.5 text-3xl font-bold tabular-nums text-foreground">
                   {((stats?.total_hours ?? 0) / 60).toFixed(1)}h
                 </p>
               </div>
@@ -222,9 +248,14 @@ export default async function StudentDashboardPage({
               </CardTitle>
               <Link
                 href={`/portal/student/${id}/schedule`}
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                className="group inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
-                View schedule <ArrowRight size={13} aria-hidden="true" />
+                View schedule
+                <ArrowRight
+                  size={13}
+                  className="transition-transform duration-150 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </Link>
             </div>
             <CardDescription className="text-sm">
@@ -235,7 +266,7 @@ export default async function StudentDashboardPage({
           </CardHeader>
           <CardContent>
             {upcoming.length <= 1 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 <Calendar size={32} className="mx-auto mb-2 opacity-40" aria-hidden="true" />
                 <p className="text-sm">
                   {nextClass
@@ -248,28 +279,28 @@ export default async function StudentDashboardPage({
                 {upcoming.slice(1).map((c) => (
                   <div
                     key={c.id}
-                    className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors"
+                    className="flex flex-wrap items-center gap-3 rounded-xl border border-border/60 p-3 transition-colors duration-150 hover:bg-muted/40"
                   >
                     <div className="flex size-9 items-center justify-center rounded-lg bg-sky-50">
                       <Clock size={16} className="text-sky-700" aria-hidden="true" />
                     </div>
                     <div className="min-w-36 flex-1">
-                      <div className="text-base font-medium">
+                      <div className="text-sm font-semibold tabular-nums sm:text-base">
                         {fmtDateTime(c.scheduled_at)}
                       </div>
-                      <div className="text-base text-muted-foreground">
+                      <div className="text-sm text-muted-foreground tabular-nums">
                         {c.duration_minutes} min ·{" "}
                         {c.subject || student.subject || "Lesson"}
                         {c.location ? ` · ${c.location}` : ""}
                       </div>
                     </div>
-                    <div className="flex gap-2 shrink-0 flex-wrap items-center justify-end">
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                       {c.is_trial ? (
                         <Badge
                           variant="outline"
-                          className="border-amber-300 bg-amber-100 text-amber-950 text-xs"
+                          className="border-amber-300 bg-amber-100 text-xs text-amber-950"
                         >
-                          TRIAL
+                          Trial
                         </Badge>
                       ) : null}
                       <LessonStatusBadge

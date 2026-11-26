@@ -12,7 +12,7 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <main className="min-h-screen bg-background transition-[margin] duration-200 md:ml-60 [.sidebar-collapsed_&]:md:ml-16">
+    <main className="min-h-dvh bg-background transition-[margin] duration-200 ease-out md:ml-60 [.sidebar-collapsed_&]:md:ml-16">
       <WorkspaceHeader />
       <div className="workspace-page mx-auto max-w-[1440px] min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <Suspense fallback={null}>{children}</Suspense>

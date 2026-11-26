@@ -69,7 +69,7 @@ export default async function InvoicesPage({
           </div>
         }
       />
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         {[
           [
             "Outstanding",
@@ -91,12 +91,18 @@ export default async function InvoicesPage({
             String(totals.count),
             `${totals.canceledCount} cancelled excluded`,
           ],
-        ].map(([title, value, sub]) => (
-          <Card key={title}>
+        ].map(([title, value, sub], idx) => (
+          <Card key={title} className={idx === 0 ? "kpi-hero-surface" : undefined}>
             <CardContent className="p-5">
-              <p className="text-xs text-muted-foreground">{title}</p>
-              <p className="mt-2 break-words text-2xl font-bold">{value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+              <p className="text-xs font-medium text-muted-foreground">{title}</p>
+              <p
+                className={`mt-2 break-words font-bold tracking-tight tabular-nums ${
+                  idx === 0 ? "text-2xl text-primary sm:text-3xl" : "text-2xl text-foreground"
+                }`}
+              >
+                {value}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground tabular-nums">{sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -110,7 +116,11 @@ export default async function InvoicesPage({
             key={s}
             href={s === "all" ? "/invoices" : `/invoices?status=${s}`}
             aria-current={(status ?? "all") === s ? "page" : undefined}
-            className={`rounded-full border px-3 py-2 text-xs capitalize ${(status ?? "all") === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-secondary"}`}
+            className={`rounded-full border px-3.5 py-2 text-xs font-medium capitalize tabular-nums transition-[background-color,border-color,color,box-shadow] duration-150 ease-out ${
+              (status ?? "all") === s
+                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary"
+            }`}
           >
             {s} ({s === "all" ? invoices.length : (statusCounts.get(s) ?? 0)})
           </Link>

@@ -57,19 +57,20 @@ export default async function ParentDashboard({
         title={`${student.name}'s learning journey`}
         subtitle="A clear view of lessons, progress and tuition"
       />
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         {[
-          {
-            label: "Lessons recorded",
-            value: stats?.total ?? 0,
-            detail: "Full class history",
-            icon: Calendar,
-          },
           {
             label: "Attendance",
             value: `${attendance.rate}%`,
             detail: `${attendance.present} present · ${attendance.absent} absent`,
             icon: CheckCircle2,
+            hero: true,
+          },
+          {
+            label: "Lessons recorded",
+            value: stats?.total ?? 0,
+            detail: "Full class history",
+            icon: Calendar,
           },
           {
             label: "Upcoming lessons",
@@ -84,12 +85,18 @@ export default async function ParentDashboard({
             icon: Receipt,
           },
         ].map((m) => (
-          <Card key={m.label}>
+          <Card key={m.label} className={m.hero ? "kpi-hero-surface" : undefined}>
             <CardContent className="p-4 sm:p-5">
-              <m.icon size={18} className="mb-3 text-primary" />
-              <p className="text-xs text-muted-foreground">{m.label}</p>
-              <p className="mt-2 break-words text-2xl font-bold">{m.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{m.detail}</p>
+              <m.icon size={18} className="mb-3 text-primary" aria-hidden="true" />
+              <p className="text-xs font-medium text-muted-foreground">{m.label}</p>
+              <p
+                className={`mt-2 break-words font-bold tracking-tight tabular-nums ${
+                  m.hero ? "text-3xl text-primary" : "text-2xl text-foreground"
+                }`}
+              >
+                {m.value}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground tabular-nums">{m.detail}</p>
             </CardContent>
           </Card>
         ))}
@@ -100,24 +107,29 @@ export default async function ParentDashboard({
             <CardTitle className="text-base">Next lessons</CardTitle>
             <Link
               href={`${base}/schedule`}
-              className="text-xs font-medium text-primary"
+              className="group inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
             >
-              View all <ArrowRight size={12} className="inline" />
+              View all
+              <ArrowRight
+                size={12}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </CardHeader>
           <CardContent>
             {upcoming.length ? (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border/70">
                 {upcoming.map((c) => (
                   <div
                     key={c.id}
                     className="flex flex-wrap items-center justify-between gap-3 py-3"
                   >
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium tabular-nums">
                         {fmtDateTime(c.scheduled_at)}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground tabular-nums">
                         {c.duration_minutes} minutes
                         {c.location ? ` · ${c.location}` : ""}
                       </p>
@@ -141,30 +153,40 @@ export default async function ParentDashboard({
             <CardTitle className="text-base">Recent invoices</CardTitle>
             <Link
               href={`${base}/invoices`}
-              className="text-xs font-medium text-primary"
+              className="group inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
             >
-              View all <ArrowRight size={12} className="inline" />
+              View all
+              <ArrowRight
+                size={12}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </CardHeader>
           <CardContent>
             {invoices.length ? (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border/70">
                 {invoices.map((inv) => (
                   <Link
                     key={inv.id}
                     href={`${base}/invoices/${inv.id}`}
-                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                    className="lesson-row group flex flex-wrap items-center justify-between gap-3 py-3"
                   >
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium tabular-nums group-hover:text-primary">
                         {inv.invoice_number}
                       </p>
                       <p className="mt-1 text-xs capitalize text-muted-foreground">
                         {inv.status}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold">
+                    <p className="flex items-center gap-1.5 text-sm font-semibold tabular-nums">
                       {currency(Number(inv.total_amount), settings.currency)}
+                      <ArrowRight
+                        size={14}
+                        className="text-muted-foreground/60 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-primary"
+                        aria-hidden="true"
+                      />
                     </p>
                   </Link>
                 ))}

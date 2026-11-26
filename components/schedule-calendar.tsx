@@ -140,11 +140,11 @@ export function ScheduleCalendar({ classes }: { classes: ClassItem[] }) {
                     <Link key={c.id} href={`/classes/${c.id}`} className="block">
                       <div
                         className={cn(
-                          "group relative flex items-start gap-3 rounded-lg border p-3 transition-all hover:bg-secondary/50 hover:shadow-sm",
+                          "group relative flex items-start gap-3 rounded-xl border p-3 transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-primary/30 hover:bg-secondary/50 hover:shadow-xs",
                           c.status === "canceled" && "opacity-60"
                         )}
                       >
-                        <div className="flex flex-col items-center gap-0.5 min-w-[52px]">
+                        <div className="flex flex-col items-center gap-0.5 min-w-[52px] tabular-nums">
                           <span className="text-sm font-semibold text-foreground">
                             {format(parseISO(c.scheduled_at), "h:mm")}
                           </span>
