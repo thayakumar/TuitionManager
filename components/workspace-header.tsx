@@ -50,7 +50,7 @@ export function WorkspaceHeader({
       ? `/${segments.slice(0, 3).join("/")}`
       : role === "Parent"
         ? `/${segments.slice(0, 2).join("/")}`
-        : "/dashboard";
+        : "/overview";
   const baseDepth = role === "Student" ? 3 : role === "Parent" ? 2 : 0;
 
   const trail: Array<{ label: string; href: string }> = [];
@@ -65,7 +65,7 @@ export function WorkspaceHeader({
       trail.push({ label, href });
     }
   }
-  if (!trail.length) trail.push({ label: "Dashboard", href: home });
+  if (!trail.length) trail.push({ label: role === "Admin" ? "Directory" : "Home", href: home });
 
   return (
     <header className="workspace-header no-print hidden md:flex">

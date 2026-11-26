@@ -88,7 +88,7 @@ export function middleware(request: NextRequest) {
   // Redirect before rendering the legacy root page; avoid a streamed redirect
   // through the dashboard's shared navigation tree.
   if (pathname === "/")
-    return NextResponse.redirect(publicDestination("/dashboard", request));
+    return NextResponse.redirect(publicDestination("/overview", request));
 
   return NextResponse.next();
 }

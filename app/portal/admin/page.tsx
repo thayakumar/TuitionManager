@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
       const result = await loginAdmin(formData);
       if (result.success) {
         const next = new URLSearchParams(window.location.search).get("next");
-        router.push(next?.startsWith("/oauth/authorize?") ? next : "/dashboard");
+        router.push(next?.startsWith("/oauth/authorize?") ? next : "/overview");
         router.refresh();
       } else {
         setError(result.error || "Invalid credentials");

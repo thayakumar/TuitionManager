@@ -44,6 +44,7 @@ const navGroups = [
   {
     label: "Teach & learn",
     items: [
+      { href: "/overview", label: "Directory", icon: Grid2X2 },
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/students", label: "Students", icon: Users },
       { href: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -71,7 +72,6 @@ const navGroups = [
   {
     label: "Workspace",
     items: [
-      { href: "/overview", label: "Directory", icon: Grid2X2 },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },

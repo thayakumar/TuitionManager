@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 export function BrandHomeLink({
-  href = "/dashboard",
+  href = "/overview",
   compact = false,
   subtitle = "Teaching together",
   className = "",
@@ -24,8 +24,8 @@ export function BrandHomeLink({
     <Link
       href={href}
       data-brand-home="true"
-      aria-label="TuitionHub — go to dashboard"
-      title={compact ? "TuitionHub — Dashboard" : undefined}
+      aria-label="TuitionHub — go to directory"
+      title={compact ? "TuitionHub — Directory" : undefined}
       aria-disabled={disabled || undefined}
       onClick={(event) => {
         if (disabled) {

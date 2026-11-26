@@ -163,6 +163,13 @@ function itemsForRole(
 
   return [
     {
+      label: "Directory",
+      href: "/overview",
+      group: "Teach & learn",
+      keywords: "home start all pages map shortcuts",
+      icon: Grid2X2,
+    },
+    {
       label: "Dashboard",
       href: "/dashboard",
       group: "Teach & learn",
@@ -246,13 +253,6 @@ function itemsForRole(
       group: "Stay connected",
       keywords: "alerts updates unread",
       icon: Bell,
-    },
-    {
-      label: "Directory",
-      href: "/overview",
-      group: "Workspace",
-      keywords: "all pages map shortcuts",
-      icon: Grid2X2,
     },
     {
       label: "Settings",

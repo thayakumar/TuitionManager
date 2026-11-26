@@ -13,21 +13,21 @@ export function SignInShell({
     <main className="signin-shell">
       <section className="signin-story" aria-label="About TuitionHub">
         <BrandHomeLink
-          href={role === "Admin" ? "/dashboard" : "/portal/student"}
+          href={role === "Admin" ? "/overview" : "/portal/student"}
           onDark
         />
 
         <div className="my-auto py-16">
-          <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em] text-teal-200">
+          <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em] text-orange-200">
             A little space for big ideas
           </p>
-          <p className="font-display max-w-lg text-4xl font-semibold leading-[1.12] tracking-tight lg:text-6xl">
+          <h2 className="font-display max-w-lg text-4xl font-semibold leading-[1.12] tracking-tight lg:text-6xl">
             Good lessons.
             <br />
             Bright futures.
             <br />
-            <span className="text-amber-200">All together.</span>
-          </p>
+            <span className="text-[#ffda96]">All together.</span>
+          </h2>
           <p className="mt-7 max-w-sm text-sm leading-7 text-white/75">
             A thoughtful home for lessons, learning and the small steps that
             make a big difference.
