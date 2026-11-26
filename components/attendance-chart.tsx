@@ -32,7 +32,7 @@ export function AttendanceChart({ data }: { data: AttendanceData }) {
             cy="86"
             r="64"
             fill="none"
-            stroke="#f9e7de"
+            stroke="var(--border)"
             strokeWidth="20"
           />
           <circle
@@ -40,7 +40,7 @@ export function AttendanceChart({ data }: { data: AttendanceData }) {
             cy="86"
             r="64"
             fill="none"
-            stroke="#d93624"
+            stroke="var(--primary)"
             strokeWidth="20"
             strokeDasharray={`${(present / total) * circumference} ${circumference}`}
             strokeLinecap="round"

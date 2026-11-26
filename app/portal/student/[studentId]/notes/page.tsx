@@ -43,7 +43,7 @@ export default async function StudentNotesPage({
   return (
     <>
       <PageHeader
-        title="Student Notes"
+        title="Notes"
         subtitle="Your notes, lesson whiteboards and shared documents"
       />
 

@@ -34,15 +34,6 @@ export default async function FinancialHistoryPage({
 }) {
   await requireAdminPage();
   const filters = await searchParams;
-  const [invoices, students, settings] = await Promise.all([
-    queryAll<FinanceInvoice>(
-      "SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ORDER BY i.period_start DESC,i.id DESC",
-    ),
-    queryAll<{ id: number; name: string }>(
-      "SELECT id,name FROM students ORDER BY name",
-    ),
-    getSettings(["currency"]),
-  ]);
   const validMonth = (v?: string) =>
     v && /^\d{4}-(0[1-9]|1[0-2])$/.test(v) ? v : undefined;
   const from = validMonth(filters.from),
@@ -53,13 +44,37 @@ export default async function FinancialHistoryPage({
     )
       ? filters.status
       : undefined;
-  const filtered = invoices.filter(
-    (i) =>
-      (!from || invoiceBillingMonth(i) >= from) &&
-      (!to || invoiceBillingMonth(i) <= to) &&
-      (!student || i.student_id === student) &&
-      (!status || i.status === status),
-  );
+  const where: string[] = [];
+  const queryParams: (string | number)[] = [];
+  const monthExpr =
+    "COALESCE(NULLIF(i.billing_month, ''), strftime('%Y-%m', i.period_start, '+8 hours'))";
+  if (from) {
+    where.push(`${monthExpr} >= ?`);
+    queryParams.push(from);
+  }
+  if (to) {
+    where.push(`${monthExpr} <= ?`);
+    queryParams.push(to);
+  }
+  if (student) {
+    where.push("i.student_id = ?");
+    queryParams.push(student);
+  }
+  if (status) {
+    where.push("i.status = ?");
+    queryParams.push(status);
+  }
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const [filtered, students, settings] = await Promise.all([
+    queryAll<FinanceInvoice>(
+      `SELECT i.id,i.student_id,i.invoice_number,i.period_start,i.period_end,i.billing_month,i.total_amount,i.status,i.issued_at,i.paid_at,s.name AS student_name FROM invoices i JOIN students s ON s.id=i.student_id ${whereSql} ORDER BY i.period_start DESC,i.id DESC`,
+      queryParams,
+    ),
+    queryAll<{ id: number; name: string }>(
+      "SELECT id,name FROM students ORDER BY name",
+    ),
+    getSettings(["currency"]),
+  ]);
   const totals = financeTotals(filtered),
     months = monthlyRevenue(filtered),
     symbol = settings.currency || "RM";
@@ -69,9 +84,9 @@ export default async function FinancialHistoryPage({
         title="Financial history"
         subtitle="Your complete tuition history, with revenue attributed to the month the lessons were invoiced for."
         action={
-          <Link href="/invoices">
-            <Button variant="outline">Manage invoices</Button>
-          </Link>
+          <Button asChild variant="outline">
+            <Link href="/invoices">Manage invoices</Link>
+          </Button>
         }
       />
       <form
@@ -195,7 +210,7 @@ export default async function FinancialHistoryPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <TableExplorer><table className="w-full text-left text-sm">
+            <TableExplorer label="monthly summaries"><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Month</th>
@@ -239,7 +254,7 @@ export default async function FinancialHistoryPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <TableExplorer><table className="w-full text-left text-sm">
+            <TableExplorer label="invoices"><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Invoice</th>

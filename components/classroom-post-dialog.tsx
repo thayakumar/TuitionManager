@@ -139,7 +139,7 @@ function PostDialog({
   studentId,
   editPost,
   topics = [],
-  existingAttachments = [],
+  existingAttachments,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -163,22 +163,26 @@ function PostDialog({
   const uploading = fileUploading || editorUploading;
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const [error, setError] = useState("");
-  const [savedAttachments, setSavedAttachments] =
-    useState<PostAttachment[]>(existingAttachments);
+  const hasInitialAttachments = existingAttachments !== undefined;
+  const [savedAttachments, setSavedAttachments] = useState<PostAttachment[]>(
+    existingAttachments ?? [],
+  );
   const [removedAttachmentIds, setRemovedAttachmentIds] = useState<number[]>(
     [],
   );
-  const [loadingAttachments, setLoadingAttachments] = useState(!!editPost);
+  const [loadingAttachments, setLoadingAttachments] = useState(
+    Boolean(editPost) && !hasInitialAttachments,
+  );
   const [attachmentLoadError, setAttachmentLoadError] = useState("");
   useEffect(() => {
-    if (!editPost) return;
+    if (!editPost || hasInitialAttachments) return;
     let active = true;
     setLoadingAttachments(true);
     fetch(`/api/classroom/posts/${editPost.id}/attachments`, {
       cache: "no-store",
     })
       .then(async (response) => {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         if (!response.ok)
           throw new Error(data.error || "Could not load existing attachments");
         return data;
@@ -201,7 +205,7 @@ function PostDialog({
     return () => {
       active = false;
     };
-  }, [editPost?.id]);
+  }, [editPost?.id, hasInitialAttachments]);
   useActionBusy(
     busy || uploading || loadingAttachments || refreshing,
     uploading
@@ -281,7 +285,7 @@ function PostDialog({
         if (!busy && !uploading && !refreshing) onOpenChange(next);
       }}
     >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <config.icon size={18} className="text-primary" />
@@ -423,7 +427,8 @@ function PostDialog({
                       placeholder="e.g., 100"
                     />
                     <Field
-                      label="Due date and time (Malaysia)"
+                      label="Due date (Malaysia)"
+                      timeLabel="Due time"
                       name="due_at"
                       type="datetime-local"
                       defaultValue={
@@ -433,9 +438,9 @@ function PostDialog({
                   </>
                 )}
               </section>
-              <div className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5">
+              <div className="rounded-2xl border border-primary/20 bg-secondary/50 p-5">
                 <p className="flex items-center gap-2 font-semibold">
-                  <Send size={18} className="text-primary" /> Ready for the
+                  <Send size={18} className="text-primary" aria-hidden="true" /> Ready for the
                   classroom
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">

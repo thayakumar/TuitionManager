@@ -3,11 +3,17 @@ import {useNotificationCounts} from "@/components/notification-context";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 
-export function UnreadBadge({ count }: { count: number }) {
+export function UnreadBadge({
+  count,
+  label = "notifications",
+}: {
+  count: number;
+  label?: string;
+}) {
   return count > 0 ? (
     <span
-      aria-label={`${count} unread notifications`}
-      className="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold leading-none text-primary-foreground"
+      aria-label={`${count} unread ${label}`}
+      className="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold leading-none text-primary-foreground tabular-nums"
     >
       {count > 99 ? "99+" : count}
     </span>

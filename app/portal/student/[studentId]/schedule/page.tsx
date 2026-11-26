@@ -17,6 +17,7 @@ import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { fmtDateTime } from "@/lib/format";
 import { RescheduleRequestDialog } from "@/components/reschedule-request-dialog";
+import { PageHeader } from "@/components/page-header";
 import type { ClassRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -24,11 +25,11 @@ export const dynamic = "force-dynamic";
 function statusIcon(status: string, attendance: string | null) {
   const state = lessonStatus(status, attendance);
   return state.key === "scheduled" ? (
-    <Clock size={19} />
+    <Clock size={19} aria-hidden="true" />
   ) : state.key === "completed" ? (
-    <CheckCircle2 size={19} />
+    <CheckCircle2 size={19} aria-hidden="true" />
   ) : (
-    <XCircle size={19} />
+    <XCircle size={19} aria-hidden="true" />
   );
 }
 
@@ -86,15 +87,10 @@ export default async function StudentSchedulePage({
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <Calendar size={22} className="text-orange-500" />
-          My Schedule
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your full lesson history and confirmed future schedule · Malaysia time
-        </p>
-      </div>
+      <PageHeader
+        title="My schedule"
+        subtitle="Your full lesson history and confirmed future schedule · Malaysia time"
+      />
 
       {classes.length === 0 ? (
         <Card className="border shadow-none">
@@ -102,6 +98,7 @@ export default async function StudentSchedulePage({
             <Calendar
               size={40}
               className="mx-auto mb-3 text-muted-foreground/40"
+              aria-hidden="true"
             />
             <p className="text-sm text-muted-foreground">
               No classes scheduled
@@ -136,6 +133,7 @@ export default async function StudentSchedulePage({
                 <ChevronDown
                   size={19}
                   className="ml-auto transition-transform group-open:rotate-180"
+                  aria-hidden="true"
                 />
               </summary>
 
@@ -188,15 +186,11 @@ export default async function StudentSchedulePage({
                                 <RescheduleRequestDialog classId={c.id} studentId={id} />
                               )}
                               {c.meeting_room && (
-                                <Link href={`/meeting/${c.id}`}>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7"
-                                  >
-                                    <Video size={13} /> Join
-                                  </Button>
-                                </Link>
+                                <Button asChild variant="outline" size="sm">
+                                  <Link href={`/meeting/${c.id}`}>
+                                    <Video size={14} aria-hidden="true" /> Join
+                                  </Link>
+                                </Button>
                               )}
                             </>
                           )}
@@ -210,10 +204,10 @@ export default async function StudentSchedulePage({
                       )}
 
                       {c.is_trial ? (
-                        <div className="mt-2 ml-12">
+                        <div className="mt-2 sm:ml-12">
                           <Badge
                             variant="outline"
-                            className="text-xs border-amber-300 text-amber-700"
+                            className="border-amber-300 bg-amber-100 text-amber-950 text-xs"
                           >
                             TRIAL
                           </Badge>
@@ -222,7 +216,7 @@ export default async function StudentSchedulePage({
 
                       {c.cancel_reason && (
                         <div className="mt-2 text-sm text-muted-foreground flex items-start gap-2 break-words sm:ml-12">
-                          <AlertCircle size={12} />{" "}
+                          <AlertCircle size={12} aria-hidden="true" />{" "}
                           <span className="min-w-0 break-words">
                             {c.cancel_reason}
                           </span>

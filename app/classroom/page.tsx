@@ -1,18 +1,10 @@
 import { getInitials } from "@/lib/initials";
 import { requireAdminPage } from "@/lib/auth";
 import Link from "next/link";
-import {
-  BookOpen,
-  Users,
-  FileText,
-  ClipboardList,
-  Megaphone,
-} from "lucide-react";
+import { BookOpen, Users } from "lucide-react";
 import { queryAll } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -47,10 +39,11 @@ export default async function ClassroomPage() {
             <Users
               size={48}
               className="mx-auto mb-4 text-muted-foreground/30"
+              aria-hidden="true"
             />
-            <h3 className="text-lg font-semibold text-foreground mb-1">
+            <h2 className="text-lg font-semibold text-foreground mb-1">
               No students yet
-            </h3>
+            </h2>
             <p className="text-sm text-muted-foreground">
               Add students to create their classroom spaces.
             </p>
@@ -58,11 +51,38 @@ export default async function ClassroomPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {students.map((student, index) => <Link key={student.id} href={`/classroom/${student.id}`} className="classroom-home-card">
-            <div className={`classroom-home-cover classroom-cover-${index % 3}`}><h2 className="text-2xl font-semibold leading-snug">{student.subject || "Learning together"}</h2><p className="mt-3 text-lg">{student.name}</p><BookOpen className="absolute bottom-5 right-6 size-16 text-white/20" /></div>
-            <div className="relative min-h-28 px-6 pb-6 pt-10"><div className="classroom-home-avatar">{getInitials(student.name)}</div><p className="text-base text-muted-foreground">{student.post_count} classroom {student.post_count === 1 ? "post" : "posts"}</p></div>
-            <div className="flex items-center justify-between border-t border-border px-6 py-4 font-medium text-primary">Open classroom <BookOpen size={21} /></div>
-          </Link>)}
+          {students.map((student, index) => (
+            <Link
+              key={student.id}
+              href={`/classroom/${student.id}`}
+              className="classroom-home-card"
+            >
+              <div className={`classroom-home-cover classroom-cover-${index % 3}`}>
+                <h2 className="break-words text-2xl font-semibold leading-snug">
+                  {student.name}
+                </h2>
+                <p className="mt-2 text-base text-white/85">
+                  {student.subject || "Learning together"}
+                </p>
+                <BookOpen
+                  className="absolute bottom-5 right-6 size-16 text-white/20"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="relative min-h-28 px-6 pb-6 pt-10">
+                <div className="classroom-home-avatar" aria-hidden="true">
+                  {getInitials(student.name)}
+                </div>
+                <p className="text-base text-muted-foreground">
+                  {student.post_count} classroom{" "}
+                  {student.post_count === 1 ? "post" : "posts"}
+                </p>
+              </div>
+              <div className="flex items-center justify-between border-t border-border px-6 py-4 font-medium text-primary">
+                Open classroom <BookOpen size={21} aria-hidden="true" />
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </>

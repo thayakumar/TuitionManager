@@ -4,18 +4,15 @@ import { requireAdminPage } from "@/lib/auth";
 
 import {
   Bell,
-  CheckCheck,
   CalendarClock,
   BookOpen,
   FileText,
   Megaphone,
 } from "lucide-react";
-import { queryAll, queryOne, execute } from "@/lib/db";
-import { markAllNotificationsRead } from "@/lib/actions";
+import { queryAll, queryOne } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
 import type { AppNotification } from "@/lib/types";
 
@@ -26,15 +23,15 @@ function iconForType(type: string) {
     case "reschedule_request":
     case "reschedule_approved":
     case "reschedule_rejected":
-      return <CalendarClock size={16} className="text-orange-500" />;
+      return <CalendarClock size={16} className="text-primary" aria-hidden="true" />;
     case "new_material":
     case "new_assignment":
-      return <BookOpen size={16} className="text-emerald-500" />;
+      return <BookOpen size={16} className="text-emerald-700" aria-hidden="true" />;
     case "class_scheduled":
     case "class_cancelled":
-      return <FileText size={16} className="text-amber-500" />;
+      return <FileText size={16} className="text-amber-700" aria-hidden="true" />;
     default:
-      return <Megaphone size={16} className="text-orange-500" />;
+      return <Megaphone size={16} className="text-primary" aria-hidden="true" />;
   }
 }
 
@@ -49,8 +46,6 @@ export default async function NotificationsPage() {
     ),
   ]);
 
-  const markAllRead = markAllNotificationsRead.bind(null, "admin", null);
-
   const unread = Number(summary?.unread ?? 0);
 
   return (
@@ -59,8 +54,8 @@ export default async function NotificationsPage() {
         title="Notifications"
         subtitle={
           unread > 0
-            ? `${unread} unread · showing the latest50 messages`
-            : "All caught up · showing the latest50 messages"
+            ? `${unread} unread · showing the latest 50 messages`
+            : "All caught up · showing the latest 50 messages"
         }
         action={
           unread > 0 ? (
@@ -72,7 +67,7 @@ export default async function NotificationsPage() {
       {notifications.length === 0 ? (
         <Card className="border shadow-none">
           <CardContent className="py-12 text-center">
-            <Bell size={40} className="mx-auto mb-3 text-muted-foreground/40" />
+            <Bell size={40} className="mx-auto mb-3 text-muted-foreground/40" aria-hidden="true" />
             <p className="text-sm text-muted-foreground">
               No notifications yet
             </p>
@@ -83,7 +78,7 @@ export default async function NotificationsPage() {
           {notifications.map((n) => (
             <Card
               key={n.id}
-              className={`border shadow-none transition-colors ${!n.read ? "bg-orange-50/40 border-l-2 border-l-orange-500" : ""}`}
+              className={`border shadow-none transition-colors ${!n.read ? "bg-secondary/50 border-l-2 border-l-primary" : ""}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">

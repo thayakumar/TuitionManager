@@ -25,7 +25,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { lessonStatus } from "@/lib/lesson-status";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -52,8 +51,6 @@ type ClassData = {
   teacher_notes: string | null;
 };
 type Student = { id: number; name: string; subject: string | null };
-const inputClass =
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ScheduleCalendarWrapper({
   classes,
@@ -249,7 +246,9 @@ export function ScheduleCalendarWrapper({
                     </Link>
                   </Button>
                   <Button
+                    type="button"
                     variant="outline"
+                    aria-label={copied ? "Meeting link copied" : "Copy meeting link"}
                     title="Copy meeting link"
                     onClick={async () => {
                       try {
@@ -264,7 +263,7 @@ export function ScheduleCalendarWrapper({
                       }
                     }}
                   >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                    {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
                   </Button>
                 </div>
               )}

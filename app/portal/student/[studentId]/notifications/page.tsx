@@ -1,14 +1,8 @@
 import { NotificationReadLink } from "@/components/notification-read-link";
 import { NotificationReadAction } from "@/components/notification-actions";
-import Link from "next/link";
-import { Bell, CheckCheck, Check } from "lucide-react";
+import { Bell } from "lucide-react";
 import { ownStudentContext } from "@/lib/portal-context";
-import {
-  getNotificationSummary,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from "@/lib/actions";
-import { Button } from "@/components/ui/button";
+import { getNotificationSummary } from "@/lib/actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { fmtDateTime } from "@/lib/format";
@@ -24,7 +18,6 @@ export default async function StudentNotificationsPage({
     "student",
     student.id,
   );
-  const markAll = markAllNotificationsRead.bind(null, "student", student.id);
   return (
     <>
       <PageHeader
@@ -52,7 +45,7 @@ export default async function StudentNotificationsPage({
             >
               <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Bell size={18} />
+                  <Bell size={18} aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -68,10 +61,13 @@ export default async function StudentNotificationsPage({
                       )}
                     </h2>
                     {!n.read && (
-                      <span
-                        className="size-2 rounded-full bg-primary"
-                        aria-label="Unread"
-                      />
+                      <span className="inline-flex items-center gap-1">
+                        <span
+                          className="size-2 rounded-full bg-primary"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">Unread</span>
+                      </span>
                     )}
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">

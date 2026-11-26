@@ -27,8 +27,8 @@ export async function verifyBrowserAdminSession(): Promise<boolean> {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token || !tokenPattern.test(token)) return false;
   return !!(await queryOne<{ id: number }>(
-    "SELECT id FROM admin_sessions WHERE token=? AND expires_at>datetime('now')",
-    [token],
+    "SELECT id FROM admin_sessions WHERE token IN (?, ?) AND expires_at>datetime('now')",
+    [hashToken(token), token],
   ));
 }
 
@@ -70,7 +70,7 @@ export async function createAdminSession(): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
   await execute(
     "INSERT INTO admin_sessions(token,expires_at) VALUES (?,datetime('now','+7 days'))",
-    [token],
+    [hashToken(token)],
   );
   (await cookies()).set(COOKIE_NAME, token, cookieOptions);
   return token;
@@ -80,7 +80,10 @@ export async function destroyAdminSession(): Promise<void> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (token && tokenPattern.test(token))
-    await execute("DELETE FROM admin_sessions WHERE token=?", [token]);
+    await execute("DELETE FROM admin_sessions WHERE token IN (?, ?)", [
+      hashToken(token),
+      token,
+    ]);
   cookieStore.delete(COOKIE_NAME);
 }
 

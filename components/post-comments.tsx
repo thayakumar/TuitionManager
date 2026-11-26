@@ -67,7 +67,7 @@ export function PostComments({
             (query.size ? "?" + query.toString() : ""),
           { cache: "no-store" },
         );
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         if (!response.ok)
           throw new Error(data.error || "Could not load comments");
         setComments((old) =>

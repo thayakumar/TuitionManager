@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
+import { DomainError } from './action-errors';
 import { verifyAdminSession, getStudentSession } from './auth';
 import { queryOne, queryAll, withTransaction } from './db';
 import type { Transaction } from '@libsql/client';
-export class DocumentError extends Error {
-    constructor(public status: number, message: string) { super(message); }
+export class DocumentError extends DomainError {
+    constructor(status: number, message: string) { super(status, message); }
 }
 export type DocumentActor = {
     admin: boolean;

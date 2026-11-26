@@ -1,10 +1,21 @@
 /** Only deliberate, non-sensitive business errors are safe to show to a user. */
 const PREFIX = "TUITION_VALIDATION:";
 
-export class ActionValidationError extends Error {
+export class DomainError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+    public code?: string,
+  ) {
+    super(message);
+    this.name = new.target.name;
+  }
+}
+
+export class ActionValidationError extends DomainError {
   readonly digest: string;
   constructor(message: string) {
-    super(message);
+    super(400, message);
     this.name = "ActionValidationError";
     this.digest = PREFIX + encodeURIComponent(message);
   }

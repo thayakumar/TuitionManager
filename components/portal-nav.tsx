@@ -9,11 +9,9 @@ import {
   BookOpen,
   StickyNote,
   UserCircle,
-  GraduationCap,
   Menu,
   LogOut,
   Bell,
-  X,
   MessagesSquare,
   BrainCircuit,
   Files,
@@ -24,6 +22,14 @@ import {
   UnreadBadge,
   useUnreadNotifications,
 } from "@/components/notification-bell";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+
 function StudentNavigation({
   studentId,
   studentName,
@@ -37,26 +43,32 @@ function StudentNavigation({
   const count = useUnreadNotifications("student", studentId);
   const chatCount = useUnreadFamilyChats("student");
   useEffect(() => setOpen(false), [path]);
+
   const links = [
     { path: "", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/schedule", label: "My Schedule", icon: CalendarDays },
-    { path: "/classroom", label: "My Classroom", icon: BookOpen },
-    { path: "/documents", label: "My documents", icon: Files },
-    { path: "/diagnostic", label: "My Diagnostic", icon: BrainCircuit },
+    { path: "/schedule", label: "Schedule", icon: CalendarDays },
+    { path: "/classroom", label: "Classroom", icon: BookOpen },
+    { path: "/documents", label: "Documents", icon: Files },
+    { path: "/diagnostic", label: "Diagnostic", icon: BrainCircuit },
+    { path: "/notes", label: "Notes", icon: StickyNote },
     { path: "/chat", label: "Family chat", icon: MessagesSquare },
-    { path: "/notes", label: "My Notes", icon: StickyNote },
     { path: "/notifications", label: "Notifications", icon: Bell },
-    { path: "/profile", label: "My Profile", icon: UserCircle },
+    { path: "/profile", label: "Profile", icon: UserCircle },
   ];
+
   function content() {
     return (
       <div className="flex h-full flex-col">
-        <div className="shrink-0 p-5" onClick={() => setOpen(false)}>
-          <BrandHomeLink href={base} subtitle={studentName} />
+        <div className="shrink-0 p-4">
+          <BrandHomeLink
+            href={base}
+            subtitle={studentName}
+            onClick={() => setOpen(false)}
+          />
         </div>
         <nav
           aria-label="Student navigation"
-          className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3"
+          className="sidebar-nav sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 pb-4"
         >
           {links.map((link) => {
             const href = base + link.path,
@@ -67,40 +79,59 @@ function StudentNavigation({
                 href={href}
                 onClick={() => setOpen(false)}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm ${active ? "bg-orange-50 font-semibold text-orange-700" : "text-muted-foreground hover:bg-secondary"}`}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors ${active ? "bg-secondary font-semibold text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
               >
-                <link.icon size={18} />
-                <span className="flex-1">{link.label}</span>
-                {link.path === "/chat" && <UnreadBadge count={chatCount}/>}
+                <link.icon size={18} aria-hidden="true" />
+                <span className="flex-1 truncate">{link.label}</span>
+                {link.path === "/chat" && (
+                  <UnreadBadge count={chatCount} label="messages" />
+                )}
                 {link.path === "/notifications" && (
-                  <UnreadBadge count={count} />
+                  <UnreadBadge count={count} label="notifications" />
                 )}
               </Link>
             );
           })}
         </nav>
         <form action={logoutStudent} className="border-t border-border p-3">
-          <button className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground hover:bg-secondary">
-            <LogOut size={17} />
+          <button
+            type="submit"
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <LogOut size={17} aria-hidden="true" />
             Sign out
           </button>
         </form>
       </div>
     );
   }
+
   return (
     <>
-      <aside className="no-print fixed inset-y-0 left-0 z-30 hidden overflow-hidden w-60 flex-col border-r border-border bg-card md:flex">
+      <aside
+        aria-label="Student sidebar"
+        className="no-print fixed inset-y-0 left-0 z-30 hidden overflow-hidden w-60 flex-col border-r border-border bg-card md:flex"
+      >
         {content()}
       </aside>
-      <div className="no-print sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
-        <button
-          aria-label="Open navigation"
-          onClick={() => setOpen(true)}
-          className="flex size-11 items-center justify-center rounded-xl border border-border"
-        >
-          <Menu size={20} />
-        </button>
+      <div className="mobile-nav-bar no-print sticky top-0 z-40 flex items-center gap-2 border-b border-border bg-card px-4 py-2.5 md:hidden">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Open navigation"
+              />
+            }
+          >
+            <Menu size={20} aria-hidden="true" />
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 max-w-[85vw] p-0">
+            <SheetTitle className="sr-only">Student navigation</SheetTitle>
+            {content()}
+          </SheetContent>
+        </Sheet>
         <BrandHomeLink
           href={base}
           subtitle={studentName}
@@ -109,40 +140,25 @@ function StudentNavigation({
         <Link
           href={base + "/notifications"}
           aria-label={`Notifications, ${count} unread`}
-          className="flex items-center gap-1"
+          className="relative flex size-11 shrink-0 items-center justify-center rounded-lg border border-border hover:bg-muted"
         >
-          <Bell size={18} />
-          <UnreadBadge count={count} />
+          <Bell size={18} aria-hidden="true" />
+          {count > 0 && (
+            <span className="absolute -right-1 -top-1">
+              <UnreadBadge count={count} label="notifications" />
+            </span>
+          )}
         </Link>
       </div>
-      {open && (
-        <div className="no-print fixed inset-0 z-50 md:hidden">
-          <button
-            aria-label="Close navigation"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-          />
-          <aside className="relative h-dvh overflow-hidden w-72 max-w-[85vw] bg-card">
-            <button
-              aria-label="Close navigation"
-              onClick={() => setOpen(false)}
-              className="absolute right-2 top-2 p-2"
-            >
-              <X size={18} />
-            </button>
-            {content()}
-          </aside>
-        </div>
-      )}
     </>
   );
 }
+
 export function PortalNav({
-  role,
   studentId,
   studentName,
 }: {
-  role: "student" | "parent";
+  role?: "student" | "parent";
   studentId: number;
   studentName: string;
 }) {

@@ -139,13 +139,39 @@ export function RichTextEditor({
       attributes: {
         role: "textbox",
         "aria-multiline": "true",
-        "aria-label": label || "Rich text content",
+        ...(label ? { "aria-labelledby": `${id}-label` } : { "aria-label": "Rich text content" }),
         "data-placeholder": placeholder,
         class: "rich-text-editor-content rich-text",
       },
     },
   });
-  useEditorState({ editor, selector: (ctx) => ctx.editor?.state });
+  useEditorState({
+    editor,
+    selector: (ctx) => {
+      const e = ctx.editor;
+      if (!e) return "";
+      const style = e.isActive("heading", { level: 1 })
+        ? "h1"
+        : e.isActive("heading", { level: 2 })
+          ? "h2"
+          : e.isActive("heading", { level: 3 })
+            ? "h3"
+            : "p";
+      return [
+        style,
+        e.isActive("bold") ? 1 : 0,
+        e.isActive("italic") ? 1 : 0,
+        e.isActive("underline") ? 1 : 0,
+        e.isActive("strike") ? 1 : 0,
+        e.isActive("highlight") ? 1 : 0,
+        e.isActive("bulletList") ? 1 : 0,
+        e.isActive("orderedList") ? 1 : 0,
+        e.isActive("blockquote") ? 1 : 0,
+        e.isActive("codeBlock") ? 1 : 0,
+        e.isActive("link") ? 1 : 0,
+      ].join(":");
+    },
+  });
   useEffect(() => {
     editor?.setEditable(!locked, false);
   }, [editor, locked]);
@@ -341,9 +367,9 @@ export function RichTextEditor({
       className={`rich-editor-field min-w-0 ${compact ? "rich-editor-compact" : ""} ${className}`}
     >
       {label && (
-        <label id={`${id}-label`} className="mb-2 block font-medium">
+        <p id={`${id}-label`} className="mb-2 block font-medium">
           {label}
-        </label>
+        </p>
       )}
       <div className={`rich-editor ${locked ? "opacity-70" : ""}`}>
         <div
@@ -393,7 +419,7 @@ export function RichTextEditor({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => imageInput.current?.click()}
             >
-              <ImagePlus size={17} />
+              <ImagePlus size={17} aria-hidden="true" />
             </button>
           )}
           {commands
@@ -415,12 +441,12 @@ export function RichTextEditor({
                 type="button"
                 title={command.label}
                 aria-label={command.label}
-                aria-pressed={command.active ?? false}
+                aria-pressed={"active" in command ? Boolean(command.active) : undefined}
                 disabled={locked || !editor}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={command.run}
               >
-                <command.icon size={17} />
+                <command.icon size={17} aria-hidden="true" />
               </button>
             ))}
         </div>

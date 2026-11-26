@@ -30,7 +30,7 @@ function matchesType(bytes: Buffer, mime: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const originError = uploadOrigin(request);
+  const originError = uploadOrigin(request, true);
   if (originError) return NextResponse.json({ error: originError === "invalid" ? "Upload origin is invalid" : "Upload origin is not allowed" }, { status: 403 });
   const actor = await currentUploadActor(request);
   if (!actor) return NextResponse.json({ error: "Sign in before uploading a file" }, { status: 401 });

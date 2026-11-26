@@ -19,14 +19,14 @@ export function DashboardQuickActions({
         students={students}
         trigger={
           <Button size="sm">
-            <CalendarPlus size={14} /> Schedule a lesson
+            <CalendarPlus size={14} aria-hidden="true" /> Schedule a lesson
           </Button>
         }
       />
       <AddStudentDialog
         trigger={
           <Button variant="outline" size="sm">
-            <Users size={14} /> Add Student
+            <Users size={14} aria-hidden="true" /> Add student
           </Button>
         }
       />
@@ -34,7 +34,7 @@ export function DashboardQuickActions({
         students={students}
         trigger={
           <Button variant="outline" size="sm">
-            <Receipt size={14} /> Generate Invoice
+            <Receipt size={14} aria-hidden="true" /> Generate invoice
           </Button>
         }
       />
@@ -52,7 +52,7 @@ export function DashboardScheduleEmpty({
       students={students}
       trigger={
         <Button variant="outline" size="sm" className="mt-3">
-          <CalendarPlus size={14} /> Schedule a class
+          <CalendarPlus size={14} aria-hidden="true" /> Schedule a lesson
         </Button>
       }
     />

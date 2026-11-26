@@ -1,6 +1,6 @@
 "use server";
 import { ActionValidationError } from "./action-errors";
-import { generateRangeDrafts } from "./invoice-generation";
+import { generateMonthlyDrafts, generateRangeDrafts } from "./invoice-generation";
 import { sanitizeRichText, hasRichTextContent } from "./rich-text";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -15,6 +15,14 @@ import {
   verifyAdminSession,
   getStudentSession,
 } from "./auth";
+import {
+  clearLoginFailures,
+  generateStudentPassword,
+  hashPassword,
+  isLoginRateLimited,
+  recordLoginFailure,
+  verifyPassword,
+} from "./password";
 import type { Attendance, InvoiceStatus } from "./types";
 import { id, numberIn, text, oneOf, safeUrl } from "./domain/validation";
 import {
@@ -207,13 +215,17 @@ async function replacement(tx: Transaction, c: Lesson, at: string) {
     from: c.id,
   });
 }
-export async function seedAdminCredentials() {}
 export async function loginAdmin(formData: FormData): Promise<{
   success: boolean;
   error?: string;
 }> {
   const username = text(formData.get("username"), "Username", 100, true),
     password = text(formData.get("password"), "Password", 1000, true);
+  if (await isLoginRateLimited("admin", username))
+    return {
+      success: false,
+      error: "Too many failed sign-in attempts. Try again in 15 minutes.",
+    };
   const settings = await queryAll<{
     key: string;
     value: string;
@@ -221,9 +233,59 @@ export async function loginAdmin(formData: FormData): Promise<{
     "SELECT key,value FROM settings WHERE key IN ('admin_username','admin_password')",
   );
   const values = Object.fromEntries(settings.map((s) => [s.key, s.value]));
-  if (values.admin_username !== username || values.admin_password !== password)
+  const check = verifyPassword(password, values.admin_password || "");
+  if (values.admin_username !== username || !check.valid) {
+    await recordLoginFailure("admin", username);
     return { success: false, error: "Invalid username or password" };
+  }
+  await clearLoginFailures("admin", username);
+  if (check.needsUpgrade) {
+    await execute(
+      "INSERT INTO settings(key,value) VALUES('admin_password',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+      [hashPassword(password)],
+    );
+  }
   await createAdminSession();
+  return { success: true };
+}
+export async function changeAdminPasswordAction(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  await requireAdmin();
+  const current = text(
+    formData.get("current_password"),
+    "Current password",
+    1000,
+    true,
+  );
+  const next = text(formData.get("new_password"), "New password", 1000, true);
+  const confirm = text(
+    formData.get("confirm_password"),
+    "Confirm password",
+    1000,
+    true,
+  );
+  if (next.length < 8)
+    return {
+      success: false,
+      error: "New password must be at least 8 characters.",
+    };
+  if (next !== confirm)
+    return {
+      success: false,
+      error: "New password and confirmation do not match.",
+    };
+  const stored = await queryOne<{ value: string }>(
+    "SELECT value FROM settings WHERE key='admin_password'",
+  );
+  if (!verifyPassword(current, stored?.value || "").valid)
+    return { success: false, error: "Current password is incorrect." };
+  await execute(
+    "INSERT INTO settings(key,value) VALUES('admin_password',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+    [hashPassword(next)],
+  );
+  revalidatePath("/settings");
   return { success: true };
 }
 export async function logoutAdmin() {
@@ -242,13 +304,22 @@ export async function loginStudent(formData: FormData): Promise<{
       true,
     ).toLowerCase(),
     password = text(formData.get("password"), "Password", 1000, true);
+  if (await isLoginRateLimited("student", username))
+    return {
+      success: false,
+      error: "Too many failed sign-in attempts. Try again in 15 minutes.",
+    };
   const s = await queryOne<{
     id: number;
-  }>(
-    "SELECT id FROM students WHERE lower(username)=? AND password=? AND active=1",
-    [username, password],
-  );
-  if (!s) return { success: false, error: "Invalid username or password" };
+    password: string | null;
+  }>("SELECT id,password FROM students WHERE lower(username)=? AND active=1", [
+    username,
+  ]);
+  if (!s || !s.password || !verifyPassword(password, s.password).valid) {
+    await recordLoginFailure("student", username);
+    return { success: false, error: "Invalid username or password" };
+  }
+  await clearLoginFailures("student", username);
   await createStudentSession(s.id);
   return { success: true, studentId: s.id };
 }
@@ -288,11 +359,17 @@ export async function createStudentQuick(f: FormData): Promise<number> {
       username = `${base}${++n}`;
     const r = await tx.execute({
       sql: "INSERT INTO students(name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,username,password,active) VALUES(?,?,?,?,?,?,?,?,?,?,?,1)",
-      args: [...values, username, `${username}123`],
+      args: [...values, username, generateStudentPassword()],
     });
     const studentId = Number(r.lastInsertRowid);
-    await tx.execute({sql: "INSERT INTO family_chat_rooms(student_id) VALUES(?)", args: [studentId]});
-    await tx.execute({sql: "INSERT INTO diagnostics(student_id) VALUES(?)", args: [studentId]});
+    await tx.execute({
+      sql: "INSERT INTO family_chat_rooms(student_id) VALUES(?)",
+      args: [studentId],
+    });
+    await tx.execute({
+      sql: "INSERT INTO diagnostics(student_id) VALUES(?)",
+      args: [studentId],
+    });
     return studentId;
   });
   refresh(sid);
@@ -302,18 +379,87 @@ export async function createStudent(f: FormData) {
   const sid = await createStudentQuick(f);
   redirect(`/students/${sid}`);
 }
-export async function updateStudentQuick(studentId: number, f: FormData) {
+export async function patchStudentAtomic(
+  studentId: number,
+  patch: Partial<{
+    name: string;
+    subject: string | null;
+    grade_level: string | null;
+    phone: string | null;
+    email: string | null;
+    guardian_name: string | null;
+    guardian_contact: string | null;
+    hourly_rate: number;
+    notes: string | null;
+    active: boolean;
+  }>,
+) {
   await requireAdmin();
-  const sid = id(studentId),
-    values = studentValues(f),
-    active = f.get("active") === "on" ? 1 : 0;
+  const sid = id(studentId);
   await withTransaction(async (tx) => {
-    const previous = await row<Record<string, InValue> & {active: number}>(
-      tx, "SELECT name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,active FROM students WHERE id=?", [sid],
+    const previous = await row<Record<string, InValue> & { active: number }>(
+      tx,
+      "SELECT name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,active FROM students WHERE id=?",
+      [sid],
     );
     if (!previous) throw new ActionValidationError("Student not found");
-    const fields = ["name","subject","grade_level","phone","email","guardian_name","guardian_contact","hourly_rate","notes"] as const;
-    if (Number(previous.active) === active && fields.every((field,index) => !changed(previous[field],values[index]))) return;
+    const nextName =
+      patch.name !== undefined
+        ? text(patch.name, "Name", 200, true)
+        : String(previous.name);
+    const nextStr = (
+      k:
+        | "subject"
+        | "grade_level"
+        | "phone"
+        | "email"
+        | "guardian_name"
+        | "guardian_contact",
+    ) =>
+      patch[k] !== undefined
+        ? text(patch[k], k, 500) || null
+        : (previous[k] as string | null);
+    const nextRate =
+      patch.hourly_rate !== undefined
+        ? numberIn(patch.hourly_rate, 0, 1000000, "Hourly rate")
+        : Number(previous.hourly_rate);
+    const nextNotes =
+      patch.notes !== undefined
+        ? text(patch.notes, "Notes", 20000) || null
+        : (previous.notes as string | null);
+    const active =
+      patch.active !== undefined
+        ? patch.active
+          ? 1
+          : 0
+        : Number(previous.active);
+    const values = [
+      nextName,
+      nextStr("subject"),
+      nextStr("grade_level"),
+      nextStr("phone"),
+      nextStr("email"),
+      nextStr("guardian_name"),
+      nextStr("guardian_contact"),
+      nextRate,
+      nextNotes,
+    ];
+    const fields = [
+      "name",
+      "subject",
+      "grade_level",
+      "phone",
+      "email",
+      "guardian_name",
+      "guardian_contact",
+      "hourly_rate",
+      "notes",
+    ] as const;
+    if (
+      Number(previous.active) === active &&
+      fields.every((field, index) => !changed(previous[field], values[index]))
+    )
+      return;
     await tx.execute({
       sql: "UPDATE students SET name=?,subject=?,grade_level=?,phone=?,email=?,guardian_name=?,guardian_contact=?,hourly_rate=?,notes=?,active=? WHERE id=?",
       args: [...values, active, sid],
@@ -323,9 +469,56 @@ export async function updateStudentQuick(studentId: number, f: FormData) {
         sql: "DELETE FROM student_sessions WHERE student_id=?",
         args: [sid],
       });
+    } else {
+      await studentNotice(
+        tx,
+        sid,
+        "profile_updated",
+        "Profile updated",
+        "Your tutor updated your profile.",
+        randomUUID(),
+        `/portal/student/${sid}/profile`,
+      );
+    }
+  });
+  refresh(sid);
+}
+export async function updateStudentQuick(studentId: number, f: FormData) {
+  await requireAdmin();
+  const sid = id(studentId),
+    values = studentValues(f),
+    active = f.get("active") === "on" ? 1 : 0;
+  await withTransaction(async (tx) => {
+    const previous = await row<Record<string, InValue> & { active: number }>(
+      tx,
+      "SELECT name,subject,grade_level,phone,email,guardian_name,guardian_contact,hourly_rate,notes,active FROM students WHERE id=?",
+      [sid],
+    );
+    if (!previous) throw new ActionValidationError("Student not found");
+    const fields = [
+      "name",
+      "subject",
+      "grade_level",
+      "phone",
+      "email",
+      "guardian_name",
+      "guardian_contact",
+      "hourly_rate",
+      "notes",
+    ] as const;
+    if (
+      Number(previous.active) === active &&
+      fields.every((field, index) => !changed(previous[field], values[index]))
+    )
+      return;
+    await tx.execute({
+      sql: "UPDATE students SET name=?,subject=?,grade_level=?,phone=?,email=?,guardian_name=?,guardian_contact=?,hourly_rate=?,notes=?,active=? WHERE id=?",
+      args: [...values, active, sid],
+    });
+    if (!active) {
       await tx.execute({
-        sql: "DELETE FROM settings WHERE key=?",
-        args: [`student_session_${sid}`],
+        sql: "DELETE FROM student_sessions WHERE student_id=?",
+        args: [sid],
       });
     } else
       await studentNotice(
@@ -340,11 +533,7 @@ export async function updateStudentQuick(studentId: number, f: FormData) {
   });
   refresh(sid);
 }
-export async function updateStudent(sid: number, f: FormData) {
-  await updateStudentQuick(sid, f);
-  redirect(`/students/${sid}`);
-}
-export async function deleteStudent(sid: number) {
+export async function deactivateStudent(sid: number) {
   await requireAdmin();
   id(sid);
   await withTransaction(async (tx) => {
@@ -356,12 +545,11 @@ export async function deleteStudent(sid: number) {
       sql: "DELETE FROM student_sessions WHERE student_id=?",
       args: [sid],
     });
-    await tx.execute({
-      sql: "DELETE FROM settings WHERE key=?",
-      args: [`student_session_${sid}`],
-    });
   });
   refresh(sid);
+}
+export async function deleteStudent(sid: number) {
+  await deactivateStudent(sid);
   redirect("/students");
 }
 export async function createClassQuick(f: FormData): Promise<number> {
@@ -390,10 +578,6 @@ export async function createClassQuick(f: FormData): Promise<number> {
   });
   refresh(sid);
   return cid;
-}
-export async function createClass(f: FormData) {
-  const cid = await createClassQuick(f);
-  redirect(`/classes/${cid}`);
 }
 export async function moveClassQuick(
   classId: number,
@@ -480,6 +664,93 @@ export async function updateClass(classId: number, f: FormData) {
   revalidatePath(`/classes/${classId}`);
   redirect(`/classes/${classId}`);
 }
+export async function patchClassAtomic(
+  classId: number,
+  patch: Partial<{
+    scheduled_at: string;
+    duration_minutes: number;
+    subject: string | null;
+    location: string | null;
+    status: "scheduled" | "completed" | "canceled";
+    attendance: "present" | "absent" | null;
+  }>,
+) {
+  await requireAdmin();
+  const sid = await withTransaction(async (tx) => {
+    const c = await lesson(tx, classId);
+    const at =
+      patch.scheduled_at !== undefined
+        ? businessDateTime(patch.scheduled_at)
+        : c.scheduled_at;
+    const minutes =
+      patch.duration_minutes !== undefined
+        ? duration(patch.duration_minutes)
+        : Number(c.duration_minutes);
+    const status =
+      patch.status !== undefined
+        ? oneOf(
+            patch.status,
+            ["scheduled", "completed", "canceled"] as const,
+            "Status",
+          )
+        : (c.status as "scheduled" | "completed" | "canceled");
+    const attendance =
+      patch.attendance !== undefined
+        ? patch.attendance
+          ? oneOf(patch.attendance, ["present", "absent"] as const, "Attendance")
+          : null
+        : c.attendance === "late"
+          ? "present"
+          : (c.attendance as "present" | "absent" | null);
+    if (status === "scheduled" && attendance)
+      throw new ActionValidationError("Scheduled lessons must be unmarked");
+    if (status === "canceled" && attendance)
+      throw new ActionValidationError(
+        "Advance-cancelled lessons have no attendance mark",
+      );
+    const subject =
+      patch.subject !== undefined
+        ? text(patch.subject, "Subject", 500) || null
+        : c.subject;
+    const location =
+      patch.location !== undefined
+        ? text(patch.location, "Location", 500) || null
+        : c.location;
+    if (
+      [at, minutes, subject, location, status, attendance].every(
+        (value, index) =>
+          !changed(
+            value,
+            [
+              c.scheduled_at,
+              c.duration_minutes,
+              c.subject,
+              c.location,
+              c.status,
+              c.attendance,
+            ][index],
+          ),
+      )
+    )
+      return c.student_id;
+    if (status !== "canceled") await overlap(tx, at, minutes, c.id);
+    await tx.execute({
+      sql: "UPDATE classes SET scheduled_at=?,duration_minutes=?,subject=?,location=?,status=?,attendance=? WHERE id=?",
+      args: [at, minutes, subject, location, status, attendance, c.id],
+    });
+    await studentNotice(
+      tx,
+      c.student_id,
+      "class_updated",
+      "Lesson updated",
+      "Your tutor updated a lesson.",
+      randomUUID(),
+    );
+    return c.student_id;
+  });
+  refresh(sid);
+  revalidatePath(`/classes/${classId}`);
+}
 export async function markAttendance(classId: number, attendance: Attendance) {
   await requireAdmin();
   const mark = oneOf(attendance, ["present", "absent"] as const, "Attendance");
@@ -530,13 +801,6 @@ export async function cancelClassQuick(classId: number) {
   });
   refresh(sid);
   revalidatePath(`/classes/${classId}`);
-}
-export async function deleteClassQuick(classId: number) {
-  await cancelClassQuick(classId);
-}
-export async function deleteClass(classId: number) {
-  await cancelClassQuick(classId);
-  redirect("/schedule");
 }
 export async function rescheduleClassQuick(
   classId: number,
@@ -658,9 +922,28 @@ export async function generateInvoiceQuick(f: FormData): Promise<number> {
   refresh(sid);
   return ids[0];
 }
-export async function generateInvoice(f: FormData) {
-  const invoiceId = await generateInvoiceQuick(f);
-  redirect(`/invoices/${invoiceId}`);
+export async function generateMonthlyDraftsAction(month: string): Promise<{
+  success: boolean;
+  month?: string;
+  created?: number;
+  alreadyProcessed?: boolean;
+  invoiceIds?: number[];
+  error?: string;
+}> {
+  try {
+    await requireAdmin();
+    const result = await generateMonthlyDrafts(month);
+    refresh();
+    return { success: true, ...result };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof ActionValidationError
+          ? error.message
+          : "Could not generate monthly drafts.",
+    };
+  }
 }
 export async function setInvoiceStatus(
   invoiceId: number,
@@ -824,10 +1107,6 @@ export async function createRecurrenceQuick(f: FormData) {
   });
   refresh(sid);
 }
-export async function createRecurrence(f: FormData) {
-  await createRecurrenceQuick(f);
-  redirect("/schedule");
-}
 export async function extendRecurrence(recurrenceId: number, endDate: string) {
   await requireAdmin();
   const through = businessDate(endDate);
@@ -900,18 +1179,6 @@ export async function stopRecurrence(recurrenceId: number) {
   });
   refresh(sid);
   return { success: true };
-}
-export async function deleteRecurrence(recurrenceId: number) {
-  await stopRecurrence(recurrenceId);
-  redirect("/schedule");
-}
-export async function addHoliday(_f: FormData) {
-  await requireAdmin();
-  throw new ActionValidationError("Holiday scheduling is no longer supported");
-}
-export async function deleteHoliday(_holidayId: number) {
-  await requireAdmin();
-  throw new ActionValidationError("Holiday scheduling is no longer supported");
 }
 // Administrative notes and read-only parent access.
 export async function addStudentNote(studentId: number, f: FormData) {
@@ -991,6 +1258,49 @@ export async function saveSettings(f: FormData) {
   refresh();
   revalidatePath("/settings");
   redirect("/settings");
+}
+export async function patchSettingsAtomic(
+  patch: Partial<{
+    business_name: string;
+    business_contact: string;
+    currency: string;
+    payment_instructions: string;
+  }>,
+) {
+  await requireAdmin();
+  const keys = [
+    "business_name",
+    "business_contact",
+    "currency",
+    "payment_instructions",
+  ] as const;
+  await withTransaction(async (tx) => {
+    const existingRows = (
+      await tx.execute({
+        sql: `SELECT key,value FROM settings WHERE key IN (${keys.map(() => "?").join(",")})`,
+        args: [...keys],
+      })
+    ).rows;
+    const current = Object.fromEntries(
+      existingRows.map((r) => [String(r.key), String(r.value)]),
+    );
+    const values = keys.map((key) =>
+      text(
+        patch[key] !== undefined ? patch[key] : (current[key] ?? ""),
+        key,
+        key === "payment_instructions" ? 10000 : 500,
+        key === "currency" || key === "business_name",
+      ),
+    );
+    await tx.batch(
+      keys.map((key, index) => ({
+        sql: "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        args: [key, values[index]],
+      })),
+    );
+  });
+  refresh();
+  revalidatePath("/settings");
 }
 export async function saveDuitNowQR(f: FormData) {
   await requireAdmin();
@@ -1272,15 +1582,6 @@ export async function deletePostAction(
   refresh(sid);
   return { success: true };
 }
-export async function deletePost(postId: number, studentId?: number) {
-  await requireAdmin();
-  const p = await queryOne<{
-    student_id: number;
-  }>("SELECT student_id FROM posts WHERE id=?", [id(postId)]);
-  if (!p || (studentId !== undefined && p.student_id !== studentId))
-    throw new ActionValidationError("Post not found");
-  await deletePostAction(postId, p.student_id);
-}
 // The projection holds the latest attempt; every attempt and its grade remains in history.
 export async function submitAssignment(f: FormData) {
   const sid = await studentSession(
@@ -1436,77 +1737,6 @@ export async function gradeSubmissionAction(
   revalidatePath(`/classroom/${sid}/post/${pid}`);
   revalidatePath(`/portal/student/${sid}/classroom/post/${pid}`);
   return { success: true };
-}
-export async function gradeSubmission(submissionId: number, f: FormData) {
-  await requireAdmin();
-  const s = await queryOne<{
-    student_id: number;
-  }>("SELECT student_id FROM submissions WHERE id=?", [id(submissionId)]);
-  if (!s) throw new ActionValidationError("Submission not found");
-  await gradeSubmissionAction(
-    submissionId,
-    String(f.get("grade") ?? ""),
-    String(f.get("feedback") ?? ""),
-    s.student_id,
-    id(f.get("version"), "Attempt"),
-  );
-}
-export async function submitQuizAnswers(f: FormData) {
-  const sid = await studentSession(
-      f.has("student_id") ? id(f.get("student_id")) : undefined,
-    ),
-    pid = id(f.get("post_id"));
-  await withTransaction(async (tx) => {
-    await ownPost(tx, pid, sid, "quiz");
-    const questions = (
-      await tx.execute({
-        sql: "SELECT id,type,correct_answer FROM quiz_questions WHERE post_id=? ORDER BY sort_order",
-        args: [pid],
-      })
-    ).rows;
-    const answers = questions
-      .map((q) => ({
-        id: Number(q.id),
-        answer: text(f.get(`answer_${q.id}`), "Answer", 10000),
-        type: q.type,
-        correct: q.correct_answer,
-      }))
-      .filter((a) => a.answer);
-    if (!answers.length)
-      throw new ActionValidationError(
-        "Answer at least one question before submitting",
-      );
-    await tx.execute({
-      sql: "DELETE FROM quiz_answers WHERE question_id IN (SELECT id FROM quiz_questions WHERE post_id=?) AND student_id=?",
-      args: [pid, sid],
-    });
-    await tx.batch(
-      answers.map((a) => ({
-        sql: "INSERT INTO quiz_answers(question_id,student_id,answer,is_correct) VALUES(?,?,?,?)",
-        args: [
-          a.id,
-          sid,
-          a.answer,
-          a.type === "mcq" && a.correct
-            ? Number(
-                a.answer.toLowerCase() ===
-                  String(a.correct).trim().toLowerCase(),
-              )
-            : null,
-        ],
-      })),
-    );
-    await notify(
-      tx,
-      null,
-      "quiz_submitted",
-      "Quiz work submitted",
-      "A student submitted quiz answers.",
-      randomUUID(),
-      `/classroom/${sid}/post/${pid}`,
-    );
-  });
-  refresh(sid);
 }
 export async function createTopic(
   studentId: number,
@@ -1726,9 +1956,6 @@ export async function saveClassNotes(
 ) {
   oneOf(scope, ["teacher", "student"] as const, "Note scope");
   await upsertNote(classId, scope, content);
-}
-export async function saveMeetingNotes(classId: number, notes: string) {
-  await saveTeacherNotes(classId, notes);
 }
 async function submitRescheduleRequest(
   f: FormData,

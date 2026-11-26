@@ -56,7 +56,7 @@ export function TableExplorer({ children, label = "records", pageSize = 10 }: {
     const observer = new MutationObserver(apply);
     observer.observe(host, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
-  }, [query, column, page, pageSize, children]);
+  }, [query, column, page, pageSize]);
 
   return (
     <section className="table-explorer min-w-0 max-w-full" aria-label={`${label} table`}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 const id = new URLSearchParams(location.search).get('id') || '', clientId = crypto.randomUUID();
-async function api(body?: unknown,suffix='') { const r = await fetch('/api/documents/' + id+suffix, { ...(body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}) }); const data = await r.json(); if (!r.ok)
+async function api(body?: unknown,suffix='') { const r = await fetch('/api/documents/' + id+suffix, { ...(body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}) }); const data = await r.json().catch(() => ({})); if (!r.ok)
     throw new Error(data.error || 'Document request failed'); return data; }
 const decode = (value: string) => Uint8Array.from(atob(value), c => c.charCodeAt(0)).buffer;
 function encode(value: ArrayBuffer) { const b = new Uint8Array(value); let s = ''; for (let i = 0; i < b.length; i += 32768)

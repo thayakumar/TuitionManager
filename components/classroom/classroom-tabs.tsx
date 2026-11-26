@@ -105,7 +105,8 @@ export function ClassroomTabs({
   isAdmin?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState("stream"),
-    [search, setSearch] = useState("");
+    [search, setSearch] = useState(""),
+    [nowMs] = useState(() => Date.now());
   const submissionMap = new Map(submissions.map((s) => [s.post_id, s]));
   const basePath = isAdmin
     ? `/classroom/${studentId}`
@@ -129,7 +130,7 @@ export function ClassroomTabs({
     .filter(
       (post) =>
         post.due_at &&
-        new Date(post.due_at) >= new Date() &&
+        Date.parse(post.due_at) >= nowMs &&
         !submissionMap.has(post.id),
     )
     .slice(0, 4);
@@ -152,7 +153,7 @@ export function ClassroomTabs({
       {activeTab !== "grades" && (
         <div className="classroom-search-bar">
           <div className="classroom-search-input">
-            <Search size={21} />
+            <Search size={21} aria-hidden="true" />
             <input
               type="search"
               aria-label="Search classroom"
@@ -166,7 +167,7 @@ export function ClassroomTabs({
                 aria-label="Clear classroom search"
                 onClick={() => setSearch("")}
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -181,7 +182,7 @@ export function ClassroomTabs({
         <div className="classroom-stream-layout">
           <aside className="classroom-upcoming">
             <h2 className="flex items-center gap-2 font-semibold">
-              <CalendarDays size={20} /> Upcoming
+              <CalendarDays size={20} aria-hidden="true" /> Upcoming
             </h2>
             {dueSoon.length ? (
               dueSoon.map((post) => (
@@ -202,16 +203,17 @@ export function ClassroomTabs({
               </p>
             )}
             <button
+              type="button"
               onClick={() => setActiveTab("classwork")}
               className="mt-4 flex w-full items-center justify-end gap-2 font-medium text-primary"
             >
-              View classwork <ArrowRight size={17} />
+              View classwork <ArrowRight size={17} aria-hidden="true" />
             </button>
           </aside>
           <div className="min-w-0 space-y-5">
             <div className="classroom-stream-intro">
               <div className="classroom-round-icon">
-                <Megaphone size={24} />
+                <Megaphone size={24} aria-hidden="true" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">
@@ -241,46 +243,45 @@ export function ClassroomTabs({
                 <article key={post.id} className="classroom-stream-post">
                   <Link
                     href={`${basePath}/post/${post.id}`}
-                    className="block p-5 sm:p-6"
+                    className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`classroom-round-icon ${config.bg} ${config.textColor}`}
-                      >
-                        <Icon size={23} />
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`classroom-round-icon ${config.bg} ${config.textColor}`}
+                        >
+                          <Icon size={23} aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {config.label} · {fmtShortDate(post.created_at)}
+                          </p>
+                          <h2 className="mt-2 text-xl font-semibold leading-snug">
+                            {post.title}
+                          </h2>
+                        </div>
+                        {post.due_at && (
+                          <span className="text-sm text-muted-foreground">
+                            Due {fmtShortDate(post.due_at)}
+                          </span>
+                        )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          {config.label} · {fmtShortDate(post.created_at)}
+                      {post.body && (
+                        <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-base leading-relaxed text-foreground">
+                          {richTextPlainText(post.body)}
                         </p>
-                        <h2 className="mt-2 text-xl font-semibold leading-snug">
-                          {post.title}
-                        </h2>
-                      </div>
-                      {post.due_at && (
-                        <span className="text-sm text-muted-foreground">
-                          Due {fmtShortDate(post.due_at)}
-                        </span>
                       )}
                     </div>
-                    {post.body && (
-                      <p className="mt-4 line-clamp-3 whitespace-pre-wrap text-base leading-relaxed text-foreground">
-                        {richTextPlainText(post.body)}
-                      </p>
-                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
+                      <PostStatus
+                        post={post}
+                        submission={submissionMap.get(post.id)}
+                      />
+                      <span className="inline-flex items-center gap-2 font-medium text-primary">
+                        Open {config.label.toLowerCase()} <ArrowRight size={18} aria-hidden="true" />
+                      </span>
+                    </div>
                   </Link>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
-                    <PostStatus
-                      post={post}
-                      submission={submissionMap.get(post.id)}
-                    />
-                    <Link
-                      href={`${basePath}/post/${post.id}`}
-                      className="inline-flex items-center gap-2 font-medium text-primary"
-                    >
-                      Open {config.label.toLowerCase()} <ArrowRight size={18} />
-                    </Link>
-                  </div>
                 </article>
               );
             })}
@@ -448,9 +449,11 @@ function ClassworkPanel({
     );
   return (
     <div className="classwork-layout">
-      <aside className="classwork-topics">
+      <aside className="classwork-topics" aria-label="Filter by topic">
         <p className="mb-3 font-semibold">Topics</p>
         <button
+          type="button"
+          aria-pressed={currentTopic === "all"}
           className={currentTopic === "all" ? "selected" : ""}
           onClick={() => setSelectedTopic("all")}
         >
@@ -458,7 +461,9 @@ function ClassworkPanel({
         </button>
         {posts.some((p) => p.topic_id === null) && (
           <button
+            type="button"
             disabled={searching}
+            aria-pressed={currentTopic === "none"}
             className={currentTopic === "none" ? "selected" : ""}
             onClick={() => setSelectedTopic("none")}
           >
@@ -467,7 +472,9 @@ function ClassworkPanel({
         )}
         {topics.map((topic) => (
           <button
+            type="button"
             disabled={searching}
+            aria-pressed={currentTopic === topic.id}
             key={topic.id}
             className={currentTopic === topic.id ? "selected" : ""}
             onClick={() => setSelectedTopic(topic.id)}

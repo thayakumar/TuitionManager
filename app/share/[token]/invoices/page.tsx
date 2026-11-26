@@ -4,21 +4,19 @@ import {
   invoiceCalendarPeriod,
 } from "@/lib/portal-context";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   Receipt,
-  DollarSign,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
 } from "lucide-react";
-import { queryOne, queryAll, getSetting } from "@/lib/db";
+import { queryAll, getSetting } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
+import { invoiceStatusBadgeClass } from "@/components/invoice-document";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { currency, fmtDate } from "@/lib/format";
-import type { Invoice, InvoiceItem } from "@/lib/types";
+import type { Invoice } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -58,13 +56,13 @@ export default async function ParentInvoicesPage({
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Invoiced</p>
+                <p className="text-sm text-muted-foreground">Total invoiced</p>
                 <p className="text-xl font-bold mt-1 text-foreground">
                   {currency(totalInvoiced, currencySymbol)}
                 </p>
               </div>
-              <div className="flex size-10 items-center justify-center rounded-xl bg-orange-50">
-                <Receipt size={20} className="text-orange-500" />
+              <div className="flex size-10 items-center justify-center rounded-xl bg-secondary">
+                <Receipt size={20} className="text-primary" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -73,13 +71,13 @@ export default async function ParentInvoicesPage({
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Paid</p>
-                <p className="text-xl font-bold mt-1 text-emerald-600">
+                <p className="text-sm text-muted-foreground">Total paid</p>
+                <p className="text-xl font-bold mt-1 text-emerald-700">
                   {currency(totalPaid, currencySymbol)}
                 </p>
               </div>
               <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50">
-                <CheckCircle2 size={20} className="text-emerald-500" />
+                <CheckCircle2 size={20} className="text-emerald-700" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -90,13 +88,13 @@ export default async function ParentInvoicesPage({
               <div>
                 <p className="text-sm text-muted-foreground">Outstanding</p>
                 <p
-                  className={`text-xl font-bold mt-1 ${outstanding > 0 ? "text-red-600" : "text-foreground"}`}
+                  className={`text-xl font-bold mt-1 ${outstanding > 0 ? "text-destructive" : "text-foreground"}`}
                 >
                   {currency(outstanding, currencySymbol)}
                 </p>
               </div>
               <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50">
-                <AlertTriangle size={20} className="text-amber-500" />
+                <AlertTriangle size={20} className="text-amber-700" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -110,6 +108,7 @@ export default async function ParentInvoicesPage({
             <Receipt
               size={40}
               className="mx-auto mb-3 text-muted-foreground/30"
+              aria-hidden="true"
             />
             <p className="text-sm text-muted-foreground">No invoices yet</p>
           </CardContent>
@@ -117,48 +116,40 @@ export default async function ParentInvoicesPage({
       ) : (
         <div className="space-y-3">
           {invoices.map((inv) => {
-            const statusColor =
-              inv.status === "paid"
-                ? "bg-emerald-500"
-                : inv.status === "overdue"
-                  ? "bg-red-500"
-                  : inv.status === "sent"
-                    ? "bg-blue-500"
-                    : "bg-gray-400";
-
+            const period = invoiceCalendarPeriod(inv);
             return (
               <Link
                 key={inv.id}
                 href={`/share/${params.token}/invoices/${inv.id}`}
+                className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Card className="border shadow-none overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
+                <Card className="border shadow-none overflow-hidden hover:border-primary/40 transition-colors cursor-pointer group">
                   <div
                     className={`border-l-4 ${
                       inv.status === "paid"
-                        ? "border-emerald-500"
+                        ? "border-emerald-700"
                         : inv.status === "overdue"
-                          ? "border-red-500"
+                          ? "border-red-700"
                           : inv.status === "sent"
-                            ? "border-blue-500"
-                            : "border-gray-300"
+                            ? "border-sky-700"
+                            : "border-slate-400"
                     }`}
                   >
                     <CardContent className="p-5">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-semibold text-foreground group-hover:text-orange-600 transition-colors">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                               {inv.invoice_number}
-                            </h3>
+                            </h2>
                             <Badge
-                              className={`text-xs text-white capitalize ${statusColor}`}
+                              className={`text-xs capitalize ${invoiceStatusBadgeClass(inv.status)}`}
                             >
                               {inv.status}
                             </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Period: {fmtDate(invoiceCalendarPeriod(inv).start)}{" "}
-                            — {fmtDate(invoiceCalendarPeriod(inv).end)}
+                            Period: {fmtDate(period.start)} — {fmtDate(period.end)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Issued: {fmtDate(inv.issued_at)}
@@ -167,13 +158,14 @@ export default async function ParentInvoicesPage({
                               : ""}
                           </p>
                         </div>
-                        <div className="text-right flex items-center gap-2">
+                        <div className="text-right flex items-center gap-2 shrink-0">
                           <p className="text-lg font-bold text-foreground">
                             {currency(Number(inv.total_amount), currencySymbol)}
                           </p>
                           <ArrowRight
                             size={16}
-                            className="text-muted-foreground/50 group-hover:text-orange-500 transition-colors"
+                            className="text-muted-foreground/60 group-hover:text-primary transition-colors"
+                            aria-hidden="true"
                           />
                         </div>
                       </div>

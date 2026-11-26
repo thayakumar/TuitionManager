@@ -51,7 +51,7 @@ export async function uploadFile(
       size: file.size,
     }),
   });
-  const session = await begin.json();
+  const session = await begin.json().catch(() => ({}));
   if (!begin.ok) {
     if (session.code !== "CONNECTOR_UPGRADE")
       throw new ActionValidationError(
@@ -69,7 +69,7 @@ export async function uploadFile(
         headers: { "X-Upload-Role": role, ...(parentToken ? { "X-Parent-Token": parentToken } : {}) },
         body,
       }),
-      result = await r.json();
+      result = await r.json().catch(() => ({}));
     if (!r.ok || !result.fileUrl)
       throw new ActionValidationError(result.error || "Upload failed.");
     onProgress?.(100);

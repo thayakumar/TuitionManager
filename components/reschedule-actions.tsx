@@ -104,7 +104,7 @@ export function RescheduleActions({
         onClick={() => setMode("reject")}
         disabled={isPending}
       >
-        <X size={14} /> Reject
+        <X size={14} aria-hidden="true" /> Decline
       </Button>
     </div>
   );

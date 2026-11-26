@@ -6,11 +6,18 @@ import { BusyProvider } from "@/components/action-busy";
 import { LayoutShell } from "@/components/layout-shell";
 import { MainWrapper } from "@/components/main-wrapper";
 import { Toaster } from "sonner";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 
 const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-sans",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +42,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#d93624",
+  viewportFit: "cover",
+  themeColor: "#0F766E",
 };
 
 export default function RootLayout({
@@ -44,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
       <body className="antialiased font-sans">
         <BusyProvider>
           <NotificationProvider>

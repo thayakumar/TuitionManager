@@ -16,7 +16,6 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LessonStatusBadge } from "@/components/lesson-status-badge";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { currency, fmtDateTime } from "@/lib/format";
 import type { ClassRow, Invoice } from "@/lib/types";
@@ -179,12 +178,12 @@ export default async function ParentDashboard({
         </Card>
       </div>
       <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={`${base}/reports`}>
-          <Button variant="outline">Read class reports</Button>
-        </Link>
-        <Link href={`${base}/attendance`}>
-          <Button variant="outline">View attendance</Button>
-        </Link>
+        <Button asChild variant="outline">
+          <Link href={`${base}/reports`}>Read class reports</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href={`${base}/attendance`}>View attendance</Link>
+        </Button>
       </div>
       <p className="mt-5 text-xs text-muted-foreground">
         Attendance includes marked Present and Absent lessons only.

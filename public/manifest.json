@@ -4,8 +4,8 @@
   "description": "Tuition management \u2014 schedule, attendance, reports, invoices",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff8f3",
-  "theme_color": "#d93624",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0F766E",
   "orientation": "portrait-primary",
   "icons": [
     {

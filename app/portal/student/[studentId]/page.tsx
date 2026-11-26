@@ -110,16 +110,16 @@ export default async function StudentDashboardPage({
         </Button>
       </header>
 
-      {diagnostic && <Link href={`/portal/student/${id}/diagnostic`} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 hover:bg-orange-100/60"><span><strong className="block text-lg">Your readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">{diagnostic.status==='locked'?'Your results are ready to view.':diagnostic.status==='in_progress'?'Continue your saved one-time assessment.':diagnostic.status==='open'?'Your tutor has opened your diagnostic.':diagnostic.status==='submitted'?'Submitted · waiting for tutor review.':'Your tutor will open this for your first regular class.'}</span></span><ArrowRight size={21} className="shrink-0 text-orange-600"/></Link>}
+      {diagnostic && <Link href={`/portal/student/${id}/diagnostic`} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-secondary/50 p-5 transition-colors hover:bg-secondary"><span><strong className="block text-lg">Your readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">{diagnostic.status==='locked'?'Your results are ready to view.':diagnostic.status==='in_progress'?'Continue your saved one-time assessment.':diagnostic.status==='open'?'Your tutor has opened your diagnostic.':diagnostic.status==='submitted'?'Submitted · waiting for tutor review.':'Your tutor will open this for your first regular class.'}</span></span><ArrowRight size={21} className="shrink-0 text-primary" aria-hidden="true"/></Link>}
 
       {/* Next Class Highlight */}
       {nextClass && (
-        <Card className="student-next-class border-l-4 border-l-blue-500">
+        <Card className="student-next-class border-l-4 border-l-primary">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-base font-semibold text-blue-700 mb-2">
-                  Next Class
+                <p className="text-base font-semibold text-primary mb-2">
+                  Next class
                 </p>
                 <p className="text-xl font-semibold text-foreground sm:text-2xl">
                   {fmtDateTime(nextClass.scheduled_at)}
@@ -131,11 +131,11 @@ export default async function StudentDashboardPage({
                 </p>
               </div>
               {nextClass.meeting_room && (
-                <Link href={`/meeting/${nextClass.id}`}>
-                  <Button className="bg-primary hover:bg-primary/90 text-white">
-                    <Video size={16} /> Join Meeting
-                  </Button>
-                </Link>
+                <Button asChild>
+                  <Link href={`/meeting/${nextClass.id}`}>
+                    <Video size={16} aria-hidden="true" /> Join meeting
+                  </Link>
+                </Button>
               )}
             </div>
           </CardContent>
@@ -154,7 +154,7 @@ export default async function StudentDashboardPage({
                 </p>
               </div>
               <div className="student-metric-icon flex size-9 items-center justify-center rounded-xl bg-muted">
-                <BookOpen size={18} className="text-muted-foreground" />
+                <BookOpen size={18} className="text-muted-foreground" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -169,8 +169,8 @@ export default async function StudentDashboardPage({
                   {stats?.upcoming_count ?? 0}
                 </p>
               </div>
-              <div className="student-metric-icon flex size-9 items-center justify-center rounded-xl bg-blue-50">
-                <Calendar size={18} className="text-blue-500" />
+              <div className="student-metric-icon flex size-9 items-center justify-center rounded-xl bg-sky-50">
+                <Calendar size={18} className="text-sky-700" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -186,7 +186,7 @@ export default async function StudentDashboardPage({
                 </p>
               </div>
               <div className="student-metric-icon flex size-9 items-center justify-center rounded-xl bg-emerald-50">
-                <CheckCircle2 size={18} className="text-emerald-500" />
+                <CheckCircle2 size={18} className="text-emerald-700" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
@@ -204,110 +204,111 @@ export default async function StudentDashboardPage({
                 </p>
               </div>
               <div className="student-metric-icon flex size-9 items-center justify-center rounded-xl bg-muted">
-                <Activity size={18} className="text-muted-foreground" />
+                <Activity size={18} className="text-muted-foreground" aria-hidden="true" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Upcoming Classes */}
-      <div
-        className={
-          upcoming.length > 1
-            ? "grid items-start gap-5 xl:grid-cols-2"
-            : "grid gap-5"
-        }
-      >
-        {upcoming.length !== 1 && (
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar size={18} className="text-muted-foreground" />
-                  Upcoming Classes
-                </CardTitle>
-                <Link href={`/portal/student/${id}/schedule`}>
-                  <Button variant="ghost" size="sm" className="text-sm">
-                    View schedule <ArrowRight size={12} />
-                  </Button>
-                </Link>
+      {/* Upcoming & Completed Classes */}
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Calendar size={18} className="text-primary" aria-hidden="true" />
+                Upcoming classes
+              </CardTitle>
+              <Link
+                href={`/portal/student/${id}/schedule`}
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                View schedule <ArrowRight size={13} aria-hidden="true" />
+              </Link>
+            </div>
+            <CardDescription className="text-sm">
+              {nextClass
+                ? "Lessons after your next class"
+                : "Your scheduled lessons appear here"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {upcoming.length <= 1 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar size={32} className="mx-auto mb-2 opacity-40" aria-hidden="true" />
+                <p className="text-sm">
+                  {nextClass
+                    ? "No other upcoming classes scheduled yet."
+                    : "No upcoming classes"}
+                </p>
               </div>
-              <CardDescription className="text-sm">
-                {nextClass
-                  ? "Lessons after your next class"
-                  : "Your scheduled lessons appear here"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcoming.length <= 1 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar size={32} className="mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">
-                    {nextClass
-                      ? "No other upcoming classes"
-                      : "No upcoming classes"}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {upcoming.slice(1).map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-blue-50">
-                        <Clock size={16} className="text-blue-600" />
+            ) : (
+              <div className="space-y-2">
+                {upcoming.slice(1).map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-sky-50">
+                      <Clock size={16} className="text-sky-700" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-36 flex-1">
+                      <div className="text-base font-medium">
+                        {fmtDateTime(c.scheduled_at)}
                       </div>
-                      <div className="min-w-36 flex-1">
-                        <div className="text-base font-medium">
-                          {fmtDateTime(c.scheduled_at)}
-                        </div>
-                        <div className="text-base text-muted-foreground">
-                          {c.duration_minutes} min ·{" "}
-                          {c.subject || student.subject || "Lesson"}
-                          {c.location ? ` · ${c.location}` : ""}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0 flex-wrap justify-end">
-                        <LessonStatusBadge
-                          status={c.status}
-                          attendance={c.attendance}
-                        />
-                        {c.meeting_room && (
-                          <Link href={`/meeting/${c.id}`}>
-                            <Button variant="outline" size="sm">
-                              <Video size={14} /> Join
-                            </Button>
-                          </Link>
-                        )}
-                        {c.is_trial ? (
-                          <Badge variant="outline" className="text-xs">
-                            TRIAL
-                          </Badge>
-                        ) : null}
+                      <div className="text-base text-muted-foreground">
+                        {c.duration_minutes} min ·{" "}
+                        {c.subject || student.subject || "Lesson"}
+                        {c.location ? ` · ${c.location}` : ""}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                    <div className="flex gap-2 shrink-0 flex-wrap items-center justify-end">
+                      {c.is_trial ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-300 bg-amber-100 text-amber-950 text-xs"
+                        >
+                          TRIAL
+                        </Badge>
+                      ) : null}
+                      <LessonStatusBadge
+                        status={c.status}
+                        attendance={c.attendance}
+                      />
+                      {c.meeting_room && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/meeting/${c.id}`}>
+                            <Video size={14} aria-hidden="true" /> Join
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Recent Completed */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <CheckCircle2 size={18} className="text-emerald-500" />
-              Recently Completed
-            </CardTitle>
-            <Link
-              href={`/portal/student/${id}/schedule`}
-              className="text-sm font-medium text-primary"
-            >
-              View all lessons →
-            </Link>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CheckCircle2 size={18} className="text-emerald-700" aria-hidden="true" />
+                Recently completed
+              </CardTitle>
+              <Link
+                href={`/portal/student/${id}/schedule`}
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                View all lessons <ArrowRight size={13} aria-hidden="true" />
+              </Link>
+            </div>
+            <CardDescription className="text-sm">
+              Your latest finished classes
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {recentCompleted.length === 0 ? (

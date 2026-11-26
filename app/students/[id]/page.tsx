@@ -8,8 +8,6 @@ import { notFound } from "next/navigation";
 import {
   CalendarPlus,
   Receipt,
-  Pencil,
-  Trash2,
   Phone,
   Mail,
   UserCircle,
@@ -49,7 +47,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareTokenButton } from "@/components/share-token-button";
-import { CopyLinkButton } from "@/components/copy-link-button";
 import { CopyLoginButton } from "@/components/copy-login-button";
 import { ReportRow } from "@/components/report-row";
 import { NotesTable } from "@/components/notes-table";
@@ -83,6 +80,7 @@ export default async function StudentDetailPage({
 }) {
   await requireAdminPage();
   const id = Number((await params).id);
+  if (!Number.isSafeInteger(id) || id < 1) notFound();
   const [student, currencySymbol, allStudents] = await Promise.all([
     queryOne<Student>("SELECT * FROM students WHERE id = ?", [id]),
     getSetting("currency"),
@@ -206,35 +204,34 @@ export default async function StudentDetailPage({
       label: "Total Classes",
       value: Number(stats.total_classes),
       icon: Calendar,
-      bg: "bg-blue-50",
-      iconColor: "text-blue-500",
+      bg: "bg-sky-50",
+      iconColor: "text-sky-700",
     },
     {
       label: "Completed",
       value: Number(stats.completed_classes),
       icon: CheckCircle2,
       bg: "bg-emerald-50",
-      iconColor: "text-emerald-500",
+      iconColor: "text-emerald-700",
     },
     {
       label: "Revenue",
       value: currency(Number(stats.total_revenue), currencySymbol),
       icon: Wallet,
-      bg: "bg-orange-50",
-      iconColor: "text-orange-500",
+      bg: "bg-secondary",
+      iconColor: "text-primary",
     },
     {
       label: "Attendance",
       value: `${attendancePct}%`,
       icon: TrendingUp,
       bg: "bg-amber-50",
-      iconColor: "text-amber-500",
+      iconColor: "text-amber-700",
     },
   ];
 
   return (
     <>
-      <Link href={`/diagnostics/${id}`} className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 hover:bg-orange-100/60"><span><strong className="block text-lg">ASK readiness diagnostic</strong><span className="mt-1 block text-sm text-muted-foreground">Open the one-time assessment or review saved results.</span></span><ArrowRight size={21} className="shrink-0 text-orange-600"/></Link>
       <PageHeader
         title={student.name}
         subtitle={`${student.subject || "General"}${student.grade_level ? " · " + student.grade_level : ""} · ${currency(Number(student.hourly_rate), currencySymbol)}/hr`}
@@ -256,9 +253,9 @@ export default async function StudentDetailPage({
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar + Name */}
             <div className="flex min-w-0 items-center gap-4">
-              <Avatar className="size-16 border-4 border-orange-100">
+              <Avatar className="size-16 border-4 border-primary/15">
                 {student.profile_photo_url && <AvatarImage src={student.profile_photo_url} alt={student.name} />}
-                <AvatarFallback className="bg-[#b82f25] text-white text-xl font-bold">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
                   {getInitials(student.name)}
                 </AvatarFallback>
               </Avatar>
@@ -392,6 +389,22 @@ export default async function StudentDetailPage({
         </CardContent>
       </Card>
 
+      {/* Diagnostic readiness link (placed after profile summary, never above PageHeader) */}
+      <Link
+        href={`/diagnostics/${id}`}
+        className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-secondary/60 px-5 py-4 transition-colors hover:bg-secondary"
+      >
+        <span>
+          <strong className="block text-base text-foreground">
+            ASK readiness diagnostic
+          </strong>
+          <span className="mt-0.5 block text-sm text-muted-foreground">
+            Open the one-time assessment or review saved results.
+          </span>
+        </span>
+        <ArrowRight size={19} className="shrink-0 text-primary" aria-hidden="true" />
+      </Link>
+
       {/* Stat Cards */}
       <div className="student-profile-stats grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statCards.map((card) => (
@@ -422,7 +435,7 @@ export default async function StudentDetailPage({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar size={18} className="text-orange-500" />
+                  <Calendar size={18} className="text-primary" />
                   Upcoming Classes
                 </CardTitle>
                 <CardDescription>
@@ -455,9 +468,9 @@ export default async function StudentDetailPage({
               <div className="space-y-2">
                 {upcoming.map((c) => (
                   <Link key={c.id} href={`/classes/${c.id}`} className="block">
-                    <div className="flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-all hover:bg-orange-50/50 hover:shadow-sm">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-orange-50">
-                        <Clock size={16} className="text-orange-500" />
+                    <div className="flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-colors hover:bg-secondary/60">
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-secondary">
+                        <Clock size={16} className="text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium">
@@ -514,7 +527,7 @@ export default async function StudentDetailPage({
                 {past.map((c) => (
                   <Link key={c.id} href={`/classes/${c.id}`} className="block">
                     <div
-                      className={`flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-all hover:bg-secondary/50 hover:shadow-sm ${c.status === "canceled" ? "opacity-60" : ""}`}
+                      className={`flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-colors hover:bg-secondary/50 hover:shadow-sm ${c.status === "canceled" ? "opacity-60" : ""}`}
                     >
                       <div
                         className={`flex size-9 items-center justify-center rounded-lg ${
@@ -599,7 +612,7 @@ export default async function StudentDetailPage({
                   href={`/invoices/${inv.id}`}
                   className="block"
                 >
-                  <div className="flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-all hover:bg-secondary/50 hover:shadow-sm">
+                  <div className="flex items-center gap-3 rounded-lg border border-border/50 p-3 transition-colors hover:bg-secondary/50 hover:shadow-sm">
                     <div
                       className={`flex size-9 items-center justify-center rounded-lg ${
                         inv.status === "paid"
@@ -795,7 +808,11 @@ export default async function StudentDetailPage({
                 <FormBusy />
             <div className="flex gap-2 items-end">
               <div className="flex-1">
+                <label htmlFor="student-running-note" className="sr-only">
+                  Running note
+                </label>
                 <Textarea
+                  id="student-running-note"
                   name="content"
                   rows={2}
                   required

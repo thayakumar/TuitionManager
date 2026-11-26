@@ -88,6 +88,9 @@ export default async function PostDetailPage({
   const resolvedParams = await params;
   const studentId = Number(resolvedParams.studentId);
   const postId = Number(resolvedParams.postId);
+  if (!Number.isSafeInteger(studentId) || studentId < 1 || !Number.isSafeInteger(postId) || postId < 1) {
+    notFound();
+  }
 
   const [student, work] = await Promise.all([
     queryOne<Student>(
@@ -107,21 +110,21 @@ export default async function PostDetailPage({
     POST_TYPE_CONFIG[post.type as PostType] || POST_TYPE_CONFIG.material;
   const Icon = config.icon;
 
-
   return (
     <>
       {/* Back + Breadcrumb */}
       <div className="flex items-center gap-2 mb-4">
-        <Link href={`/classroom/${studentId}`}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-muted-foreground"
-          >
-            <ArrowLeft size={14} />
-            {student.name}&apos;s Classroom
-          </Button>
-        </Link>
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground"
+        >
+          <Link href={`/classroom/${studentId}`}>
+            <ArrowLeft size={14} aria-hidden="true" />
+            {student.name}&apos;s classroom
+          </Link>
+        </Button>
       </div>
 
       {acceptsWork ? (
@@ -180,7 +183,7 @@ function PostContent({
             >
               <Icon size={22} className={config.color} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="break-words text-2xl font-semibold text-foreground">
                 {post.title}
               </h1>
@@ -257,9 +260,9 @@ function AssignmentDetail({
               <div
                 className={`flex size-11 items-center justify-center rounded-xl ${config.bg} shrink-0`}
               >
-                <Icon size={22} className={config.color} />
+                <Icon size={22} className={config.color} aria-hidden="true" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h1 className="break-words text-2xl font-semibold text-foreground">
                   {post.title}
                 </h1>
@@ -281,8 +284,8 @@ function AssignmentDetail({
                     </Badge>
                   )}
                   {post.due_at && (
-                    <span className="flex items-center gap-1 text-xs text-amber-600">
-                      <Calendar size={12} />
+                    <span className="flex items-center gap-1 text-xs text-amber-700">
+                      <Calendar size={12} aria-hidden="true" />
                       Due {fmtDateTime(post.due_at)}
                     </span>
                   )}
@@ -310,7 +313,7 @@ function AssignmentDetail({
         <TabsList>
           <TabsTrigger value="instructions">Instructions</TabsTrigger>
           <TabsTrigger value="student-work">
-            Student Work
+            Student work
             {submission && (
               <span className="ml-1.5 inline-flex size-5 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                 1
@@ -341,9 +344,9 @@ function AssignmentDetail({
           <Card className="border shadow-none">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {student.name}&apos;s Work
-                </h3>
+                <h2 className="text-sm font-semibold text-foreground">
+                  {student.name}&apos;s work
+                </h2>
                 {submission?.graded_at &&
                   submission.grade !== null &&
                   recordedMaximum !== null && (
@@ -361,6 +364,7 @@ function AssignmentDetail({
                   <Inbox
                     size={36}
                     className="mx-auto mb-3 text-muted-foreground/40"
+                    aria-hidden="true"
                   />
                   <p className="text-sm font-medium text-foreground">
                     No submission yet
@@ -379,11 +383,11 @@ function AssignmentDetail({
                   <Separator />
 
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground mb-3">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">
                       {submission.graded_at
-                        ? "Update Grade"
-                        : "Grade Submission"}
-                    </h4>
+                        ? "Update grade"
+                        : "Grade submission"}
+                    </h3>
                     <GradeSubmissionForm
                       key={`${submission.id}:${submission.version}:${submission.graded_at ?? "pending"}`}
                       submission={submission}

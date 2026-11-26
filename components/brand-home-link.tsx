@@ -7,6 +7,7 @@ export function BrandHomeLink({
   subtitle = "Teaching together",
   className = "",
   onNavigate,
+  onClick,
   disabled = false,
   onDark = false,
 }: {
@@ -15,6 +16,7 @@ export function BrandHomeLink({
   subtitle?: string;
   className?: string;
   onNavigate?: () => void | Promise<void>;
+  onClick?: () => void;
   disabled?: boolean;
   onDark?: boolean;
 }) {
@@ -30,6 +32,7 @@ export function BrandHomeLink({
           event.preventDefault();
           return;
         }
+        onClick?.();
         if (
           onNavigate &&
           !event.metaKey &&

@@ -14,22 +14,28 @@ export function Field({
   label,
   name,
   type = "text",
+  timeLabel,
   defaultValue,
   required,
   step,
   placeholder,
   min,
   max,
+  minLength,
+  autoComplete,
 }: {
   label: string;
   name: string;
   type?: string;
+  timeLabel?: string;
   defaultValue?: string | number;
   required?: boolean;
   step?: string;
   placeholder?: string;
   min?: number | string;
   max?: number | string;
+  minLength?: number;
+  autoComplete?: string;
 }) {
   const fieldId = useId();
   if (type === "datetime-local")
@@ -37,6 +43,7 @@ export function Field({
       <DateTimeField
         name={name}
         label={label}
+        timeLabel={timeLabel}
         defaultValue={String(defaultValue ?? "")}
         required={required}
       />
@@ -73,6 +80,8 @@ export function Field({
         step={step}
         min={min}
         max={max}
+        minLength={minLength}
+        autoComplete={autoComplete}
         placeholder={placeholder}
       />
     </div>

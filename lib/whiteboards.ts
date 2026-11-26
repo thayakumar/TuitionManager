@@ -1,3 +1,4 @@
+import { DomainError } from "./action-errors";
 import { getStudentSession, verifyAdminSession } from "./auth";
 import { queryOne, withTransaction } from "./db";
 import type { Transaction } from "@libsql/client";
@@ -8,13 +9,13 @@ export type WhiteboardSnapshot = {
   revision: number;
   updatedAt: string | null;
 };
-export class WhiteboardError extends Error {
+export class WhiteboardError extends DomainError {
   constructor(
-    public status: number,
+    status: number,
     message: string,
     public current?: WhiteboardSnapshot,
   ) {
-    super(message);
+    super(status, message);
   }
 }
 type Actor = { admin: boolean; studentId: number | null };

@@ -122,6 +122,13 @@ function fixture({
         return load("components/rich-text.tsx");
       if (name === "@/lib/rich-text") return load("lib/rich-text.ts");
       if (name === "@/lib/auth") return auth;
+      if (name === "@/lib/portal-context")
+        return {
+          ownStudentContext: async (id) => {
+            await auth.requireStudent(id);
+            return { id: 1, name: "Test Student", active: 1 };
+          },
+        };
       if (name === "next/navigation")
         return {
           notFound() {

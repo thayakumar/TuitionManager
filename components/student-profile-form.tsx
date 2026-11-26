@@ -36,12 +36,21 @@ export function StudentProfileForm({student}: {student:{name:string;phone:string
   }
   return <form onSubmit={submit} className="space-y-6" aria-label="Edit my profile">
     <div className="flex flex-wrap items-center gap-4">
-      <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-orange-50 text-primary">
-        {photo ? <img src={photo} alt="Your profile photo" className="size-full object-cover"/> : <UserRound size={40}/>}
+      <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-primary">
+        {photo ? <img src={photo} alt={student.name} className="size-full object-cover"/> : <UserRound size={40} aria-hidden="true"/>}
       </div>
       <div className="min-w-0 space-y-2">
-        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-4 font-medium"><Camera size={18}/>Choose photo<input aria-label="Upload profile photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy} className="sr-only" onChange={e=>{void choose(e.target.files?.[0]);e.target.value=''}}/></label>
-        {photo && <button type="button" disabled={busy} onClick={()=>{setPhoto('');setSaved(false)}} className="ml-3 inline-flex min-h-11 items-center gap-1 text-sm"><X size={16}/>Remove photo</button>}
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium hover:bg-secondary">
+            <Camera size={16} aria-hidden="true"/>Choose photo
+            <input aria-label="Upload profile photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy} className="sr-only" onChange={e=>{void choose(e.target.files?.[0]);e.target.value=''}}/>
+          </label>
+          {photo && (
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={()=>{setPhoto('');setSaved(false)}}>
+              <X size={15} aria-hidden="true"/>Remove photo
+            </Button>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">PNG, JPEG, WebP or GIF. Save changes to update your profile.</p>
       </div>
     </div>

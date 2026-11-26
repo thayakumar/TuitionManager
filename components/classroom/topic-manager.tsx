@@ -78,7 +78,6 @@ export function CreateTopicButton({ studentId }: { studentId: number }) {
               <label className="field-group">
                 <span className="field-label">Topic name</span>
                 <input
-                  autoFocus
                   required
                   aria-label="Topic name"
                   maxLength={200}
@@ -212,7 +211,6 @@ export function TopicActions({
                 <label className="field-group">
                   <span className="field-label">Topic name</span>
                   <input
-                    autoFocus
                     required
                     aria-label="Rename topic"
                     value={name}

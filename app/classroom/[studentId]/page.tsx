@@ -6,7 +6,6 @@ import { queryAll, queryOne } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { ClassroomBanner } from "@/components/classroom/classroom-banner";
 import { ClassroomTabs } from "@/components/classroom/classroom-tabs";
-import { ClassroomActions } from "@/components/classroom-post-dialog";
 import type { Student, Post, Topic } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +18,7 @@ export default async function StudentClassroomPage({
   await requireAdminPage();
   const resolvedParams = await params;
   const studentId = Number(resolvedParams.studentId);
+  if (!Number.isSafeInteger(studentId) || studentId < 1) notFound();
   const student = await queryOne<Student>(
     "SELECT id, name, subject, grade_level, phone, email, guardian_name, guardian_contact, active, created_at FROM students WHERE id = ? AND active = 1",
     [studentId],
@@ -51,16 +51,17 @@ export default async function StudentClassroomPage({
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <Link href="/classroom">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-muted-foreground"
-          >
-            <ArrowLeft size={14} />
-            All Classrooms
-          </Button>
-        </Link>
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground"
+        >
+          <Link href="/classroom">
+            <ArrowLeft size={14} aria-hidden="true" />
+            All classrooms
+          </Link>
+        </Button>
       </div>
 
       <ClassroomBanner studentName={student.name} subject={student.subject} />

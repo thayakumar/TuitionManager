@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BrandHomeLink } from "@/components/brand-home-link";
 import {
-  ArrowLeft,
   Copy,
   Check,
+  Files,
   PhoneOff,
   PanelRightClose,
   PanelRightOpen,
@@ -65,6 +65,12 @@ export function MeetingRoom({
     queue.current = new NoteSaveQueue(initialNotes, (value) =>
       saveClassNotes(classId, scope, value),
     );
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setNotesOpen(false);
+    }
+  }, []);
 
   const flush = useCallback(async () => {
     setPending(true);
@@ -180,23 +186,14 @@ export function MeetingRoom({
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Top bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5 shrink-0">
-        <div className="flex min-w-0 flex-1 basis-full items-center gap-2 sm:basis-0">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5 shrink-0">
+        <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-0">
           <BrandHomeLink
             href={isAdmin ? "/dashboard" : "/portal/student/" + studentId}
             compact
             onNavigate={goHome}
             disabled={leaving || imageUploading || imageUploadError}
           />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => void handleLeave()}
-            disabled={leaving || imageUploading || imageUploadError}
-            title="Back to class"
-          >
-            <ArrowLeft size={16} />
-          </Button>
           <div className="min-w-0">
             <h1 className="text-sm font-semibold truncate">
               Meeting with {studentName}
@@ -209,25 +206,37 @@ export function MeetingRoom({
 
         <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleCopy}
+            aria-label={copied ? "Meeting link copied" : "Copy meeting link"}
             className="gap-1.5"
           >
             {copied ? (
               <>
-                <Check size={14} className="text-emerald-500" />
+                <Check size={15} className="text-emerald-700" aria-hidden="true" />
                 <span className="text-xs">Copied!</span>
               </>
             ) : (
               <>
-                <Copy size={14} />
-                <span className="text-xs hidden sm:inline">Copy Link</span>
+                <Copy size={15} aria-hidden="true" />
+                <span className="text-xs hidden sm:inline">Copy link</span>
               </>
             )}
           </Button>
 
-          <Button asChild variant="outline" size="sm"><Link href={`/meeting/${classId}/documents`} target="_blank" rel="noopener noreferrer">Documents ↗</Link></Button>
+          <Button asChild variant="outline" size="sm">
+            <Link
+              href={`/meeting/${classId}/documents`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open lesson documents in a new tab"
+            >
+              <Files size={15} aria-hidden="true" />
+              <span className="text-xs hidden sm:inline">Documents</span>
+            </Link>
+          </Button>
           <Button asChild variant="outline" size="sm">
             <Link
               href={`/meeting/${classId}/whiteboard`}
@@ -235,39 +244,44 @@ export function MeetingRoom({
               rel="noopener noreferrer"
               aria-label="Open lesson whiteboard in a new tab"
             >
-              <PencilRuler size={17} />
-              <span className="hidden sm:inline">Whiteboard</span>
+              <PencilRuler size={15} aria-hidden="true" />
+              <span className="text-xs hidden sm:inline">Whiteboard</span>
             </Link>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setNotesOpen(!notesOpen)}
+            aria-pressed={notesOpen}
+            aria-label={notesOpen ? "Hide notes panel" : "Show notes panel"}
             title={notesOpen ? "Hide notes" : "Show notes"}
           >
             {notesOpen ? (
-              <PanelRightClose size={14} />
+              <PanelRightClose size={15} aria-hidden="true" />
             ) : (
-              <PanelRightOpen size={14} />
+              <PanelRightOpen size={15} aria-hidden="true" />
             )}
             <span className="text-xs hidden sm:inline">Notes</span>
           </Button>
 
           <Button
+            type="button"
             variant="destructive"
             size="sm"
             onClick={() => void handleLeave()}
             disabled={leaving || imageUploading || imageUploadError}
+            aria-label="Leave meeting"
           >
-            <PhoneOff size={14} />
-            <span className="hidden sm:inline">Leave</span>
+            <PhoneOff size={15} aria-hidden="true" />
+            <span className="text-xs hidden sm:inline">Leave</span>
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Main content: Jitsi + Notes panel */}
-      <div className="flex-1 flex min-h-0">
-        <div className="flex-1 min-w-0 bg-gray-900">
+      <main className="relative flex-1 flex min-h-0">
+        <div className="flex-1 min-w-0 bg-slate-900">
           <JitsiMeeting
             roomName={roomName}
             displayName={isAdmin ? "Tutor" : studentName}
@@ -277,37 +291,43 @@ export function MeetingRoom({
         </div>
 
         {notesOpen && (
-          <div className="absolute inset-y-14 right-0 z-20 w-[min(90vw,320px)] md:relative md:inset-auto md:z-auto md:w-80 border-l border-border bg-card flex flex-col shrink-0">
+          <aside
+            aria-label={isAdmin ? "Teacher notes" : "My notes"}
+            className="absolute inset-y-0 right-0 z-20 w-[min(90vw,320px)] md:relative md:inset-auto md:z-auto md:w-80 border-l border-border bg-card flex flex-col shrink-0 shadow-xl md:shadow-none"
+          >
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
               <div className="flex items-center gap-2">
                 <StickyNote
                   size={14}
-                  className={isAdmin ? "text-amber-500" : "text-blue-500"}
+                  className={isAdmin ? "text-amber-700" : "text-primary"}
+                  aria-hidden="true"
                 />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {isAdmin ? "Teacher Notes" : "My Notes"}
+                  {isAdmin ? "Teacher notes" : "My notes"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 {saved ? (
-                  <span className="text-xs text-emerald-500 flex items-center gap-1">
-                    <Check size={10} /> Saved
+                  <span className="text-xs text-emerald-700 flex items-center gap-1">
+                    <Check size={12} aria-hidden="true" /> Saved
                   </span>
                 ) : isPending ? (
                   <span className="text-xs text-muted-foreground animate-pulse">
-                    Saving...
+                    Saving…
                   </span>
                 ) : (
-                  <span className="text-xs text-amber-500">Unsaved</span>
+                  <span className="text-xs text-amber-700">Unsaved</span>
                 )}
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon-sm"
                   onClick={handleManualSave}
                   disabled={saved || isPending}
+                  aria-label="Save notes"
                   title="Save notes"
                 >
-                  <Save size={12} />
+                  <Save size={14} aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -334,9 +354,9 @@ export function MeetingRoom({
               }
               className="min-h-0 flex-1 overflow-y-auto p-3"
             />
-          </div>
+          </aside>
         )}
-      </div>
+      </main>
     </div>
   );
 }

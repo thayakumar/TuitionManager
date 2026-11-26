@@ -10,6 +10,7 @@ import {
 } from "@/lib/finance";
 import { currency, fmtDate } from "@/lib/format";
 import { GenerateInvoiceDialog } from "@/components/generate-invoice-dialog";
+import { MonthlyDraftsButton } from "@/components/monthly-drafts-button";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -21,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ExportButton } from "@/components/export-button";
 import { exportInvoicesCsv } from "@/lib/export";
+import { invoiceCalendarPeriod } from "@/lib/portal-context";
 export const dynamic = "force-dynamic";
 export default async function InvoicesPage({
   searchParams,
@@ -43,10 +45,15 @@ export default async function InvoicesPage({
     ),
     getSettings(["currency"]),
   ]);
-  const totals = financeTotals(invoices),
-    month = financeTotals(
-      invoices.filter((i) => invoiceBillingMonth(i) === currentBillingMonth()),
-    ),
+  const billingMonth = currentBillingMonth();
+  const totals = financeTotals(invoices);
+  const statusCounts = new Map<string, number>();
+  const thisMonthInvoices: FinanceInvoice[] = [];
+  for (const inv of invoices) {
+    statusCounts.set(inv.status, (statusCounts.get(inv.status) ?? 0) + 1);
+    if (invoiceBillingMonth(inv) === billingMonth) thisMonthInvoices.push(inv);
+  }
+  const month = financeTotals(thisMonthInvoices),
     symbol = settings.currency || "RM",
     visible = status ? invoices.filter((i) => i.status === status) : invoices;
   return (
@@ -55,7 +62,8 @@ export default async function InvoicesPage({
         title="Invoices"
         subtitle={`${invoices.length} documents · ${currency(totals.outstanding, symbol)} outstanding`}
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <MonthlyDraftsButton month={billingMonth} />
             <ExportButton getData={exportInvoicesCsv} filename="invoices.csv" />
             <GenerateInvoiceDialog students={students} />
           </div>
@@ -104,11 +112,7 @@ export default async function InvoicesPage({
             aria-current={(status ?? "all") === s ? "page" : undefined}
             className={`rounded-full border px-3 py-2 text-xs capitalize ${(status ?? "all") === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-secondary"}`}
           >
-            {s} (
-            {s === "all"
-              ? invoices.length
-              : invoices.filter((i) => i.status === s).length}
-            )
+            {s} ({s === "all" ? invoices.length : (statusCounts.get(s) ?? 0)})
           </Link>
         ))}
         <Link
@@ -131,7 +135,7 @@ export default async function InvoicesPage({
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <TableExplorer><table className="w-full text-left text-sm">
+            <TableExplorer label="invoices"><table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-3 pr-4">Invoice</th>
@@ -142,42 +146,45 @@ export default async function InvoicesPage({
                 </tr>
               </thead>
               <tbody>
-                {visible.map((i) => (
-                  <tr
-                    key={i.id}
-                    className="border-b border-border/60 hover:bg-secondary/40"
-                  >
-                    <td className="whitespace-nowrap py-4 pr-4">
-                      <Link
-                        href={`/invoices/${i.id}`}
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        {i.invoice_number}
-                      </Link>
-                    </td>
-                    <td className="p-3">{i.student_name}</td>
-                    <td className="hidden p-3 text-xs text-muted-foreground md:table-cell">
-                      {fmtDate(i.period_start)} – {fmtDate(/T16:00:00(?:\.000)?Z$/.test(i.period_end) ? new Date(Date.parse(i.period_end) - 1).toISOString() : i.period_end)}
-                    </td>
-                    <td className="whitespace-nowrap p-3 text-right font-semibold">
-                      {currency(Number(i.total_amount), symbol)}
-                    </td>
-                    <td className="p-3">
-                      <Badge
-                        variant={
-                          i.status === "paid"
-                            ? "default"
-                            : i.status === "overdue"
-                              ? "destructive"
-                              : "outline"
-                        }
-                        className="capitalize"
-                      >
-                        {i.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                {visible.map((i) => {
+                  const period = invoiceCalendarPeriod(i);
+                  return (
+                    <tr
+                      key={i.id}
+                      className="border-b border-border/60 hover:bg-secondary/40"
+                    >
+                      <td className="whitespace-nowrap py-4 pr-4">
+                        <Link
+                          href={`/invoices/${i.id}`}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {i.invoice_number}
+                        </Link>
+                      </td>
+                      <td className="p-3">{i.student_name}</td>
+                      <td className="hidden p-3 text-xs text-muted-foreground md:table-cell">
+                        {fmtDate(period.start)} – {fmtDate(period.end)}
+                      </td>
+                      <td className="whitespace-nowrap p-3 text-right font-semibold">
+                        {currency(Number(i.total_amount), symbol)}
+                      </td>
+                      <td className="p-3">
+                        <Badge
+                          variant={
+                            i.status === "paid"
+                              ? "default"
+                              : i.status === "overdue"
+                                ? "destructive"
+                                : "outline"
+                          }
+                          className="capitalize"
+                        >
+                          {i.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table></TableExplorer>
             {!visible.length && (

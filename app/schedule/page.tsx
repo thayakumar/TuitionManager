@@ -75,14 +75,17 @@ export default async function SchedulePage({
     <>
       <PageHeader
         title="Schedule"
-        subtitle="Click on any day to add a class"
+        subtitle="Manage lessons, recurring series, and upcoming availability."
         action={
           <div className="flex flex-wrap gap-2">
-            <ExportButton getData={exportClassesCsv} filename="classes.csv" />
+            <Button asChild>
+              <Link href="/schedule/new">Plan a lesson</Link>
+            </Button>
             <RecurringScheduleDialog students={studentList} />
             <Button asChild variant="outline">
               <Link href="/schedule/recurring">Manage series</Link>
             </Button>
+            <ExportButton getData={exportClassesCsv} filename="classes.csv" />
           </div>
         }
       />

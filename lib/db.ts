@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -489,17 +489,70 @@ async function migrateMcp(tx: Transaction) {
   `);
 }
 
+async function migrateSecurityAndIndexes(tx: Transaction) {
+  const columns = (await tx.execute("PRAGMA table_info(family_chat_messages)")).rows;
+  if (columns.length > 0) {
+    if (!columns.some((column) => column.name === "inline_files")) {
+      await tx.execute(
+        "ALTER TABLE family_chat_messages ADD COLUMN inline_files TEXT NOT NULL DEFAULT '[]'",
+      );
+    }
+    const rows = (
+      await tx.execute(
+        "SELECT id, body FROM family_chat_messages WHERE inline_files='[]' AND instr(body, '/api/files/') > 0",
+      )
+    ).rows;
+    for (const row of rows) {
+      const ids = Array.from(
+        new Set(
+          Array.from(
+            String(row.body ?? "").matchAll(
+              /<img[^>]+src="\/api\/files\/([A-Za-z0-9_-]{10,200})\?inline=1"/g,
+            ),
+            (match) => match[1],
+          ),
+        ),
+      );
+      if (ids.length) {
+        await tx.execute({
+          sql: "UPDATE family_chat_messages SET inline_files=? WHERE id=?",
+          args: [JSON.stringify(ids), row.id],
+        });
+      }
+    }
+  }
+  await tx.executeMultiple(`
+    CREATE INDEX IF NOT EXISTS idx_classes_jday ON classes(julianday(scheduled_at));
+    CREATE INDEX IF NOT EXISTS idx_classes_status_jday ON classes(status, julianday(scheduled_at));
+    CREATE INDEX IF NOT EXISTS idx_classes_student_status_jday ON classes(student_id, status, julianday(scheduled_at));
+    CREATE INDEX IF NOT EXISTS idx_invoice_items_class ON invoice_items(class_id);
+    CREATE INDEX IF NOT EXISTS idx_classes_rescheduled_from ON classes(rescheduled_from) WHERE rescheduled_from IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_reschedule_requests_class_status ON reschedule_requests(class_id, status);
+  `);
+}
+
+const INCREMENTAL_MIGRATIONS: ReadonlyArray<{
+  version: number;
+  up: (tx: Transaction) => Promise<void>;
+}> = [
+  { version: 3, up: migratePostOrder },
+  { version: 4, up: migrateWhiteboards },
+  { version: 5, up: migrateClassroomConversation },
+  { version: 6, up: migrateStudentProfile },
+  { version: 7, up: migrateFamilyChat },
+  { version: 8, up: migrateDiagnostics },
+  { version: 9, up: migrateMcp },
+  { version: 10, up: migrateDocuments },
+  { version: 11, up: migrateSecurityAndIndexes },
+];
+
 async function applyMigration(tx: Transaction, fromVersion = 0) {
-  // Prepared versions already have their history backfills. Never replay them.
+  // Prepared versions already have their history backfills. Run only unapplied
+  // incremental migrations in order so newer upgrades never replay older steps.
   if (fromVersion >= 2) {
-    if (fromVersion < 3) await migratePostOrder(tx);
-    await migrateWhiteboards(tx);
-    await migrateClassroomConversation(tx);
-    await migrateStudentProfile(tx);
-    await migrateFamilyChat(tx);
-    await migrateDiagnostics(tx);
-    await migrateMcp(tx);
-    await migrateDocuments(tx);
+    for (const step of INCREMENTAL_MIGRATIONS) {
+      if (fromVersion < step.version) await step.up(tx);
+    }
     await writeSchemaVersion(tx);
     return;
   }
@@ -634,14 +687,7 @@ async function applyMigration(tx: Transaction, fromVersion = 0) {
     INSERT OR IGNORE INTO settings(key,value) VALUES ('admin_password','admin123');
     DELETE FROM settings WHERE key LIKE 'student_session_%';
   `);
-  await migratePostOrder(tx);
-  await migrateWhiteboards(tx);
-  await migrateClassroomConversation(tx);
-  await migrateStudentProfile(tx);
-  await migrateFamilyChat(tx);
-  await migrateDiagnostics(tx);
-  await migrateMcp(tx);
-    await migrateDocuments(tx);
+  for (const step of INCREMENTAL_MIGRATIONS) await step.up(tx);
   await writeSchemaVersion(tx);
 }
 

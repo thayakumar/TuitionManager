@@ -1,9 +1,8 @@
-import { requireStudent } from "@/lib/auth";
-import { notFound } from "next/navigation";
-import { queryAll, queryOne } from "@/lib/db";
+import { ownStudentContext } from "@/lib/portal-context";
+import { queryAll } from "@/lib/db";
 import { ClassroomBanner } from "@/components/classroom/classroom-banner";
 import { ClassroomTabs } from "@/components/classroom/classroom-tabs";
-import type { Student, Post, Topic } from "@/lib/types";
+import type { Post, Topic } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +13,7 @@ export default async function StudentClassroomPage({
 }) {
   const resolvedParams = await params;
   const studentId = Number(resolvedParams.studentId);
-  await requireStudent(studentId);
-  const student = await queryOne<Student>(
-    `SELECT id, name, subject, grade_level, phone, email, guardian_name,
-            guardian_contact, username, active, created_at
-     FROM students WHERE id = ? AND active = 1`,
-    [studentId],
-  );
-  if (!student) notFound();
+  const student = await ownStudentContext(studentId);
 
   const [posts, topics, submissions] = await Promise.all([
     queryAll<Post>(

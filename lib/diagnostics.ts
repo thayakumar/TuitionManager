@@ -1,13 +1,16 @@
 import { createHash } from "crypto";
 import type { Transaction, InValue } from "@libsql/client";
+import { DomainError } from "./action-errors";
 import { verifyAdminSession, getStudentSession } from "./auth";
 import { queryAll, queryOne, withTransaction } from "./db";
 import { DIAGNOSTIC_VERSION, loadDiagnosticBank, validateDiagnosticBank, publicQuestions, type DiagnosticBank } from "./diagnostic-bank";
 import { computeDiagnosticReport, normalizeDiagnosticAnswers } from "./diagnostic-scoring";
 import type { DiagnosticAnswers, DiagnosticReport } from "./diagnostic-types";
 
-export class DiagnosticError extends Error {
-  constructor(public status:number,message:string,public code?:string){super(message)}
+export class DiagnosticError extends DomainError {
+  constructor(status: number, message: string, code?: string) {
+    super(status, message, code);
+  }
 }
 export type DiagnosticContext={viewer?:'admin'|'student'};
 export type DiagnosticStatus='awaiting'|'open'|'in_progress'|'submitted'|'locked';

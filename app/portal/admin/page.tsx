@@ -4,7 +4,7 @@ import { useActionBusy } from "@/components/action-busy";
 import { SignInShell } from "@/components/sign-in-shell";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, ShieldCheck } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { loginAdmin } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -53,7 +53,6 @@ export default function AdminLoginPage() {
             id="admin-username"
             name="username"
             required
-            autoFocus
             placeholder="Admin username"
             autoComplete="username"
             className={inputClass}

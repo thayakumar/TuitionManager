@@ -1,22 +1,13 @@
 "use client";
 
 import { WorkspaceHeader } from "@/components/workspace-header";
+import { isFullscreenRoute } from "@/lib/route-shell";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 export function MainWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isFullscreen =
-    pathname.startsWith("/portal") ||
-    pathname.startsWith("/oauth/") ||
-    pathname.startsWith("/share/") ||
-    pathname.startsWith("/meeting/") ||
-    pathname.startsWith("/documents/") ||
-    pathname.startsWith("/office-editor/") ||
-    pathname === "/whiteboard" ||
-    pathname === "/login";
-
-  if (isFullscreen) {
+  if (isFullscreenRoute(pathname)) {
     return <>{children}</>;
   }
 

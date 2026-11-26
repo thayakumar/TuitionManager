@@ -73,8 +73,8 @@ async function serveFile(
       `SELECT m.id FROM family_chat_messages m JOIN family_chat_rooms r ON r.id=m.room_id
        WHERE r.student_id=? AND m.deleted_at IS NULL AND
        (EXISTS(SELECT 1 FROM json_each(m.attachments) a WHERE json_extract(a.value,'$.fileUrl')=?)
-        OR instr(m.body,?)>0) LIMIT 1`,
-      [sid, "/api/files/" + id, '/api/files/' + id + '?inline=1"'],
+        OR EXISTS(SELECT 1 FROM json_each(m.inline_files) f WHERE f.value=?)) LIMIT 1`,
+      [sid, "/api/files/" + id, id],
     );
     shared = !!chat;
     if (parentViewer && !shared)

@@ -141,12 +141,12 @@ export function AttachmentCard({
       setPreview(inline);
       return;
     }
-    if (fileType === "application/pdf" || /\.pdf(?:$|[?#])/i.test(fileName)) {
-      setPdf(true); setPdfLoaded(false); setFileOpen(true);
-      return;
-    }
     if (!driveFileId(fileUrl)) {
       setFileOpen(true);
+      return;
+    }
+    if (fileType === "application/pdf" || /\.pdf(?:$|[?#])/i.test(fileName)) {
+      setPdf(true); setPdfLoaded(false); setFileOpen(true);
       return;
     }
     if (inspecting) return;

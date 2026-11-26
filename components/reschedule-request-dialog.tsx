@@ -80,21 +80,17 @@ export function RescheduleRequestDialog({
       }}
     >
       <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        <CalendarClock size={14} /> Request Reschedule
+        <CalendarClock size={14} aria-hidden="true" /> Request reschedule
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Request a new lesson time</DialogTitle>
           <DialogDescription>
             Suggest up to three times in Malaysia time. Your current booking
-            stays in place until your tutor approves.
+            stays in place until your tutor approves a new slot.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6" aria-busy={saving}>
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-base leading-relaxed text-blue-900">
-            Your current lesson remains booked. Your tutor will choose a
-            suggested time or confirm another available slot.
-          </div>
           {[1, 2, 3].map((index) => (
             <section key={index} className="form-section">
               <p className="form-section-title mb-4">
@@ -104,7 +100,8 @@ export function RescheduleRequestDialog({
               </p>
               <DateTimeField
                 name={`preferred_time_${index}`}
-                label={`Preferred time ${index}`}
+                label={`Preferred date ${index}`}
+                timeLabel="Preferred time"
                 required={index === 1}
                 disabled={saving}
               />
@@ -134,7 +131,7 @@ export function RescheduleRequestDialog({
           <DialogFooter>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={() => setOpen(false)}
               disabled={saving}
             >

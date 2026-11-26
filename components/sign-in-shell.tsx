@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandHomeLink } from "@/components/brand-home-link";
-import { ArrowUpRight, BookOpen, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowUpRight, BookOpen, Sparkles } from "lucide-react";
 
 export function SignInShell({
   role,
@@ -10,25 +10,25 @@ export function SignInShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="signin-shell">
-      <section className="signin-story">
+    <main className="signin-shell">
+      <section className="signin-story" aria-label="About TuitionHub">
         <BrandHomeLink
           href={role === "Admin" ? "/dashboard" : "/portal/student"}
           onDark
         />
 
         <div className="my-auto py-16">
-          <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em] text-orange-200">
+          <p className="mb-6 text-xs font-semibold uppercase tracking-[.2em] text-teal-200">
             A little space for big ideas
           </p>
-          <h2 className="max-w-lg text-4xl font-semibold leading-[1.12] tracking-tight lg:text-6xl">
+          <p className="font-display max-w-lg text-4xl font-semibold leading-[1.12] tracking-tight lg:text-6xl">
             Good lessons.
             <br />
             Bright futures.
             <br />
-            <span className="text-[#edc69e]">All together.</span>
-          </h2>
-          <p className="mt-7 max-w-sm text-sm leading-7 text-white/65">
+            <span className="text-amber-200">All together.</span>
+          </p>
+          <p className="mt-7 max-w-sm text-sm leading-7 text-white/75">
             A thoughtful home for lessons, learning and the small steps that
             make a big difference.
           </p>
@@ -44,7 +44,7 @@ export function SignInShell({
             </div>
           </div>
         </div>
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-white/60">
           More clarity. More room to grow.
         </p>
       </section>
@@ -65,14 +65,14 @@ export function SignInShell({
               Looking for the {role === "Admin" ? "student" : "admin"} space?
             </span>
             <Link
-              className="flex items-center gap-1 font-medium text-primary"
+              className="flex items-center gap-1 font-medium text-primary hover:underline"
               href={role === "Admin" ? "/portal/student" : "/portal/admin"}
             >
-              Go there <ArrowUpRight size={13} />
+              Go there <ArrowUpRight size={13} aria-hidden="true" />
             </Link>
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

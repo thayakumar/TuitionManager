@@ -40,39 +40,53 @@ export default async function RescheduleRequestsPage() {
                 New requests
               </h2>
               <div className="space-y-3">
-                {pending.map((req) => (
-                  <article
-                    key={req.id}
-                    className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="rounded-xl bg-amber-50 p-3 text-amber-700">
-                        <CalendarClock size={22} />
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold break-words">
-                          {req.student_name} requested to reschedule
-                        </h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {fmtDateTime(req.created_at)}
-                        </p>
+                {pending.map((req) => {
+                  const preferred = [
+                    req.preferred_time_1,
+                    req.preferred_time_2,
+                    req.preferred_time_3,
+                  ].filter(Boolean) as string[];
+                  return (
+                    <article
+                      key={req.id}
+                      className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5"
+                    >
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <span className="rounded-xl bg-amber-50 p-3 text-amber-800 shrink-0">
+                          <CalendarClock size={20} aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold break-words">
+                            {req.student_name} requested to reschedule
+                          </h3>
+                          <p className="mt-1 text-sm text-foreground">
+                            Current lesson: <strong>{fmtDateTime(req.scheduled_at)}</strong>
+                          </p>
+                          {preferred.length > 0 && (
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              Preferred: {preferred.map((t) => fmtDateTime(t)).join(" · ")}
+                            </p>
+                          )}
+                          {req.reason && (
+                            <p className="mt-1 text-sm text-muted-foreground break-words">
+                              Reason: {req.reason}
+                            </p>
+                          )}
+                          <p className="mt-1.5 text-xs text-muted-foreground">
+                            Requested {fmtDateTime(req.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <RescheduleActions
-                      requestId={req.id}
-                      preferredTimes={
-                        [
-                          req.preferred_time_1,
-                          req.preferred_time_2,
-                          req.preferred_time_3,
-                        ].filter(Boolean) as string[]
-                      }
-                      studentName={req.student_name}
-                      originalTime={req.scheduled_at}
-                      reason={req.reason}
-                    />
-                  </article>
-                ))}
+                      <RescheduleActions
+                        requestId={req.id}
+                        preferredTimes={preferred}
+                        studentName={req.student_name}
+                        originalTime={req.scheduled_at}
+                        reason={req.reason}
+                      />
+                    </article>
+                  );
+                })}
               </div>
             </section>
           )}

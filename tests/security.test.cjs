@@ -302,6 +302,7 @@ test("upload denies anonymous/malformed requests and derives student identity be
       if (file !== undefined) form.set("file", file);
       return new Request("https://app.example.invalid/api/upload", {
         method: "POST",
+        headers: { Origin: "https://app.example.invalid" },
         body: form,
       });
     };

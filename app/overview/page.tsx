@@ -16,62 +16,99 @@ import {
   MessagesSquare,
   BrainCircuit,
   Files,
+  ExternalLink,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
 import { PageHeader } from "@/components/page-header";
+
 export const dynamic = "force-dynamic";
-const sections = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/students", label: "Students", icon: Users },
-  { href: "/schedule", label: "Schedule", icon: CalendarDays },
-  { href: "/classroom", label: "Classroom", icon: BookOpen },
-  { href: "/documents", label: "Documents", icon: Files },
-  { href: "/diagnostics", label: "Diagnostics", icon: BrainCircuit },
-  { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler },
-  { href: "/invoices", label: "Invoices", icon: Receipt },
-  { href: "/financial-history", label: "Financial history", icon: BarChart3 },
-  { href: "/schedule/new", label: "Plan a lesson", icon: CalendarPlus },
-  { href: "/schedule/recurring", label: "Recurring lessons", icon: Repeat2 },
-  { href: "/chats", label: "Family chats", icon: MessagesSquare },
-  { href: "/requests", label: "Requests", icon: CalendarClock },
-  { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/settings", label: "Settings", icon: Settings },
+
+const groups = [
+  {
+    title: "Teach & learn",
+    items: [
+      { href: "/dashboard", label: "Dashboard", desc: "Today’s schedule and tasks", icon: LayoutDashboard },
+      { href: "/students", label: "Students", desc: "Roster, rates and parent links", icon: Users },
+      { href: "/schedule", label: "Schedule", desc: "Calendar and upcoming lessons", icon: CalendarDays },
+      { href: "/schedule/new", label: "Plan a lesson", desc: "Book a single or trial session", icon: CalendarPlus },
+      { href: "/schedule/recurring", label: "Recurring lessons", desc: "Extend or stop weekly series", icon: Repeat2 },
+      { href: "/classroom", label: "Classroom", desc: "Assignments, materials and grades", icon: BookOpen },
+      { href: "/documents", label: "Documents", desc: "Shared Docs and Gridcraft sheets", icon: Files },
+      { href: "/diagnostics", label: "Diagnostics", desc: "One-time readiness assessments", icon: BrainCircuit },
+      { href: "/whiteboard", label: "Whiteboard", desc: "Personal canvas (new tab)", icon: PencilRuler, external: true },
+    ],
+  },
+  {
+    title: "Business",
+    items: [
+      { href: "/invoices", label: "Invoices", desc: "Drafts, billing status and PDFs", icon: Receipt },
+      { href: "/financial-history", label: "Financial history", desc: "Monthly paid and outstanding revenue", icon: BarChart3 },
+    ],
+  },
+  {
+    title: "Stay connected & workspace",
+    items: [
+      { href: "/chats", label: "Family chats", desc: "Messages with students and parents", icon: MessagesSquare },
+      { href: "/requests", label: "Requests", desc: "Approve or decline reschedules", icon: CalendarClock },
+      { href: "/notifications", label: "Notifications", desc: "Recent lesson and grade updates", icon: Bell },
+      { href: "/settings", label: "Settings", desc: "Business info, QR, storage and AI", icon: Settings },
+    ],
+  },
 ];
+
 export default async function OverviewPage() {
   await requireAdminPage();
   return (
     <>
       <PageHeader
-        title="Overview"
-        subtitle="Everything you need, one place to start."
+        title="Workspace directory"
+        subtitle="Jump directly to any teaching, billing, or communication tool."
       />
-      <nav
-        aria-label="Workspace overview"
-        className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-      >
-        {sections.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            target={href === "/whiteboard" ? "_blank" : undefined}
-            rel={href === "/whiteboard" ? "noopener noreferrer" : undefined}
-            className="overview-tile group flex min-h-36 min-w-0 items-center gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm transition-[background-color,border-color,box-shadow] hover:border-primary/40 hover:bg-orange-50/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-40 lg:p-7"
-          >
-            <Icon
-              size={32}
-              className="shrink-0 text-primary"
-              strokeWidth={1.8}
-            />
-            <span className="min-w-0 flex-1 break-words text-lg font-semibold tracking-tight">
-              {label}
-            </span>
-            <ArrowRight
-              size={21}
-              className="shrink-0 text-primary transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
-            />
-          </Link>
+      <div className="space-y-8">
+        {groups.map((group) => (
+          <section key={group.title} aria-label={group.title}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              {group.title}
+            </h2>
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {group.items.map(({ href, label, desc, icon: Icon, external }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
+                  className="overview-tile group flex min-w-0 items-center gap-4 rounded-xl border border-border bg-card p-4 transition-[background-color,border-color,box-shadow] duration-150 hover:border-primary/40 hover:bg-secondary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+                    <Icon size={20} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="block truncate text-sm font-semibold text-foreground">
+                      {label}
+                    </strong>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {desc}
+                    </span>
+                  </span>
+                  {external ? (
+                    <ExternalLink
+                      size={16}
+                      className="shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <ArrowRight
+                      size={16}
+                      className="shrink-0 text-primary transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
         ))}
-      </nav>
+      </div>
     </>
   );
 }

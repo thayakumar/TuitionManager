@@ -329,17 +329,28 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <section aria-labelledby="upcoming-lessons" className="mt-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-            <h2 id="upcoming-lessons" className="text-xl font-semibold">Upcoming lessons</h2>
-            <CardDescription>
-              {Number(stats?.upcoming ?? 0)} scheduled · showing the next 5
-            </CardDescription>
+      <Card id="upcoming-lessons" className="mt-6">
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Upcoming lessons</CardTitle>
+              <CardDescription className="mt-1">
+                {Number(stats?.upcoming ?? 0)} scheduled · showing the next 5
+              </CardDescription>
+            </div>
+            <Link
+              href="/schedule"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              View full schedule →
+            </Link>
           </div>
-          <div>
-            {upcoming.map((c) => (
+        </CardHeader>
+        <CardContent>
+          {upcoming.length ? (
+            upcoming.map((c) => (
               <Link
-                className="flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0"
+                className="flex items-center justify-between gap-3 border-b border-border/50 py-3 last:border-0 hover:text-primary"
                 key={c.id}
                 href={`/classes/${c.id}`}
               >
@@ -349,22 +360,16 @@ export default async function DashboardPage() {
                     {fmtDateTime(c.scheduled_at)}
                   </p>
                 </div>
-                <ArrowRight size={15} className="shrink-0 text-primary" />
+                <ArrowRight size={15} className="shrink-0 text-primary" aria-hidden="true" />
               </Link>
-            ))}
-            {!upcoming.length && (
-              <p className="py-6 text-sm text-muted-foreground">
-                No upcoming lessons scheduled.
-              </p>
-            )}
-            <Link
-              href="/schedule"
-              className="mt-4 block text-xs font-semibold text-primary"
-            >
-              View the schedule →
-            </Link>
-          </div>
-      </section>
+            ))
+          ) : (
+            <p className="py-6 text-sm text-muted-foreground">
+              No upcoming lessons scheduled.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }

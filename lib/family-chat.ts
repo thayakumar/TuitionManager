@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import type { Transaction, InValue } from "@libsql/client";
+import { DomainError } from "./action-errors";
 import { verifyAdminSession, getStudentSession } from "./auth";
 import { queryAll, queryOne, withTransaction, ensureMigrated, getClient } from "./db";
 import { sanitizeRichText, hasRichTextContent } from "./rich-text";
@@ -8,8 +9,8 @@ import { driveFileId } from "./attachment-url";
 export type ChatRole = "admin" | "student" | "parent";
 export type ChatContext = { viewer?: ChatRole; parentToken?: string };
 export type ChatAttachment = { fileUrl: string; fileName: string; fileType: string };
-export class ChatError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+export class ChatError extends DomainError {
+  constructor(status: number, message: string) { super(status, message); }
 }
 export type ChatActor = { role: ChatRole; key: string; studentId: number | null; parentToken?: string };
 const invalid = (message: string): never => { throw new ChatError(400, message); };
@@ -189,16 +190,18 @@ export async function mutateChat(studentId:number, data:{action:string;body?:unk
     const body=sanitizeRichText(normalized).replace(/(?:[?&]|&amp;)parent_token=[^&"\s<>]*/g, "");
     const inlineUrls=Array.from(body.matchAll(/<img[^>]+src="([^"]+)"/g),match=>match[1]);
     const attachments=await verifiedAttachments(tx,actor,sid,data.attachments ?? (previous?JSON.parse(String(previous.attachments)):[]),inlineUrls);
+    const inlineFiles=Array.from(new Set(inlineUrls.map(url=>driveFileId(url)).filter((fid):fid is string=>Boolean(fid))));
+    const inlineFilesJson=JSON.stringify(inlineFiles);
     if(!hasRichTextContent(body)&&!attachments.length)invalid("Write a message or add an attachment");
     if(previous) {
-      if(previous.body===body&&previous.attachments===JSON.stringify(attachments))return {success:true,id:Number(previous.id),message:await savedMessage(tx,roomId,actor,"m.id=?",[Number(previous.id)])};
+      if(previous.body===body&&previous.attachments===JSON.stringify(attachments)&&String(previous.inline_files??"[]")===inlineFilesJson)return {success:true,id:Number(previous.id),message:await savedMessage(tx,roomId,actor,"m.id=?",[Number(previous.id)])};
       await tx.execute({sql:"INSERT INTO family_chat_edits(message_id,body,attachments,changed_by,changed_at,action) VALUES(?,?,?,?,?,'edit')",args:[previous.id,previous.body,previous.attachments,actor.key,now]});
-      await tx.execute({sql:"UPDATE family_chat_messages SET body=?,attachments=?,edited_at=? WHERE id=?",args:[body,JSON.stringify(attachments),now,previous.id]});
+      await tx.execute({sql:"UPDATE family_chat_messages SET body=?,attachments=?,inline_files=?,edited_at=? WHERE id=?",args:[body,JSON.stringify(attachments),inlineFilesJson,now,previous.id]});
       return {success:true,id:Number(previous.id),message:await savedMessage(tx,roomId,actor,"m.id=?",[Number(previous.id)])};
     }
     let replyTo:number|null=null,replyRow:Record<string,unknown>|undefined;
     if(data.replyTo){replyTo=positive(data.replyTo,"Reply");replyRow=(await tx.execute({sql:"SELECT id,body,author_role,deleted_at FROM family_chat_messages WHERE id=? AND room_id=?",args:[replyTo,roomId]})).rows[0];if(!replyRow)throw new ChatError(404,"Reply message not found");}
-    const result=await tx.execute({sql:"INSERT INTO family_chat_messages(room_id,author_role,author_key,body,attachments,reply_to,client_id,created_at) VALUES(?,?,?,?,?,?,?,?) RETURNING id",args:[roomId,actor.role,actor.key,body,JSON.stringify(attachments),replyTo,clientId,now]});
+    const result=await tx.execute({sql:"INSERT INTO family_chat_messages(room_id,author_role,author_key,body,attachments,inline_files,reply_to,client_id,created_at) VALUES(?,?,?,?,?,?,?,?,?) RETURNING id",args:[roomId,actor.role,actor.key,body,JSON.stringify(attachments),inlineFilesJson,replyTo,clientId,now]});
     const sentId=Number(result.rows[0].id);
     const message=messageView({id:sentId,body,attachments:JSON.stringify(attachments),author_role:actor.role,author_key:actor.key,student_name:room.studentName,profile_photo_url:room.profilePhotoUrl,client_id:clientId,created_at:now,reply_to:replyTo,reply_id:replyRow?.id,reply_body:replyRow?.body,reply_author_role:replyRow?.author_role,reply_deleted_at:replyRow?.deleted_at},actor);
     return {success:true,id:sentId,message};

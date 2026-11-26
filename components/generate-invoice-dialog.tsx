@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { isValidElement, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Receipt,
@@ -13,6 +13,7 @@ import { generateInvoiceResult } from "@/lib/actions";
 import { actionError } from "@/lib/action-errors";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -72,28 +73,24 @@ export function GenerateInvoiceDialog({
     }
   }
   return (
-    <>
-      <span
-        onClick={() => {
-          setError(null);
-          setOpen(true);
-        }}
-        className="inline-flex cursor-pointer"
-      >
-        {trigger ?? (
-          <Button>
-            <Receipt size={19} />
-            Generate invoice
-          </Button>
-        )}
-      </span>
-      <Dialog
-        open={open}
-        onOpenChange={(value) => {
-          if (!busy) setOpen(value);
-        }}
-      >
-        <DialogContent className="sm:max-w-5xl">
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!busy) {
+          setOpen(value);
+          if (value) setError(null);
+        }
+      }}
+    >
+      {isValidElement(trigger) ? (
+        <DialogTrigger render={trigger} />
+      ) : (
+        <DialogTrigger render={<Button />}>
+          <Receipt size={18} aria-hidden="true" />
+          Generate invoice
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>Generate invoice</DialogTitle>
             <DialogDescription>
@@ -171,9 +168,9 @@ export function GenerateInvoiceDialog({
                     />
                   </section>
                 </div>
-                <aside className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5 self-start">
-                  <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-white text-primary">
-                    <Receipt size={23} />
+                <aside className="rounded-2xl border border-primary/20 bg-secondary/50 p-5 self-start">
+                  <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-card text-primary">
+                    <Receipt size={23} aria-hidden="true" />
                   </div>
                   <h3 className="text-lg font-semibold">
                     A clear month-end bill
@@ -183,6 +180,7 @@ export function GenerateInvoiceDialog({
                       <CheckCircle2
                         size={18}
                         className="mt-0.5 shrink-0 text-primary"
+                        aria-hidden="true"
                       />
                       Only completed, attended lessons that haven’t been billed.
                     </li>
@@ -190,6 +188,7 @@ export function GenerateInvoiceDialog({
                       <CheckCircle2
                         size={18}
                         className="mt-0.5 shrink-0 text-primary"
+                        aria-hidden="true"
                       />
                       Rescheduled lessons are included once marked Present.
                     </li>
@@ -197,12 +196,13 @@ export function GenerateInvoiceDialog({
                       <Info
                         size={18}
                         className="mt-0.5 shrink-0 text-primary"
+                        aria-hidden="true"
                       />
                       Absent and cancelled lessons are excluded. Trials remain
                       free.
                     </li>
                   </ul>
-                  <p className="mt-5 border-t border-orange-200 pt-4 text-sm text-muted-foreground">
+                  <p className="mt-5 border-t border-primary/15 pt-4 text-sm text-muted-foreground">
                     You’ll see the complete invoice next.
                   </p>
                 </aside>
@@ -229,7 +229,7 @@ export function GenerateInvoiceDialog({
                     "Generating…"
                   ) : (
                     <>
-                      Generate invoice <ArrowRight size={18} />
+                      Generate invoice <ArrowRight size={18} aria-hidden="true" />
                     </>
                   )}
                 </Button>
@@ -237,7 +237,6 @@ export function GenerateInvoiceDialog({
             </form>
           )}
         </DialogContent>
-      </Dialog>
-    </>
+    </Dialog>
   );
 }

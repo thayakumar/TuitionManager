@@ -88,7 +88,7 @@ export default async function StudentHistory({
         subtitle="Full records · 20 per page"
         action={
           <Button asChild variant="outline">
-            <Link href={`/students/${id}`}>Back to overview</Link>
+            <Link href={`/students/${id}`}>Back to student</Link>
           </Button>
         }
       />
@@ -101,7 +101,7 @@ export default async function StudentHistory({
             key={key}
             href={`/students/${id}/history?section=${key}`}
             aria-current={section === key ? "page" : undefined}
-            className={`rounded-full border px-4 py-2 font-medium ${section === key ? "border-primary bg-secondary text-primary" : "border-border bg-card text-muted-foreground"}`}
+            className={`rounded-full border px-4 py-2 text-sm font-medium ${section === key ? "border-primary bg-secondary text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"}`}
           >
             {label}
           </Link>
@@ -119,7 +119,7 @@ export default async function StudentHistory({
             className="mt-2 h-11 w-full rounded-xl border border-border bg-card px-3 text-base"
           />
         </label>
-        <Button type="submit">Search all records</Button>
+        <Button type="submit">Search</Button>
         {q && (
           <Button asChild variant="outline">
             <Link href={`/students/${id}/history?section=${section}`}>
@@ -170,27 +170,25 @@ export default async function StudentHistory({
         </div>
       ) : section === "reports" ? (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <TableExplorer pageSize={20} label="reports on this page">
-            <table className="w-full text-left">
-              <thead>
-                <tr>
-                  <th className="p-4">Lesson</th>
-                  <th className="p-4">Topics</th>
-                  <th className="p-4">Rating</th>
-                  <th className="p-4">Report</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(visible as ReportRecord[]).map((r) => (
-                  <ReportRow
-                    key={r.id}
-                    report={r}
-                    defaultSubject={student.subject || "Lesson"}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </TableExplorer>
+          <table className="w-full text-left">
+            <thead>
+              <tr>
+                <th className="p-4">Lesson</th>
+                <th className="p-4">Topics</th>
+                <th className="p-4">Rating</th>
+                <th className="p-4">Report</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(visible as ReportRecord[]).map((r) => (
+                <ReportRow
+                  key={r.id}
+                  report={r}
+                  defaultSubject={student.subject || "Lesson"}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : section === "notes" ? (
         <div className="space-y-4">

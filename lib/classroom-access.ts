@@ -1,11 +1,9 @@
+import { DomainError } from "./action-errors";
 import { verifyAdminSession, getStudentSession } from "./auth";
 import { queryOne } from "./db";
-export class ClassroomAccessError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
+export class ClassroomAccessError extends DomainError {
+  constructor(status: number, message: string) {
+    super(status, message);
   }
 }
 export async function classroomAccess(

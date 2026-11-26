@@ -46,7 +46,9 @@ export const dynamic = "force-dynamic";
 export default async function StudentsPage() {
   await requireAdminPage();
   const [students, currencySymbol] = await Promise.all([
-    queryAll<Student>("SELECT * FROM students ORDER BY active DESC, name"),
+    queryAll<Pick<Student, "id" | "name" | "subject" | "grade_level" | "phone" | "hourly_rate" | "active">>(
+      "SELECT id, name, subject, grade_level, phone, hourly_rate, active FROM students ORDER BY active DESC, name",
+    ),
     getSetting("currency"),
   ]);
 
@@ -60,32 +62,32 @@ export default async function StudentsPage() {
 
   const statCards = [
     {
-      label: "Total Students",
+      label: "Total students",
       value: students.length,
       icon: Users,
-      bg: "bg-blue-50",
-      iconColor: "text-blue-500",
+      bg: "bg-sky-50",
+      iconColor: "text-sky-700",
     },
     {
       label: "Active",
       value: activeCount,
       icon: UserCheck,
       bg: "bg-emerald-50",
-      iconColor: "text-emerald-500",
+      iconColor: "text-emerald-700",
     },
     {
       label: "Inactive",
       value: inactiveCount,
       icon: UserX,
       bg: "bg-red-50",
-      iconColor: "text-red-500",
+      iconColor: "text-red-700",
     },
     {
-      label: "Avg. Rate",
+      label: "Avg. rate",
       value: currency(avgRate, currencySymbol) + "/hr",
       icon: Wallet,
-      bg: "bg-orange-50",
-      iconColor: "text-orange-500",
+      bg: "bg-secondary",
+      iconColor: "text-primary",
     },
   ];
 
@@ -95,7 +97,7 @@ export default async function StudentsPage() {
         title="Students"
         subtitle={`${activeCount} active · ${students.length} total`}
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <ExportButton getData={exportStudentsCsv} filename="students.csv" />
             <AddStudentDialog />
           </div>
@@ -110,14 +112,14 @@ export default async function StudentsPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{card.label}</p>
-                  <p className="text-2xl font-bold mt-1 text-foreground">
+                  <p className="text-2xl font-bold mt-1 text-foreground tabular-nums">
                     {card.value}
                   </p>
                 </div>
                 <div
                   className={`flex size-10 items-center justify-center rounded-xl ${card.bg}`}
                 >
-                  <card.icon size={20} className={card.iconColor} />
+                  <card.icon size={20} className={card.iconColor} aria-hidden="true" />
                 </div>
               </div>
             </CardContent>
@@ -137,8 +139,8 @@ export default async function StudentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
-                  <GraduationCap size={18} className="text-orange-500" />
-                  All Students
+                  <GraduationCap size={18} className="text-primary" aria-hidden="true" />
+                  All students
                 </CardTitle>
                 <CardDescription>
                   Manage your students and view their details.
@@ -154,7 +156,7 @@ export default async function StudentsPage() {
                     <TableHead className="w-[280px]">Student</TableHead>
                     <TableHead className="hidden md:table-cell">
                       <span className="flex items-center gap-1.5">
-                        <BookOpen size={14} className="text-muted-foreground" />
+                        <BookOpen size={14} className="text-muted-foreground" aria-hidden="true" />
                         Subject
                       </span>
                     </TableHead>
@@ -163,13 +165,14 @@ export default async function StudentsPage() {
                         <GraduationCap
                           size={14}
                           className="text-muted-foreground"
+                          aria-hidden="true"
                         />
                         Grade
                       </span>
                     </TableHead>
                     <TableHead className="text-right">
                       <span className="flex items-center gap-1.5 justify-end">
-                        <Wallet size={14} className="text-muted-foreground" />
+                        <Wallet size={14} className="text-muted-foreground" aria-hidden="true" />
                         Rate
                       </span>
                     </TableHead>
@@ -180,15 +183,15 @@ export default async function StudentsPage() {
                   {students.map((s) => (
                     <TableRow
                       key={s.id}
-                      className="cursor-pointer group transition-colors hover:bg-orange-50/50"
+                      className="group transition-colors hover:bg-secondary/60"
                     >
                       <TableCell>
                         <Link
                           href={`/students/${s.id}`}
                           className="flex items-center gap-3"
                         >
-                          <Avatar className="border-2 border-transparent group-hover:border-orange-200 transition-colors">
-                            <AvatarFallback className="bg-orange-50 text-orange-600 text-xs font-semibold">
+                          <Avatar className="border-2 border-transparent group-hover:border-primary/30 transition-colors">
+                            <AvatarFallback className="bg-secondary text-primary text-xs font-semibold">
                               {getInitials(s.name)}
                             </AvatarFallback>
                           </Avatar>

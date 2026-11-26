@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 const labels: Record<string, string> = {
-  overview: "Overview",
+  overview: "Directory",
   documents: "Documents",
   dashboard: "Dashboard",
-  diagnostic: "My diagnostic",
+  diagnostic: "Diagnostic",
   diagnostics: "Diagnostics",
   chat: "Family chat",
   chats: "Family chats",
@@ -24,10 +24,13 @@ const labels: Record<string, string> = {
   classes: "Lesson details",
   attendance: "Attendance",
   reports: "Class reports",
-  notes: "My notes",
-  profile: "My profile",
+  notes: "Notes",
+  profile: "Profile",
   recurring: "Recurring lessons",
   whiteboard: "Whiteboard",
+  history: "History",
+  edit: "Edit",
+  new: "New",
 };
 
 export function WorkspaceHeader({
@@ -41,36 +44,73 @@ export function WorkspaceHeader({
 }) {
   const path = usePathname();
   const segments = path.split("/").filter(Boolean);
-  const section =
-    segments
-      .filter((s) => labels[s])
-      .map((s) => labels[s])
-      .pop() || "Dashboard";
   const home =
     role === "Student"
       ? `/${segments.slice(0, 3).join("/")}`
       : role === "Parent"
         ? `/${segments.slice(0, 2).join("/")}`
         : "/dashboard";
+  const baseDepth = role === "Student" ? 3 : role === "Parent" ? 2 : 0;
+
+  const trail: Array<{ label: string; href: string }> = [];
+  for (let i = baseDepth; i < segments.length; i++) {
+    const seg = segments[i];
+    const label = labels[seg];
+    if (!label) continue;
+    const href = "/" + segments.slice(0, i + 1).join("/");
+    if (href === home && trail.length === 0) {
+      trail.push({ label, href });
+    } else if (!trail.some((item) => item.href === href)) {
+      trail.push({ label, href });
+    }
+  }
+  if (!trail.length) trail.push({ label: "Dashboard", href: home });
+
   return (
-    <header className="workspace-header no-print">
-      <div className="flex min-w-0 items-center gap-3 text-xs">
+    <header className="workspace-header no-print hidden md:flex">
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
         <Link
           href={home}
           className="truncate text-muted-foreground hover:text-primary"
         >
-          {name ? `${name}’s space` : "Your workspace"}
+          {name ? `${name}’s workspace` : "Workspace"}
         </Link>
-        <ChevronRight size={13} className="shrink-0 text-muted-foreground/50" />
-        <span className="truncate font-medium">{section}</span>
-      </div>
+        {trail.map((item, idx) => {
+          const isLast = idx === trail.length - 1;
+          return (
+            <span key={item.href} className="flex min-w-0 items-center gap-2">
+              <ChevronRight
+                size={14}
+                className="shrink-0 text-muted-foreground/60"
+                aria-hidden="true"
+              />
+              {isLast ? (
+                <span className="truncate font-semibold text-foreground">
+                  {item.label}
+                </span>
+              ) : (
+                <Link
+                  href={item.href}
+                  className="truncate text-muted-foreground hover:text-primary"
+                >
+                  {item.label}
+                </Link>
+              )}
+            </span>
+          );
+        })}
+      </nav>
       <div className="workspace-role">
-        {avatarSrc ? <img src={avatarSrc} alt={name ? `${name} profile` : "Profile photo"} className="size-8 rounded-full object-cover" /> : <span className="size-1.5 rounded-full bg-primary" />}
+        {avatarSrc ? (
+          <img
+            src={avatarSrc}
+            alt={name ? `${name} profile` : "Profile photo"}
+            className="size-6 rounded-full object-cover"
+          />
+        ) : (
+          <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+        )}
         {role} workspace
-      </div>
-      <div className="hidden items-center gap-2 text-xs text-muted-foreground xl:flex">
-        <Sparkles size={13} className="text-primary" /> A little clarity for
-        your day
       </div>
     </header>
   );

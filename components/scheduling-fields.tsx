@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
-  GraduationCap,
 } from "lucide-react";
 
 const todayMYT = () =>
@@ -28,17 +27,20 @@ const isoDay = (date: Date) =>
 type FieldProps = {
   name: string;
   label: string;
+  timeLabel?: string;
   defaultValue?: string;
   required?: boolean;
   disabled?: boolean;
 };
 
 function DateControl({
+  id,
   value,
   onChange,
   label,
   disabled,
 }: {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   label: string;
@@ -72,6 +74,7 @@ function DateControl({
       }}
     >
       <button
+        id={id}
         type="button"
         disabled={disabled}
         aria-label={label}
@@ -83,9 +86,9 @@ function DateControl({
           setExpanded(!expanded);
         }}
       >
-        <CalendarDays size={21} />
+        <CalendarDays size={21} aria-hidden="true" />
         <span>{dateLabel(value)}</span>
-        <ChevronDown size={18} className={expanded ? "rotate-180" : ""} />
+        <ChevronDown size={18} className={expanded ? "rotate-180" : ""} aria-hidden="true" />
       </button>
       {expanded && (
         <div
@@ -101,7 +104,7 @@ function DateControl({
               onClick={() => moveMonth(-1)}
               className="calendar-nav-button"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} aria-hidden="true" />
             </button>
             <strong>
               {new Intl.DateTimeFormat("en-MY", {
@@ -115,13 +118,13 @@ function DateControl({
               onClick={() => moveMonth(1)}
               className="calendar-nav-button"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={20} aria-hidden="true" />
             </button>
           </div>
           <div className="date-control-grid">
-            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-              <span key={index} className="calendar-weekday">
-                {day}
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <span key={day} className="calendar-weekday" aria-hidden="true">
+                {day[0]}
               </span>
             ))}
             {days.map((day) => {
@@ -154,7 +157,7 @@ function DateControl({
           <div className="mt-3 flex justify-between border-t border-border pt-3">
             <button
               type="button"
-              className="font-medium text-primary"
+              className="min-h-10 px-2 font-medium text-primary"
               onClick={() => {
                 onChange(todayMYT());
                 setExpanded(false);
@@ -164,7 +167,7 @@ function DateControl({
             </button>
             <button
               type="button"
-              className="text-muted-foreground"
+              className="min-h-10 px-2 text-muted-foreground"
               onClick={() => setExpanded(false)}
             >
               Done
@@ -183,17 +186,19 @@ export function DateField({
   required,
   disabled,
 }: FieldProps) {
+  const controlId = useId();
   const [date, setDate] = useState(
     defaultValue.slice(0, 10) || (required ? todayMYT() : ""),
   );
   return (
     <div className="field-group">
-      <label className="field-label">
+      <label htmlFor={controlId} className="field-label">
         {label}
         {required && <span aria-hidden="true"> *</span>}
       </label>
       <input type="hidden" name={name} value={date} />
       <DateControl
+        id={controlId}
         label={label}
         value={date}
         onChange={setDate}
@@ -214,11 +219,13 @@ export function DateField({
 }
 
 function TimeControl({
+  id,
   value,
   onChange,
   label,
   disabled,
 }: {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   label: string;
@@ -234,8 +241,9 @@ function TimeControl({
   }
   return (
     <div className="time-control">
-      <Clock3 size={21} />
+      <Clock3 size={21} aria-hidden="true" />
       <select
+        id={id}
         aria-label={`${label} hour`}
         value={displayHour}
         disabled={disabled}
@@ -247,7 +255,7 @@ function TimeControl({
           </option>
         ))}
       </select>
-      <span>:</span>
+      <span aria-hidden="true">:</span>
       <select
         aria-label={`${label} minute`}
         value={minute}
@@ -279,12 +287,14 @@ export function TimeField({
   defaultValue = "09:00",
   disabled,
 }: FieldProps) {
+  const controlId = useId();
   const [time, setTime] = useState(defaultValue);
   return (
     <div className="field-group">
-      <label className="field-label">{label}</label>
+      <label htmlFor={controlId} className="field-label">{label}</label>
       <input type="hidden" name={name} value={time} />
       <TimeControl
+        id={controlId}
         label={label}
         value={time}
         onChange={setTime}
@@ -297,10 +307,13 @@ export function TimeField({
 export function DateTimeField({
   name,
   label,
+  timeLabel = "Time",
   defaultValue = "",
   required,
   disabled,
 }: FieldProps) {
+  const dateId = useId();
+  const timeId = useId();
   const [date, setDate] = useState(
     defaultValue.slice(0, 10) || (required ? todayMYT() : ""),
   );
@@ -309,11 +322,12 @@ export function DateTimeField({
     <div className="date-time-field">
       <input type="hidden" name={name} value={date ? `${date}T${time}` : ""} />
       <div className="field-group">
-        <label className="field-label">
+        <label htmlFor={dateId} className="field-label">
           {label}
-          {required && " *"}
+          {required && <span aria-hidden="true"> *</span>}
         </label>
         <DateControl
+          id={dateId}
           label={label}
           value={date}
           onChange={setDate}
@@ -321,11 +335,12 @@ export function DateTimeField({
         />
       </div>
       <div className="field-group">
-        <label className="field-label">
-          Start time{" "}
+        <label htmlFor={timeId} className="field-label">
+          {timeLabel}{" "}
           <span className="font-normal text-muted-foreground">MYT</span>
         </label>
         <TimeControl
+          id={timeId}
           label={label}
           value={time}
           onChange={setTime}
@@ -339,7 +354,7 @@ export function DateTimeField({
           onClick={() => setDate("")}
           disabled={disabled}
         >
-          Clear preference
+          Clear date &amp; time
         </button>
       )}
     </div>
@@ -432,6 +447,7 @@ export function ScheduleFields({
         <DateTimeField
           name="scheduled_at"
           label="Lesson date"
+          timeLabel="Start time"
           defaultValue={defaultDateTime}
           required
         />

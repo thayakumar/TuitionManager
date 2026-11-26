@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
-import {ActionValidationError,actionError} from "../action-errors";
+import { DomainError, ActionValidationError, actionError } from "../action-errors";
 import type { Transaction, InValue } from "@libsql/client";
 import { execute, queryOne, queryAll, withTransaction } from "../db";
 export const ALL_SCOPES = "tuition:read tuition:write";
 export type AgentPrincipal = { connectionId:string; tokenHash:string; scopes:string[] };
-export class OAuthError extends Error {
-  constructor(public code:string, message:string, public status=400){super(message);}
+export class OAuthError extends DomainError {
+  constructor(public code:string, message:string, status=400){super(status, message, code);}
 }
 export const digest = (value:string) => crypto.createHash("sha256").update(value).digest("hex");
 const random = () => crypto.randomBytes(32).toString("base64url");

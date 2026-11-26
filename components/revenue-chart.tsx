@@ -57,8 +57,8 @@ export function RevenueChart({
           className="flex flex-col justify-between text-xs text-muted-foreground pr-2 py-1"
           style={{ height: chartH }}
         >
-          {yLabels.reverse().map((v, index) => (
-            <span key={index}>
+          {yLabels.reverse().map((v) => (
+            <span key={v}>
               {symbol} {v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v}
             </span>
           ))}
@@ -76,7 +76,7 @@ export function RevenueChart({
               />
             ))}
             <div className="absolute inset-0 flex items-end">
-              {data.map((d, i) => {
+              {data.map((d) => {
                 const paidH = (d.paid / max) * 100;
                 const outH = (d.outstanding / max) * 100;
                 return (
@@ -86,12 +86,12 @@ export function RevenueChart({
                     style={{ height: "100%" }}
                   >
                     <div
-                      className="w-4 bg-primary rounded-t-sm transition-all duration-500 hover:bg-primary"
+                      className="w-4 bg-primary rounded-t-sm transition-[height,background-color] duration-200 hover:bg-primary/85"
                       style={{ height: `${paidH}%` }}
                       title={`Paid: ${symbol} ${d.paid.toFixed(2)}`}
                     />
                     <div
-                      className="w-4 bg-[#ff9c52] rounded-t-sm transition-all duration-500 hover:bg-[#dca577]"
+                      className="w-4 bg-amber-600 rounded-t-sm transition-[height,background-color] duration-200 hover:bg-amber-700"
                       style={{ height: `${outH}%` }}
                       title={`Outstanding: ${symbol} ${d.outstanding.toFixed(2)}`}
                     />
@@ -118,7 +118,7 @@ export function RevenueChart({
           <span className="text-muted-foreground">Paid</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-[#ff9c52]" />
+          <span className="size-2.5 rounded-full bg-amber-600" />
           <span className="text-muted-foreground">Outstanding</span>
         </span>
       </div>
@@ -167,21 +167,21 @@ export function RevenueTrend({
             x2={width - pad}
             y1={height - pad - p * (height - pad * 2)}
             y2={height - pad - p * (height - pad * 2)}
-            stroke="#f9e7de"
+            stroke="var(--border)"
             strokeDasharray="4 4"
           />
         ))}
         <polyline
           points={points}
           fill="none"
-          stroke="#d93624"
+          stroke="var(--primary)"
           strokeWidth="3"
           strokeLinejoin="round"
         />
         {data.map((d, index) => {
           const [cx, cy] = points.split(" ")[index].split(",");
           return (
-            <circle key={d.month} cx={cx} cy={cy} r="4" fill="#d93624">
+            <circle key={d.month} cx={cx} cy={cy} r="4" fill="var(--primary)">
               <title>{`${d.month}: ${symbol} ${(d.paid + d.outstanding).toFixed(2)}`}</title>
             </circle>
           );
