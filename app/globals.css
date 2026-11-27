@@ -1969,13 +1969,261 @@ aside nav a[aria-current="page"]::before,
   }
 }
 
+/* ==========================================================================
+   Review Quest — 3D Adventure Map, Biome Trail & Tactile Game Controls
+   ========================================================================== */
+
+/* Tropical ocean & sunlit shore world canvas (like image.png) */
+.quest-world-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.45) 0%, transparent 48%),
+    linear-gradient(180deg, #38bdf8 0%, #06b6d4 44%, #22d3ee 68%, #fde68a 86%, #fcd34d 100%);
+  box-shadow: 0 14px 32px rgba(14, 90, 111, 0.22);
+}
+
+/* 3D Bevelled Terracotta & Parchment Map Board */
+.quest-parchment-board {
+  position: relative;
+  border-radius: 22px;
+  border: 6px solid #9a3e1a;
+  background:
+    radial-gradient(circle at 50% 45%, #fff9eb 0%, #f8e6c1 72%, #ecd09c 100%);
+  box-shadow:
+    0 10px 0 #69270e,
+    0 20px 34px rgba(69, 26, 3, 0.34),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -8px 20px rgba(154, 62, 26, 0.18);
+}
+
+/* 3D Green-Gold Ribbon Title Banner crowning the Map Board */
+.quest-ribbon-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 26px;
+  border-radius: 999px;
+  border: 3px solid #3f6212;
+  background: linear-gradient(180deg, #a3e635 0%, #65a30d 100%);
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 #365314;
+  box-shadow:
+    0 5px 0 #365314,
+    0 10px 18px rgba(54, 83, 20, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* 3D Hanging Wooden Signboard Plaque for Chapter Trail (like image_2.png) */
+.quest-wood-signboard {
+  position: relative;
+  border-radius: 22px;
+  border: 5px solid #5c280e;
+  background: linear-gradient(180deg, #b8622f 0%, #8f461d 55%, #743513 100%);
+  color: #fffbeb;
+  box-shadow:
+    0 8px 0 #451a03,
+    0 16px 28px rgba(69, 26, 3, 0.3),
+    inset 0 3px 0 rgba(255, 224, 178, 0.45);
+}
+
+/* Tactile 3D Island Station Card on the Parchment Map */
+.quest-station-card {
+  position: relative;
+  border-radius: 18px;
+  border: 3px solid #c2783e;
+  background: linear-gradient(180deg, #fffdf7 0%, #fff4dc 100%);
+  box-shadow:
+    0 7px 0 #9a5220,
+    0 14px 24px rgba(120, 53, 15, 0.18);
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 150ms ease;
+}
+
+.quest-station-card:hover:not(:disabled) {
+  transform: translate3d(0, -4px, 0);
+  border-color: #d94625;
+  box-shadow:
+    0 11px 0 #9a5220,
+    0 20px 30px rgba(120, 53, 15, 0.25);
+}
+
+.quest-station-card:active:not(:disabled) {
+  transform: translate3d(0, 4px, 0);
+  box-shadow:
+    0 3px 0 #9a5220,
+    0 6px 12px rgba(120, 53, 15, 0.2);
+}
+
+/* Tactile 3D Raised Stepping-Stone / Arcade Button (for trail checkpoints & game choices!) */
+.quest-3d-btn {
+  position: relative;
+  border-radius: 16px;
+  border: 2.5px solid #cbd5e1;
+  background: #ffffff;
+  box-shadow: 0 5px 0 #cbd5e1;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.quest-3d-btn:hover:not(:disabled) {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 7px 0 #94a3b8;
+}
+
+.quest-3d-btn:active:not(:disabled) {
+  transform: translate3d(0, 3px, 0);
+  box-shadow: 0 2px 0 #94a3b8;
+}
+
+.quest-3d-btn-primary {
+  border-color: #9a2c1d;
+  background: linear-gradient(180deg, #ea580c 0%, #d93624 100%);
+  color: #ffffff;
+  box-shadow: 0 5px 0 #881f14;
+}
+
+.quest-3d-btn-primary:hover:not(:disabled) {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 7px 0 #881f14;
+}
+
+.quest-3d-btn-primary:active:not(:disabled) {
+  transform: translate3d(0, 3px, 0);
+  box-shadow: 0 2px 0 #881f14;
+}
+
+.quest-3d-btn-emerald {
+  border-color: #15803d;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  box-shadow: 0 5px 0 #14532d;
+}
+
+.quest-3d-btn-gold {
+  border-color: #b45309;
+  background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%);
+  color: #451a03;
+  box-shadow: 0 5px 0 #92400e;
+}
+
+/* 3D Round Stepping-Stone Puck on the Chapter Path */
+.quest-puck-open {
+  border: 3px solid #15803d;
+  background: radial-gradient(circle at 35% 28%, #86efac 0%, #22c55e 55%, #16a34a 100%);
+  color: #ffffff;
+  box-shadow:
+    0 6px 0 #14532d,
+    0 10px 18px rgba(20, 83, 45, 0.28);
+}
+
+.quest-puck-current {
+  border: 3px solid #b45309;
+  background: radial-gradient(circle at 35% 28%, #fef08a 0%, #f59e0b 60%, #d97706 100%);
+  color: #451a03;
+  box-shadow:
+    0 6px 0 #78350f,
+    0 0 0 6px rgba(251, 191, 36, 0.38),
+    0 12px 22px rgba(120, 53, 15, 0.32);
+}
+
+.quest-puck-locked {
+  border: 3px solid #57534e;
+  background: radial-gradient(circle at 35% 28%, #d6d3d1 0%, #a8a29e 65%, #78716c 100%);
+  color: #44403c;
+  box-shadow: 0 5px 0 #44403c;
+}
+
+/* Gentle 3D Animations */
+@keyframes quest-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes quest-pin-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
+}
+
+@keyframes quest-star-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-18deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.18) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes quest-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, -12px, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(14px, 160px, 0) rotate(260deg);
+  }
+}
+
+.quest-island-bob {
+  animation: quest-bob 3.6s ease-in-out infinite;
+}
+
+.quest-float-gentle {
+  animation: quest-bob 2.8s ease-in-out infinite;
+}
+
+.quest-pin-marker {
+  animation: quest-pin-bounce 1.5s ease-in-out infinite;
+}
+
+.quest-star-pop {
+  animation: quest-star-pop-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.quest-confetti-piece {
+  animation: quest-confetti-fall 1.3s ease-out both;
+}
+
 /* Intentional reduced-motion: disable spatial motion while preserving state feedback. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .workspace-page,
-  .skeleton-block {
+  .skeleton-block,
+  .quest-island-bob,
+  .quest-float-gentle,
+  .quest-pin-marker,
+  .quest-star-pop,
+  .quest-confetti-piece {
     animation: none;
   }
   .ui-button:active:not(:disabled),
@@ -1990,6 +2238,12 @@ aside nav a[aria-current="page"]::before,
   .sidebar-nav a:active,
   .directory-quick-action:hover,
   .directory-quick-action:active,
+  .quest-station-card:hover:not(:disabled),
+  .quest-station-card:active:not(:disabled),
+  .quest-3d-btn:hover:not(:disabled),
+  .quest-3d-btn:active:not(:disabled),
+  .quest-3d-btn-primary:hover:not(:disabled),
+  .quest-3d-btn-primary:active:not(:disabled),
   .overview-tile svg {
     transform: none;
   }

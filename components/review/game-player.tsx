@@ -9,17 +9,25 @@ import {
   Award,
   Bug,
   CheckCircle2,
+  Flame,
   HelpCircle,
   LoaderCircle,
-  Lock,
   RotateCcw,
   ShieldAlert,
   Sparkles,
-  Star,
   Trophy,
+  Volume2,
+  VolumeX,
   XCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  Gem3D,
+  QuestCompanion,
+  StarTrio3D,
+  TreasureChest3D,
+  VictoryConfetti,
+} from "./quest-art";
+import { questSfx } from "@/lib/review/sfx";
 import type {
   ActiveSessionPayload,
   SubmitAnswerResult,
@@ -38,33 +46,18 @@ function formatDuration(ms: number): string {
   return m > 0 ? `${m}m ${String(s).padStart(2, "0")}s` : `${s}s`;
 }
 
-function StarsRow({ stars, size = 22 }: { stars: 0 | 1 | 2 | 3; size?: number }) {
-  return (
-    <span className="inline-flex items-center gap-1" aria-label={`${stars} out of 3 stars`}>
-      {[1, 2, 3].map((n) => (
-        <Star
-          key={n}
-          size={size}
-          className={
-            n <= stars
-              ? "fill-amber-400 text-amber-500"
-              : "fill-stone-200 text-stone-300"
-          }
-          aria-hidden="true"
-        />
-      ))}
-    </span>
-  );
-}
-
 export function GamePlayer({
   studentId,
   session: initialSession,
+  muted,
+  onToggleMute,
   onExitToTrail,
   onStartCheckpoint,
 }: {
   studentId: number;
   session: ActiveSessionPayload;
+  muted: boolean;
+  onToggleMute: () => void;
   onExitToTrail: () => void;
   onStartCheckpoint: (checkpointId: string, forceRestart?: boolean) => Promise<void>;
 }) {
@@ -78,6 +71,7 @@ export function GamePlayer({
   const [summary, setSummary] = useState<ActiveSessionPayload["summary"]>(
     initialSession.summary,
   );
+  const [streak, setStreak] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +94,7 @@ export function GamePlayer({
   useEffect(() => {
     setSession(initialSession);
     setSummary(initialSession.summary);
+    setStreak(0);
     const nextIdx = initialSession.items.findIndex(
       (it) => !(it.id in initialSession.answered),
     );
@@ -109,7 +104,6 @@ export function GamePlayer({
   const currentItem: ClientItem | undefined = session.items[index];
   const savedAnswer = currentItem ? session.answered[currentItem.id] : undefined;
 
-  // Reset draft controls when currentItem changes
   useEffect(() => {
     if (!currentItem) return;
     itemStartRef.current = Date.now();
@@ -194,7 +188,7 @@ export function GamePlayer({
     if (!currentItem || savedAnswer || submitting) return;
     const response = buildResponse(currentItem);
     if (!response) {
-      setError("Complete your answer above before checking.");
+      setError("Complete your move above before checking.");
       return;
     }
     setSubmitting(true);
@@ -217,6 +211,15 @@ export function GamePlayer({
       if (!res.ok) {
         throw new Error(data.error || "Could not submit your answer.");
       }
+
+      const nextStreak = data.result.correct ? streak + 1 : 0;
+      setStreak(nextStreak);
+      if (data.result.correct) {
+        questSfx.correct(nextStreak);
+      } else {
+        questSfx.gentleMiss();
+      }
+
       setSession((prev) => ({
         ...prev,
         answered: {
@@ -231,7 +234,6 @@ export function GamePlayer({
         summary: data.summary ?? prev.summary,
       }));
       if (data.completed && data.summary) {
-        // Keep feedback visible on the last question; user clicks "See Results"
         setSummary(data.summary);
       }
     } catch (e) {
@@ -245,7 +247,14 @@ export function GamePlayer({
     initialSession.status === "completed" && !!initialSession.summary,
   );
 
+  function openSummaryWithSound() {
+    setShowSummaryScreen(true);
+    if (summary?.passed) questSfx.victory();
+    else questSfx.encourage();
+  }
+
   async function handleRestart() {
+    questSfx.tap();
     setRestarting(true);
     setError(null);
     try {
@@ -262,68 +271,82 @@ export function GamePlayer({
   const totalCount = session.items.length;
   const allAnswered = answeredCount >= totalCount;
 
+  // =========================================================================
+  // VICTORY / ENCOURAGEMENT TREASURE SUMMARY SCREEN
+  // =========================================================================
   if (showSummaryScreen && summary) {
+    const earnedGems = summary.passed
+      ? 100 + summary.stars * 50
+      : Math.max(15, Math.round(summary.pointsEarned * 10));
+
     return (
       <section
-        className="mx-auto max-w-2xl rounded-lg border-2 border-amber-300 bg-[#fffaf2] p-6 shadow-md sm:p-8"
+        className="quest-parchment-board relative mx-auto max-w-2xl overflow-hidden p-6 sm:p-9"
         aria-labelledby="quest-result-heading"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200/80 pb-4">
-          <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-950">
+        {summary.passed && <VictoryConfetti />}
+
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#d4a373]/50 pb-4">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#9a3e1a] px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider text-amber-100">
             <Trophy size={14} aria-hidden="true" />
-            Checkpoint {session.checkpoint.code} • Attempt #{session.attemptNumber}
+            Level {session.checkpoint.code} • Round #{session.attemptNumber}
           </span>
-          <StarsRow stars={summary.stars} size={26} />
+          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-cyan-700/30 bg-cyan-950/80 px-3 py-1 text-xs font-extrabold text-cyan-100">
+            <Gem3D size={16} />+{earnedGems} XP
+          </span>
         </div>
 
-        <div className="mt-6 text-center">
-          <div
-            className={`mx-auto inline-flex size-20 items-center justify-center rounded-full border-4 ${
-              summary.passed
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                : "border-amber-300 bg-amber-50 text-amber-800"
-            }`}
-          >
-            {summary.passed ? (
-              <Award size={40} aria-hidden="true" />
-            ) : (
-              <RotateCcw size={36} aria-hidden="true" />
-            )}
-          </div>
+        <div className="relative z-10 mt-6 flex flex-col items-center text-center">
+          {session.checkpoint.boss ? (
+            <TreasureChest3D
+              state={summary.passed ? "opened" : "ready"}
+              size={84}
+            />
+          ) : (
+            <div className="mb-1">
+              <StarTrio3D stars={summary.stars} size={38} pop />
+            </div>
+          )}
+
+          {session.checkpoint.boss && (
+            <div className="mt-2">
+              <StarTrio3D stars={summary.stars} size={30} pop />
+            </div>
+          )}
 
           <h1
             id="quest-result-heading"
-            className="font-display mt-4 text-3xl font-bold tracking-tight text-stone-900"
+            className="font-display mt-4 text-3xl font-extrabold tracking-tight text-stone-900"
           >
             {summary.passed
               ? summary.scorePct === 100
-                ? "Flawless Mastery!"
-                : "Checkpoint Cleared!"
-              : "Almost There — Try One More Round!"}
+                ? "3-Star Legendary Clear!"
+                : "Checkpoint Unlocked!"
+              : "Nice Warm-Up — Try One More Round!"}
           </h1>
-          <p className="mt-2 text-sm text-stone-700">
+          <p className="mt-2 max-w-md text-sm font-medium text-stone-700">
             {summary.passed
-              ? `You scored ${summary.scorePct}% (pass target ${session.checkpoint.passPercent}%) and unlocked the next step on the path.`
-              : `You scored ${summary.scorePct}%. Score at least ${session.checkpoint.passPercent}% to unlock the next checkpoint — fresh questions await!`}
+              ? `Awesome job! You scored ${summary.scorePct}% (goal ${session.checkpoint.passPercent}%) and opened the path forward.`
+              : `You reached ${summary.scorePct}%. Hit ${session.checkpoint.passPercent}% to unlock the next stepping-stone — every retry deals fresh questions!`}
           </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-lg border border-stone-200 bg-white p-3">
-            <div className="text-xs font-medium text-stone-600">Score</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-stone-900">
+        <div className="relative z-10 mt-6 grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
+            <div className="text-xs font-bold text-[#8c4319]">Score</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {summary.scorePct}%
             </div>
           </div>
-          <div className="rounded-lg border border-stone-200 bg-white p-3">
-            <div className="text-xs font-medium text-stone-600">Points</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-stone-900">
+          <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
+            <div className="text-xs font-bold text-[#8c4319]">Hits</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {summary.pointsEarned} / {summary.pointsMax}
             </div>
           </div>
-          <div className="rounded-lg border border-stone-200 bg-white p-3">
-            <div className="text-xs font-medium text-stone-600">Time</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-stone-900">
+          <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
+            <div className="text-xs font-bold text-[#8c4319]">Time</div>
+            <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {formatDuration(summary.durationMs)}
             </div>
           </div>
@@ -335,36 +358,43 @@ export function GamePlayer({
           </p>
         )}
 
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <div className="relative z-10 mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {summary.passed && summary.nextCheckpoint && (
-            <Button
+            <button
               type="button"
-              onClick={() => onStartCheckpoint(summary.nextCheckpoint!.checkpointId)}
+              onClick={() =>
+                onStartCheckpoint(summary.nextCheckpoint!.checkpointId)
+              }
               disabled={restarting}
-              className="gap-2"
+              className="quest-3d-btn quest-3d-btn-emerald inline-flex cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-extrabold"
             >
-              Next: {summary.nextCheckpoint.code} {summary.nextCheckpoint.title}
-              <ArrowRight size={16} aria-hidden="true" />
-            </Button>
+              Next Level: {summary.nextCheckpoint.code}
+              <ArrowRight size={17} aria-hidden="true" />
+            </button>
           )}
-          <Button
+          <button
             type="button"
-            variant={summary.passed ? "outline" : "default"}
             onClick={handleRestart}
             disabled={restarting}
-            className="gap-2"
+            className={`quest-3d-btn inline-flex cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-extrabold ${
+              summary.passed ? "quest-3d-btn-gold" : "quest-3d-btn-primary"
+            }`}
           >
             {restarting ? (
               <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
             ) : (
               <RotateCcw size={16} aria-hidden="true" />
             )}
-            {summary.passed ? "Replay for 3 Stars" : "Play Again (New Draw)"}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onExitToTrail} className="gap-2">
+            {summary.passed ? "Replay for 3 Stars" : "Play Again!"}
+          </button>
+          <button
+            type="button"
+            onClick={onExitToTrail}
+            className="quest-3d-btn inline-flex cursor-pointer items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold text-stone-800"
+          >
             <ArrowLeft size={16} aria-hidden="true" />
-            Back to Chapter Path
-          </Button>
+            Trail Map
+          </button>
         </div>
       </section>
     );
@@ -372,120 +402,143 @@ export function GamePlayer({
 
   if (!currentItem) return null;
 
+  const companionMood = savedAnswer
+    ? savedAnswer.result.correct
+      ? streak >= 2
+        ? "streak"
+        : "happy"
+      : "coach"
+    : streak >= 2
+      ? "streak"
+      : "ready";
+
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      {/* Top Game Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3.5 shadow-xs">
+    <div className="mx-auto max-w-3xl space-y-4">
+      {/* 3D Wooden Game HUD Bar */}
+      <div className="quest-wood-signboard flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={onExitToTrail}
-            className="shrink-0 gap-1.5"
+            className="quest-3d-btn quest-3d-btn-gold inline-flex shrink-0 cursor-pointer items-center gap-1 px-3 py-1.5 text-xs font-extrabold"
           >
-            <ArrowLeft size={15} aria-hidden="true" />
-            Path
-          </Button>
+            <ArrowLeft size={14} aria-hidden="true" />
+            Trail
+          </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-sm bg-secondary px-2 py-0.5 text-xs font-bold text-primary">
+              <span className="rounded-md bg-amber-400 px-2 py-0.5 font-mono text-xs font-extrabold text-amber-950">
                 {session.checkpoint.code}
               </span>
-              <span className="truncate text-sm font-semibold text-foreground">
+              <span className="truncate text-sm font-extrabold text-white">
                 {session.checkpoint.title}
               </span>
             </div>
-            <p className="truncate text-xs text-muted-foreground">
-              {session.game.name} • Need {session.checkpoint.passPercent}% to clear • Attempt #
+            <p className="truncate text-[11px] font-medium text-amber-100/85">
+              {session.game.name} • Goal {session.checkpoint.passPercent}% • Round #
               {session.attemptNumber}
             </p>
           </div>
         </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleRestart}
-          disabled={restarting}
-          className="gap-1.5 text-xs text-muted-foreground"
-        >
-          <RotateCcw size={14} aria-hidden="true" />
-          New Round
-        </Button>
-      </div>
-
-      {/* Progress Segmented Track */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-          <span>
-            Challenge {index + 1} of {totalCount}
-          </span>
-          <span className="tabular-nums">
-            {answeredCount} / {totalCount} answered
-          </span>
-        </div>
-        <div
-          className="grid gap-1.5"
-          style={{ gridTemplateColumns: `repeat(${totalCount}, minmax(0, 1fr))` }}
-          role="list"
-          aria-label="Question progress"
-        >
-          {session.items.map((it, idx) => {
-            const ans = session.answered[it.id];
-            const isCurrent = idx === index;
-            const bg = ans
-              ? ans.result.correct
-                ? "bg-emerald-600"
-                : ans.result.score > 0
-                  ? "bg-amber-500"
-                  : "bg-red-500"
-              : isCurrent
-                ? "bg-primary"
-                : "bg-stone-200";
-            return (
-              <button
-                key={it.id}
-                type="button"
-                role="listitem"
-                onClick={() => setIndex(idx)}
-                aria-label={`Go to question ${idx + 1}${ans ? (ans.result.correct ? " (correct)" : " (incorrect)") : ""}`}
-                className={`h-2.5 cursor-pointer rounded-full transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${bg} ${
-                  isCurrent ? "ring-2 ring-primary ring-offset-1" : "opacity-85 hover:opacity-100"
-                }`}
-              />
-            );
-          })}
+        <div className="flex items-center gap-2">
+          {streak >= 2 && (
+            <span className="inline-flex items-center gap-1 rounded-full border-2 border-amber-300 bg-gradient-to-r from-amber-500 to-orange-600 px-2.5 py-1 text-xs font-extrabold text-white shadow-xs">
+              <Flame size={13} aria-hidden="true" />
+              {streak}× Streak!
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleRestart}
+            disabled={restarting}
+            title="Start a fresh shuffled round"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-amber-200/40 bg-black/25 px-2.5 py-1 text-xs font-bold text-amber-100 hover:bg-black/40"
+          >
+            <RotateCcw size={13} aria-hidden="true" />
+            Shuffle
+          </button>
+          <button
+            type="button"
+            onClick={onToggleMute}
+            aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-amber-200/40 bg-black/25 text-amber-100 hover:bg-black/40"
+          >
+            {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          </button>
         </div>
       </div>
 
-      {/* Question Card */}
-      <article className="rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
+      {/* Glowing Stepping-Stone Progress Pebbles + Companion Mascot */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+        <QuestCompanion mood={companionMood} />
+        <span className="font-mono text-xs font-extrabold text-muted-foreground">
+          Stage {index + 1} / {totalCount}
+        </span>
+      </div>
+
+      <div
+        className="grid gap-2 px-1"
+        style={{ gridTemplateColumns: `repeat(${totalCount}, minmax(0, 1fr))` }}
+        role="list"
+        aria-label="Challenge stages"
+      >
+        {session.items.map((it, idx) => {
+          const ans = session.answered[it.id];
+          const isCurrent = idx === index;
+          const bg = ans
+            ? ans.result.correct
+              ? "bg-emerald-500 border-emerald-700"
+              : ans.result.score > 0
+                ? "bg-amber-400 border-amber-700"
+                : "bg-orange-400 border-orange-700"
+            : isCurrent
+              ? "bg-amber-400 border-amber-800"
+              : "bg-stone-200 border-stone-300";
+          return (
+            <button
+              key={it.id}
+              type="button"
+              role="listitem"
+              onClick={() => {
+                questSfx.tap();
+                setIndex(idx);
+              }}
+              aria-label={`Stage ${idx + 1}${ans ? (ans.result.correct ? " (cleared)" : " (reviewed)") : ""}`}
+              className={`h-3.5 cursor-pointer rounded-full border-b-2 transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-ring ${bg} ${
+                isCurrent ? "ring-2 ring-primary ring-offset-1" : "opacity-85 hover:opacity-100"
+              }`}
+            />
+          );
+        })}
+      </div>
+
+      {/* Main 3D Parchment Puzzle Stage */}
+      <article className="quest-parchment-board p-5 sm:p-7">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-primary">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c2783e] bg-[#fff8ea] px-3 py-0.5 text-xs font-extrabold text-[#9a3e1a]">
             <Sparkles size={13} aria-hidden="true" />
             {session.game.name}
           </span>
-          <span className="text-xs font-medium capitalize text-muted-foreground">
-            Skill: {currentItem.skill}
+          <span className="rounded-full bg-[#9a3e1a]/10 px-2.5 py-0.5 text-xs font-bold capitalize text-[#7c3415]">
+            {currentItem.skill}
           </span>
         </div>
 
-        <h2 className="whitespace-pre-line text-base font-semibold leading-relaxed text-foreground sm:text-lg">
+        <h2 className="whitespace-pre-line text-base font-extrabold leading-relaxed text-stone-900 sm:text-lg">
           {currentItem.prompt}
         </h2>
 
         {currentItem.code && (
-          <pre className="mt-3 overflow-x-auto rounded-md border border-stone-800 bg-stone-900 p-3.5 font-mono text-xs leading-relaxed text-amber-100 sm:text-sm">
+          <pre className="mt-3.5 overflow-x-auto rounded-xl border-2 border-stone-800 bg-stone-900 p-4 font-mono text-xs leading-relaxed text-amber-100 shadow-inner sm:text-sm">
             <code>{currentItem.code}</code>
           </pre>
         )}
 
-        {/* Interactive Workspace by Item Kind */}
+        {/* Interactive Game Mechanics */}
         <div className="mt-5">
           {currentItem.kind === "mcq" && (
-            <div className="grid gap-2.5" role="radiogroup" aria-label="Answer choices">
+            <div className="grid gap-3" role="radiogroup" aria-label="Answer options">
               {currentItem.options.map((opt, oi) => {
                 const selected = mcqChoice === opt.id;
                 return (
@@ -495,18 +548,21 @@ export function GamePlayer({
                     role="radio"
                     aria-checked={selected}
                     disabled={!!savedAnswer}
-                    onClick={() => setMcqChoice(opt.id)}
-                    className={`flex w-full cursor-pointer items-start gap-3 rounded-md border p-3.5 text-left text-sm transition-[border-color,background-color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default ${
+                    onClick={() => {
+                      questSfx.tap();
+                      setMcqChoice(opt.id);
+                    }}
+                    className={`quest-3d-btn flex w-full cursor-pointer items-start gap-3 p-3.5 text-left text-sm focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default ${
                       selected
-                        ? "border-primary bg-secondary/70 font-medium text-foreground shadow-xs"
-                        : "border-border bg-background hover:border-primary/40 hover:bg-secondary/30"
+                        ? "border-[#b82f25] bg-[#fff0e5] font-bold text-stone-900"
+                        : "border-[#d4b499] bg-[#fffdf9] text-stone-800 hover:border-[#c2783e]"
                     }`}
                   >
                     <span
-                      className={`inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`inline-flex size-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-extrabold ${
                         selected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                          ? "bg-[#d93624] text-white"
+                          : "bg-amber-100 text-[#7c3415]"
                       }`}
                     >
                       {String.fromCharCode(65 + oi)}
@@ -519,9 +575,9 @@ export function GamePlayer({
           )}
 
           {currentItem.kind === "multi" && (
-            <div className="space-y-2.5">
-              <p className="text-xs font-medium text-muted-foreground">
-                Select {currentItem.pick} correct options ({multiChoices.length} selected):
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-[#7c3415]">
+                Pick {currentItem.pick} matching cards ({multiChoices.length} chosen):
               </p>
               {currentItem.options.map((opt) => {
                 const checked = multiChoices.includes(opt.id);
@@ -532,23 +588,24 @@ export function GamePlayer({
                     role="checkbox"
                     aria-checked={checked}
                     disabled={!!savedAnswer}
-                    onClick={() =>
+                    onClick={() => {
+                      questSfx.tap();
                       setMultiChoices((prev) =>
                         prev.includes(opt.id)
                           ? prev.filter((x) => x !== opt.id)
                           : [...prev, opt.id],
-                      )
-                    }
-                    className={`flex w-full cursor-pointer items-start gap-3 rounded-md border p-3.5 text-left text-sm transition-[border-color,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default ${
+                      );
+                    }}
+                    className={`quest-3d-btn flex w-full cursor-pointer items-start gap-3 p-3.5 text-left text-sm focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default ${
                       checked
-                        ? "border-primary bg-secondary/70 font-medium text-foreground"
-                        : "border-border bg-background hover:border-primary/40"
+                        ? "border-[#b82f25] bg-[#fff0e5] font-bold text-stone-900"
+                        : "border-[#d4b499] bg-[#fffdf9] text-stone-800"
                     }`}
                   >
                     <span
-                      className={`mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-sm border text-xs font-bold ${
+                      className={`mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-md border-2 text-xs font-extrabold ${
                         checked
-                          ? "border-primary bg-primary text-primary-foreground"
+                          ? "border-[#b82f25] bg-[#d93624] text-white"
                           : "border-stone-400 bg-white"
                       }`}
                     >
@@ -562,9 +619,9 @@ export function GamePlayer({
           )}
 
           {currentItem.kind === "order" && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                Use the Up/Down buttons (or tap two lines to swap them) into the right sequence:
+            <div className="space-y-2.5">
+              <p className="text-xs font-bold text-[#7c3415]">
+                Tap two puzzle blocks to swap them, or use the Up / Down arrows:
               </p>
               {orderList.map((stepId, pos) => {
                 const step = currentItem.steps.find((s) => s.id === stepId);
@@ -573,22 +630,27 @@ export function GamePlayer({
                 return (
                   <div
                     key={step.id}
-                    className={`flex items-center gap-2 rounded-md border p-2.5 transition-colors duration-150 ${
+                    className={`quest-3d-btn flex items-center gap-2.5 p-2.5 ${
                       pickedForSwap
-                        ? "border-primary bg-secondary/70"
-                        : "border-border bg-background"
+                        ? "border-[#b82f25] bg-[#fff0e5]"
+                        : "border-[#d4b499] bg-[#fffdf9]"
                     }`}
                   >
-                    <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-sm bg-muted font-mono text-xs font-bold text-foreground">
+                    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-200 font-mono text-xs font-extrabold text-amber-950">
                       {pos + 1}
                     </span>
                     <button
                       type="button"
                       disabled={!!savedAnswer}
                       onClick={() => {
-                        if (swapPick === null) setSwapPick(pos);
-                        else if (swapPick === pos) setSwapPick(null);
-                        else {
+                        if (swapPick === null) {
+                          questSfx.tap();
+                          setSwapPick(pos);
+                        } else if (swapPick === pos) {
+                          questSfx.tap();
+                          setSwapPick(null);
+                        } else {
+                          questSfx.flip(true);
                           setOrderList((prev) => {
                             const copy = [...prev];
                             [copy[swapPick], copy[pos]] = [copy[pos], copy[swapPick]];
@@ -597,7 +659,7 @@ export function GamePlayer({
                           setSwapPick(null);
                         }
                       }}
-                      className="min-w-0 flex-1 cursor-pointer text-left font-mono text-xs leading-snug text-foreground sm:text-sm disabled:cursor-default"
+                      className="min-w-0 flex-1 cursor-pointer text-left font-mono text-xs font-semibold leading-snug text-stone-900 sm:text-sm disabled:cursor-default"
                     >
                       {step.text}
                     </button>
@@ -605,31 +667,33 @@ export function GamePlayer({
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"
-                          aria-label={`Move step ${pos + 1} up`}
+                          aria-label={`Move block ${pos + 1} up`}
                           disabled={pos === 0}
-                          onClick={() =>
+                          onClick={() => {
+                            questSfx.flip(true);
                             setOrderList((prev) => {
                               const copy = [...prev];
                               [copy[pos - 1], copy[pos]] = [copy[pos], copy[pos - 1]];
                               return copy;
-                            })
-                          }
-                          className="cursor-pointer rounded-sm border border-border p-1.5 hover:bg-secondary disabled:opacity-35"
+                            });
+                          }}
+                          className="cursor-pointer rounded-lg border-2 border-[#d4b499] bg-white p-1.5 hover:bg-amber-50 disabled:opacity-35"
                         >
                           <ArrowUp size={14} aria-hidden="true" />
                         </button>
                         <button
                           type="button"
-                          aria-label={`Move step ${pos + 1} down`}
+                          aria-label={`Move block ${pos + 1} down`}
                           disabled={pos === orderList.length - 1}
-                          onClick={() =>
+                          onClick={() => {
+                            questSfx.flip(false);
                             setOrderList((prev) => {
                               const copy = [...prev];
                               [copy[pos + 1], copy[pos]] = [copy[pos], copy[pos + 1]];
                               return copy;
-                            })
-                          }
-                          className="cursor-pointer rounded-sm border border-border p-1.5 hover:bg-secondary disabled:opacity-35"
+                            });
+                          }}
+                          className="cursor-pointer rounded-lg border-2 border-[#d4b499] bg-white p-1.5 hover:bg-amber-50 disabled:opacity-35"
                         >
                           <ArrowDown size={14} aria-hidden="true" />
                         </button>
@@ -643,15 +707,12 @@ export function GamePlayer({
 
           {currentItem.kind === "match" && (
             <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Tap an item on the left, then tap its matching partner on the right (
-                {Object.keys(matchPairs).length}/{currentItem.left.length} paired):
+              <p className="text-xs font-bold text-[#7c3415]">
+                Tap a tile on the left, then tap its matching partner on the right (
+                {Object.keys(matchPairs).length}/{currentItem.left.length} linked):
               </p>
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Prompt
-                  </div>
+                <div className="space-y-2.5">
                   {currentItem.left.map((l, li) => {
                     const pairedRight = matchPairs[l.id];
                     const active = matchLeft === l.id;
@@ -661,6 +722,7 @@ export function GamePlayer({
                         type="button"
                         disabled={!!savedAnswer}
                         onClick={() => {
+                          questSfx.tap();
                           if (pairedRight) {
                             setMatchPairs((prev) => {
                               const next = { ...prev };
@@ -670,26 +732,23 @@ export function GamePlayer({
                           }
                           setMatchLeft(active ? null : l.id);
                         }}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border p-3 text-left text-xs sm:text-sm transition-colors duration-150 ${
+                        className={`quest-3d-btn flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left text-xs sm:text-sm ${
                           active
-                            ? "border-primary bg-secondary font-semibold"
+                            ? "border-[#b82f25] bg-[#fff0e5] font-extrabold"
                             : pairedRight
-                              ? "border-amber-400 bg-amber-50/70"
-                              : "border-border bg-background hover:border-primary/40"
+                              ? "border-emerald-600 bg-emerald-50 font-semibold"
+                              : "border-[#d4b499] bg-[#fffdf9]"
                         }`}
                       >
-                        <span>{l.text}</span>
-                        <span className="shrink-0 rounded-full bg-stone-200 px-2 py-0.5 text-[11px] font-bold text-stone-800">
-                          {pairedRight ? `#${li + 1}` : "Pick"}
+                        <span className="text-stone-900">{l.text}</span>
+                        <span className="shrink-0 rounded-full bg-amber-200 px-2.5 py-0.5 font-mono text-[11px] font-extrabold text-amber-950">
+                          {pairedRight ? `#${li + 1}` : "Tap"}
                         </span>
                       </button>
                     );
                   })}
                 </div>
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Partner
-                  </div>
+                <div className="space-y-2.5">
                   {currentItem.right.map((r) => {
                     const ownerEntry = Object.entries(matchPairs).find(
                       ([, rid]) => rid === r.id,
@@ -704,6 +763,7 @@ export function GamePlayer({
                         disabled={!!savedAnswer}
                         onClick={() => {
                           if (matchLeft) {
+                            questSfx.flip(true);
                             setMatchPairs((prev) => {
                               const next: Record<string, string> = {};
                               for (const [k, v] of Object.entries(prev)) {
@@ -714,6 +774,7 @@ export function GamePlayer({
                             });
                             setMatchLeft(null);
                           } else if (ownerEntry) {
+                            questSfx.tap();
                             setMatchPairs((prev) => {
                               const next = { ...prev };
                               delete next[ownerEntry[0]];
@@ -721,17 +782,17 @@ export function GamePlayer({
                             });
                           }
                         }}
-                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border p-3 text-left text-xs sm:text-sm transition-colors duration-150 ${
+                        className={`quest-3d-btn flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left text-xs sm:text-sm ${
                           ownerIdx >= 0
-                            ? "border-amber-400 bg-amber-50/70 font-medium"
+                            ? "border-emerald-600 bg-emerald-50 font-semibold"
                             : matchLeft
-                              ? "border-dashed border-primary/60 bg-background hover:bg-secondary/40"
-                              : "border-border bg-background"
+                              ? "border-dashed border-[#b82f25] bg-[#fffdf9]"
+                              : "border-[#d4b499] bg-[#fffdf9]"
                         }`}
                       >
-                        <span>{r.text}</span>
+                        <span className="text-stone-900">{r.text}</span>
                         {ownerIdx >= 0 && (
-                          <span className="shrink-0 rounded-full bg-amber-300 px-2 py-0.5 text-[11px] font-bold text-amber-950">
+                          <span className="shrink-0 rounded-full bg-emerald-600 px-2.5 py-0.5 font-mono text-[11px] font-extrabold text-white">
                             #{ownerIdx + 1}
                           </span>
                         )}
@@ -745,16 +806,15 @@ export function GamePlayer({
 
           {currentItem.kind === "sort" && (
             <div className="space-y-4">
-              <p className="text-xs font-medium text-muted-foreground">
-                Tap a card below, then tap the basket it belongs in (
+              <p className="text-xs font-bold text-[#7c3415]">
+                Tap a card in the tray, then tap the crate where it belongs (
                 {Object.keys(sortPlacement).length}/{currentItem.cards.length} sorted):
               </p>
 
-              {/* Unsorted tray */}
-              <div className="flex flex-wrap gap-2 rounded-md border border-dashed border-stone-300 bg-muted/40 p-3">
+              <div className="flex flex-wrap gap-2 rounded-xl border-2 border-dashed border-[#c2783e]/60 bg-[#fff8ea]/80 p-3">
                 {currentItem.cards.filter((c) => !sortPlacement[c.id]).length === 0 ? (
-                  <span className="text-xs text-muted-foreground">
-                    All cards placed in baskets! Tap any card inside a basket if you want to move it.
+                  <span className="text-xs font-semibold text-[#7c3415]">
+                    All cards placed in crates! Tap any card inside a crate if you want to move it.
                   </span>
                 ) : (
                   currentItem.cards
@@ -766,11 +826,14 @@ export function GamePlayer({
                           key={card.id}
                           type="button"
                           disabled={!!savedAnswer}
-                          onClick={() => setSortPick(active ? null : card.id)}
-                          className={`cursor-pointer rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors duration-150 sm:text-sm ${
+                          onClick={() => {
+                            questSfx.tap();
+                            setSortPick(active ? null : card.id);
+                          }}
+                          className={`quest-3d-btn cursor-pointer px-3 py-2 text-left text-xs font-bold sm:text-sm ${
                             active
-                              ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                              : "border-border bg-card hover:border-primary/50"
+                              ? "quest-3d-btn-primary"
+                              : "border-[#d4b499] bg-white text-stone-900"
                           }`}
                         >
                           {card.text}
@@ -780,7 +843,6 @@ export function GamePlayer({
                 )}
               </div>
 
-              {/* Destination Baskets */}
               <div className="grid gap-3 sm:grid-cols-2">
                 {currentItem.buckets.map((b) => {
                   const inside = currentItem.cards.filter(
@@ -789,10 +851,10 @@ export function GamePlayer({
                   return (
                     <div
                       key={b.id}
-                      className={`rounded-lg border p-3 transition-colors duration-150 ${
+                      className={`rounded-xl border-2 p-3.5 transition-colors duration-150 ${
                         sortPick
-                          ? "border-primary/60 bg-secondary/25"
-                          : "border-border bg-background"
+                          ? "border-[#b82f25] bg-[#fff0e5]/70"
+                          : "border-[#c2783e] bg-[#fffdf9]"
                       }`}
                     >
                       <button
@@ -800,14 +862,15 @@ export function GamePlayer({
                         disabled={!!savedAnswer || !sortPick}
                         onClick={() => {
                           if (!sortPick) return;
+                          questSfx.flip(true);
                           setSortPlacement((prev) => ({ ...prev, [sortPick]: b.id }));
                           setSortPick(null);
                         }}
-                        className="flex w-full cursor-pointer items-center justify-between gap-2 border-b border-border pb-2 text-left text-sm font-bold text-foreground disabled:cursor-default"
+                        className="flex w-full cursor-pointer items-center justify-between gap-2 border-b border-amber-300/70 pb-2 text-left text-sm font-extrabold text-stone-900 disabled:cursor-default"
                       >
                         <span>{b.label}</span>
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-primary">
-                          {sortPick ? "Drop here +" : inside.length}
+                        <span className="rounded-full bg-amber-200 px-2.5 py-0.5 text-xs font-extrabold text-amber-950">
+                          {sortPick ? "Drop Here +" : inside.length}
                         </span>
                       </button>
                       <div className="mt-2.5 flex min-h-10 flex-wrap gap-1.5">
@@ -816,13 +879,14 @@ export function GamePlayer({
                             key={c.id}
                             type="button"
                             disabled={!!savedAnswer}
-                            onClick={() =>
-                              setSortPick((prev) => (prev === c.id ? null : c.id))
-                            }
-                            className={`cursor-pointer rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors duration-150 ${
+                            onClick={() => {
+                              questSfx.tap();
+                              setSortPick((prev) => (prev === c.id ? null : c.id));
+                            }}
+                            className={`cursor-pointer rounded-lg border-2 px-2.5 py-1.5 text-left text-xs font-bold ${
                               sortPick === c.id
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-amber-300 bg-amber-50 text-stone-900 hover:border-primary"
+                                ? "border-[#b82f25] bg-[#d93624] text-white"
+                                : "border-emerald-500 bg-emerald-50 text-emerald-950"
                             }`}
                           >
                             {c.text}
@@ -840,7 +904,7 @@ export function GamePlayer({
             <div className="max-w-md space-y-2">
               <label
                 htmlFor={`quest-input-${currentItem.id}`}
-                className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                className="block text-xs font-extrabold uppercase tracking-wider text-[#7c3415]"
               >
                 Your Answer
               </label>
@@ -858,15 +922,15 @@ export function GamePlayer({
                   }
                 }}
                 placeholder={currentItem.placeholder ?? "Type your answer…"}
-                className="w-full rounded-md border border-input bg-background px-3.5 py-2.5 font-mono text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="w-full rounded-xl border-2 border-[#c2783e] bg-white px-4 py-3 font-mono text-base font-bold text-stone-900 shadow-inner focus-visible:outline-2 focus-visible:outline-ring"
               />
             </div>
           )}
 
           {currentItem.kind === "bug" && (
-            <div className="space-y-1.5" role="radiogroup" aria-label="Code lines — tap the faulty line">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">
-                Tap the ONE line that contains the error:
+            <div className="space-y-2" role="radiogroup" aria-label="Tap the faulty code line">
+              <p className="mb-2 text-xs font-bold text-[#7c3415]">
+                Spot the bug! Tap the ONE faulty line below:
               </p>
               {currentItem.lines.map((line, li) => {
                 const picked = bugLine === li;
@@ -877,22 +941,25 @@ export function GamePlayer({
                     role="radio"
                     aria-checked={picked}
                     disabled={!!savedAnswer}
-                    onClick={() => setBugLine(li)}
-                    className={`flex w-full cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 text-left font-mono text-xs transition-colors duration-150 sm:text-sm ${
+                    onClick={() => {
+                      questSfx.tap();
+                      setBugLine(li);
+                    }}
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-3.5 py-2.5 text-left font-mono text-xs transition-colors duration-120 sm:text-sm ${
                       picked
-                        ? "border-red-600 bg-red-50 font-semibold text-red-950"
+                        ? "border-red-600 bg-red-50 font-extrabold text-red-950 shadow-sm"
                         : "border-stone-700 bg-stone-900 text-stone-100 hover:border-amber-400"
                     }`}
                   >
                     <span
-                      className={`inline-flex size-6 shrink-0 items-center justify-center rounded-sm text-xs font-bold ${
+                      className={`inline-flex size-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
                         picked ? "bg-red-600 text-white" : "bg-stone-800 text-stone-400"
                       }`}
                     >
                       {li + 1}
                     </span>
                     <span className="min-w-0 flex-1 whitespace-pre-wrap">{line}</span>
-                    {picked && <Bug size={16} className="shrink-0 text-red-600" aria-hidden="true" />}
+                    {picked && <Bug size={17} className="shrink-0 text-red-600" aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -901,19 +968,19 @@ export function GamePlayer({
 
           {currentItem.kind === "binary" && (
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-secondary/60 px-3.5 py-2.5 text-sm">
-                <span className="font-medium text-foreground">
-                  Target decimal value:{" "}
-                  <strong className="font-mono text-base text-primary">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-[#c2783e] bg-[#fff8ea] px-4 py-2.5 text-sm">
+                <span className="font-bold text-stone-800">
+                  Target Decimal:{" "}
+                  <strong className="font-mono text-lg text-[#b82f25]">
                     {currentItem.target}₁₀
                   </strong>
                 </span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  Current bits: <strong className="text-foreground">{bitsValue}₂</strong>
+                <span className="font-mono text-xs font-bold text-stone-600">
+                  Switches: <strong className="text-stone-900">{bitsValue}₂</strong>
                 </span>
               </div>
               <div
-                className="grid gap-2"
+                className="grid gap-2.5"
                 style={{
                   gridTemplateColumns: `repeat(${Math.min(currentItem.bits, 4)}, minmax(0, 1fr))`,
                 }}
@@ -929,21 +996,26 @@ export function GamePlayer({
                       aria-pressed={on}
                       aria-label={`Bit ${weight} (${on ? "1, ON" : "0, OFF"})`}
                       onClick={() => {
+                        questSfx.flip(!on);
                         setBitsValue((prev) => {
                           const chars = prev.split("");
                           chars[bi] = chars[bi] === "1" ? "0" : "1";
                           return chars.join("");
                         });
                       }}
-                      className={`flex cursor-pointer flex-col items-center justify-center rounded-md border-2 p-3 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring ${
+                      className={`quest-3d-btn flex cursor-pointer flex-col items-center justify-center p-3 focus-visible:outline-2 focus-visible:outline-ring ${
                         on
-                          ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                          : "border-border bg-background text-foreground hover:border-primary/40"
+                          ? "quest-3d-btn-emerald"
+                          : "border-[#c2783e] bg-[#fffdf9] text-stone-800"
                       }`}
                     >
-                      <span className="text-[11px] font-medium opacity-80">2^{currentItem.bits - 1 - bi} = {weight}</span>
-                      <span className="mt-1 font-mono text-2xl font-bold">{on ? "1" : "0"}</span>
-                      <span className="mt-0.5 text-[10px] uppercase tracking-wider opacity-85">
+                      <span className="text-[11px] font-bold opacity-85">
+                        2^{currentItem.bits - 1 - bi} = {weight}
+                      </span>
+                      <span className="mt-1 font-mono text-2xl font-extrabold">
+                        {on ? "1" : "0"}
+                      </span>
+                      <span className="mt-0.5 text-[10px] font-extrabold uppercase tracking-wider">
                         {on ? "ON" : "OFF"}
                       </span>
                     </button>
@@ -955,41 +1027,40 @@ export function GamePlayer({
         </div>
 
         {error && (
-          <p role="alert" className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+          <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm font-semibold text-red-800">
             {error}
           </p>
         )}
 
-        {/* Submit OR Feedback Footer */}
+        {/* 3D Tactile Check Buttons OR Teaching Feedback */}
         {!savedAnswer ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-            <p className="text-xs text-muted-foreground">
-              Pick how confident you feel to check your answer:
-            </p>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#d4a373]/50 pt-4">
+            <span className="text-xs font-bold text-[#7c3415]">
+              Ready? Lock in your move:
+            </span>
             <div className="flex flex-wrap items-center gap-2.5">
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 disabled={!readyToSubmit || submitting}
                 onClick={() => handleCheck("unsure")}
-                className="gap-1.5"
+                className="quest-3d-btn quest-3d-btn-gold inline-flex cursor-pointer items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold disabled:cursor-not-allowed disabled:opacity-45 sm:text-sm"
               >
                 <HelpCircle size={15} aria-hidden="true" />
-                Check (Not 100% sure)
-              </Button>
-              <Button
+                Try It (Unsure)
+              </button>
+              <button
                 type="button"
                 disabled={!readyToSubmit || submitting}
                 onClick={() => handleCheck("sure")}
-                className="gap-1.5"
+                className="quest-3d-btn quest-3d-btn-primary inline-flex cursor-pointer items-center gap-1.5 px-5 py-2.5 text-xs font-extrabold disabled:cursor-not-allowed disabled:opacity-45 sm:text-sm"
               >
                 {submitting ? (
                   <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
                 ) : (
                   <CheckCircle2 size={15} aria-hidden="true" />
                 )}
-                Check (I&apos;m sure!)
-              </Button>
+                Lock Answer (Sure!)
+              </button>
             </div>
           </div>
         ) : (
@@ -998,8 +1069,9 @@ export function GamePlayer({
             isLast={index === totalCount - 1}
             allAnswered={allAnswered}
             onNext={() => {
+              questSfx.tap();
               if (allAnswered && index === totalCount - 1) {
-                setShowSummaryScreen(true);
+                openSummaryWithSound();
               } else {
                 const nextUnanswered = session.items.findIndex(
                   (it, idx) => idx > index && !(it.id in session.answered),
@@ -1011,7 +1083,7 @@ export function GamePlayer({
                 );
               }
             }}
-            onShowResults={() => setShowSummaryScreen(true)}
+            onShowResults={openSummaryWithSound}
           />
         )}
       </article>
@@ -1033,62 +1105,65 @@ function FeedbackBanner({
   onShowResults: () => void;
 }) {
   const tone = result.correct
-    ? "border-emerald-300 bg-emerald-50/90 text-emerald-950"
+    ? "border-emerald-500 bg-emerald-50 text-emerald-950"
     : result.score > 0
-      ? "border-amber-300 bg-amber-50/90 text-amber-950"
-      : "border-red-300 bg-red-50/90 text-red-950";
+      ? "border-amber-500 bg-amber-50 text-amber-950"
+      : "border-orange-400 bg-orange-50 text-stone-900";
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className={`mt-6 rounded-lg border p-4 ${tone}`}
+      className={`mt-6 rounded-xl border-2 p-4 shadow-xs ${tone}`}
     >
       <div className="flex items-start gap-3">
         {result.correct ? (
-          <CheckCircle2 size={22} className="mt-0.5 shrink-0 text-emerald-700" aria-hidden="true" />
+          <CheckCircle2 size={24} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
         ) : result.score > 0 ? (
-          <ShieldAlert size={22} className="mt-0.5 shrink-0 text-amber-700" aria-hidden="true" />
+          <ShieldAlert size={24} className="mt-0.5 shrink-0 text-amber-600" aria-hidden="true" />
         ) : (
-          <XCircle size={22} className="mt-0.5 shrink-0 text-red-700" aria-hidden="true" />
+          <XCircle size={24} className="mt-0.5 shrink-0 text-orange-600" aria-hidden="true" />
         )}
         <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="font-bold">
+          <div className="text-sm font-extrabold sm:text-base">
             {result.correct
-              ? "Spot on!"
+              ? "Boom! Direct Hit!"
               : result.score > 0
-                ? `Partial credit (${Math.round(result.score * 100)}%)`
-                : "Not quite — learn from this one:"}
+                ? `Nice! Partial Match (${Math.round(result.score * 100)}%)`
+                : "Power-Up Tip — Here's How It Works:"}
           </div>
           {!result.correct && (
             <p className="text-xs sm:text-sm">
-              <span className="font-semibold">Correct answer: </span>
-              <span className="font-mono">{result.solution}</span>
+              <span className="font-bold">Solution: </span>
+              <span className="font-mono font-semibold">{result.solution}</span>
             </p>
           )}
-          <p className="text-xs leading-relaxed opacity-95 sm:text-sm">
+          <p className="text-xs leading-relaxed sm:text-sm">
             {result.explanation}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap justify-end gap-2">
+      <div className="mt-4 flex flex-wrap justify-end gap-2.5">
         {allAnswered && (
-          <Button type="button" onClick={onShowResults} className="gap-1.5">
-            See Checkpoint Score
-            <Trophy size={15} aria-hidden="true" />
-          </Button>
+          <button
+            type="button"
+            onClick={onShowResults}
+            className="quest-3d-btn quest-3d-btn-emerald inline-flex cursor-pointer items-center gap-1.5 px-4 py-2 text-xs font-extrabold sm:text-sm"
+          >
+            Claim Stars & Score!
+            <Award size={16} aria-hidden="true" />
+          </button>
         )}
         {(!allAnswered || !isLast) && (
-          <Button
+          <button
             type="button"
-            variant={allAnswered ? "outline" : "default"}
             onClick={onNext}
-            className="gap-1.5"
+            className="quest-3d-btn quest-3d-btn-primary inline-flex cursor-pointer items-center gap-1.5 px-4 py-2 text-xs font-extrabold sm:text-sm"
           >
-            Next Challenge
+            Next Stage
             <ArrowRight size={15} aria-hidden="true" />
-          </Button>
+          </button>
         )}
       </div>
     </div>
