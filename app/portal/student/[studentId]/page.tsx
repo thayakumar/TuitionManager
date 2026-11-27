@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ArrowRight,
   Activity,
+  Compass,
 } from "lucide-react";
 import { queryAll, queryOne } from "@/lib/db";
 import {
@@ -103,11 +104,18 @@ export default async function StudentDashboardPage({
             {student.grade_level ? ` · ${student.grade_level}` : ""}
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/portal/student/${id}/classroom`}>
-            <BookOpen size={16} /> Open classwork
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <Link href={`/portal/student/${id}/review`}>
+              <Compass size={16} /> Review Quest
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/portal/student/${id}/classroom`}>
+              <BookOpen size={16} /> Open classwork
+            </Link>
+          </Button>
+        </div>
       </header>
 
       {diagnostic && (

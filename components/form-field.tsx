@@ -68,6 +68,7 @@ export function Field({
     );
   if (name === "duration_minutes")
     return <DurationField defaultValue={Number(defaultValue ?? 60)} />;
+  const listId = name === "grade_level" ? `${fieldId}-forms` : undefined;
   return (
     <div className="field-group">
       <Label htmlFor={fieldId}>{label}</Label>
@@ -75,6 +76,7 @@ export function Field({
         id={fieldId}
         name={name}
         type={type}
+        list={listId}
         defaultValue={defaultValue ?? ""}
         required={required}
         step={step}
@@ -82,8 +84,17 @@ export function Field({
         max={max}
         minLength={minLength}
         autoComplete={autoComplete}
-        placeholder={placeholder}
+        placeholder={placeholder ?? (name === "grade_level" ? "Form 1 – Form 5" : undefined)}
       />
+      {listId && (
+        <datalist id={listId}>
+          <option value="Form 1" />
+          <option value="Form 2" />
+          <option value="Form 3" />
+          <option value="Form 4" />
+          <option value="Form 5" />
+        </datalist>
+      )}
     </div>
   );
 }

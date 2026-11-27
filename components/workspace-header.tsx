@@ -11,6 +11,7 @@ const labels: Record<string, string> = {
   dashboard: "Dashboard",
   diagnostic: "Diagnostic",
   diagnostics: "Diagnostics",
+  review: "Review Quest",
   chat: "Family chat",
   chats: "Family chats",
   students: "Students",

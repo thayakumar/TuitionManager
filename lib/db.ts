@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -531,6 +531,61 @@ async function migrateSecurityAndIndexes(tx: Transaction) {
   `);
 }
 
+async function migrateReviewQuest(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS review_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      form_level INTEGER NOT NULL CHECK(form_level BETWEEN 1 AND 5),
+      checkpoint_id TEXT NOT NULL,
+      curriculum_version TEXT NOT NULL,
+      attempt_number INTEGER NOT NULL CHECK(attempt_number > 0),
+      status TEXT NOT NULL DEFAULT 'in_progress' CHECK(status IN ('in_progress','completed','abandoned')),
+      item_ids_json TEXT NOT NULL,
+      seed INTEGER NOT NULL DEFAULT 1,
+      score_pct INTEGER,
+      points_earned REAL NOT NULL DEFAULT 0,
+      points_max INTEGER NOT NULL CHECK(points_max > 0),
+      passed INTEGER NOT NULL DEFAULT 0 CHECK(passed IN (0,1)),
+      duration_ms INTEGER NOT NULL DEFAULT 0 CHECK(duration_ms >= 0),
+      started_at TEXT NOT NULL,
+      completed_at TEXT,
+      UNIQUE(student_id, checkpoint_id, attempt_number)
+    );
+    CREATE INDEX IF NOT EXISTS idx_review_attempts_student_form ON review_attempts(student_id, form_level, checkpoint_id);
+    CREATE INDEX IF NOT EXISTS idx_review_attempts_completed ON review_attempts(student_id, completed_at);
+
+    CREATE TABLE IF NOT EXISTS review_item_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      attempt_id INTEGER NOT NULL REFERENCES review_attempts(id) ON DELETE CASCADE,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      form_level INTEGER NOT NULL CHECK(form_level BETWEEN 1 AND 5),
+      checkpoint_id TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      position INTEGER NOT NULL CHECK(position >= 0),
+      skill TEXT NOT NULL,
+      response_json TEXT NOT NULL,
+      score REAL NOT NULL CHECK(score >= 0 AND score <= 1),
+      correct INTEGER NOT NULL CHECK(correct IN (0,1)),
+      confidence TEXT CHECK(confidence IN ('sure','unsure') OR confidence IS NULL),
+      misconception TEXT,
+      time_ms INTEGER NOT NULL DEFAULT 0 CHECK(time_ms >= 0),
+      answered_at TEXT NOT NULL,
+      UNIQUE(attempt_id, item_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_review_responses_student_item ON review_item_responses(student_id, form_level, item_id, answered_at);
+    CREATE INDEX IF NOT EXISTS idx_review_responses_student_cp ON review_item_responses(student_id, form_level, checkpoint_id);
+
+    CREATE TABLE IF NOT EXISTS review_unlocks (
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      form_level INTEGER NOT NULL CHECK(form_level BETWEEN 1 AND 5),
+      checkpoint_id TEXT NOT NULL,
+      unlocked_at TEXT NOT NULL,
+      PRIMARY KEY(student_id, form_level, checkpoint_id)
+    );
+  `);
+}
+
 const INCREMENTAL_MIGRATIONS: ReadonlyArray<{
   version: number;
   up: (tx: Transaction) => Promise<void>;
@@ -544,6 +599,7 @@ const INCREMENTAL_MIGRATIONS: ReadonlyArray<{
   { version: 9, up: migrateMcp },
   { version: 10, up: migrateDocuments },
   { version: 11, up: migrateSecurityAndIndexes },
+  { version: 12, up: migrateReviewQuest },
 ];
 
 async function applyMigration(tx: Transaction, fromVersion = 0) {

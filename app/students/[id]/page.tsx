@@ -24,6 +24,7 @@ import {
   AlertCircle,
   TrendingUp,
   KeyRound,
+  Compass,
 } from "lucide-react";
 import { queryAll, queryOne, getSetting } from "@/lib/db";
 import { addStudentNote, deleteStudentNote } from "@/lib/actions";
@@ -237,6 +238,11 @@ export default async function StudentDetailPage({
         subtitle={`${student.subject || "General"}${student.grade_level ? " · " + student.grade_level : ""} · ${currency(Number(student.hourly_rate), currencySymbol)}/hr`}
         action={
           <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/review/${id}`}>
+                <Compass size={15} /> Review Quest
+              </Link>
+            </Button>
             <ShareTokenButton
               studentId={id}
               existingToken={shareTokenRow?.token ?? null}

@@ -11,6 +11,7 @@ import {
   CalendarClock,
   CalendarDays,
   ClipboardList,
+  Compass,
   ExternalLink,
   Files,
   Grid2X2,
@@ -68,6 +69,13 @@ function itemsForRole(
         group: "Learning",
         keywords: "assignments homework quizzes stream classwork",
         icon: BookOpen,
+      },
+      {
+        label: "Review Quest",
+        href: `${basePath}/review`,
+        group: "Learning",
+        keywords: "game map stations checkpoints revision practice",
+        icon: Compass,
       },
       {
         label: "Documents",
@@ -196,6 +204,13 @@ function itemsForRole(
       group: "Teach & learn",
       keywords: "assignments homework grading stream posts",
       icon: BookOpen,
+    },
+    {
+      label: "Review Quest",
+      href: "/review",
+      group: "Teach & learn",
+      keywords: "game map stations checkpoints learner analytics misconceptions",
+      icon: Compass,
     },
     {
       label: "Documents",

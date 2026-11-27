@@ -20,6 +20,7 @@ import {
   BarChart3,
   MessagesSquare,
   BrainCircuit,
+  Compass,
   Files,
   ExternalLink,
 } from "lucide-react";
@@ -49,6 +50,7 @@ const navGroups = [
       { href: "/students", label: "Students", icon: Users },
       { href: "/schedule", label: "Schedule", icon: CalendarDays },
       { href: "/classroom", label: "Classroom", icon: BookOpen },
+      { href: "/review", label: "Review Quest", icon: Compass },
       { href: "/documents", label: "Documents", icon: Files },
       { href: "/diagnostics", label: "Diagnostics", icon: BrainCircuit },
       { href: "/whiteboard", label: "Whiteboard", icon: PencilRuler, external: true },
