@@ -81,6 +81,7 @@ function fixture() {
 
   const db = load("lib/db.ts");
   const service = load("lib/review/service.ts");
+  const bank = load("lib/review/bank.ts");
   const curriculumMod = load("lib/review/curriculum.ts");
   const validator = load("lib/review/validate.ts");
   const form1 = load("lib/review/content/form1/index.ts").form1;
@@ -88,6 +89,7 @@ function fixture() {
   return {
     db,
     service,
+    bank,
     curriculumMod,
     validator,
     form1,
@@ -397,3 +399,87 @@ test("teacher learner-intelligence report captures retries-to-correct, blind spo
     f.close();
   }
 });
+
+test("teacher question bank supports adding, editing, deleting, and restoring questions with live overlay", async () => {
+  const f = fixture();
+  try {
+    await f.seed();
+
+    // Students cannot mutate the question bank
+    f.as("student", 1);
+    await assert.rejects(() => f.bank.getTeacherQuestionBank(1), /Tutor access/);
+
+    // Admin adds a custom MCQ question to 1.1.1 (Match Up supports match & mcq)
+    f.as("admin");
+    const added = await f.bank.saveTeacherBankItem({
+      formLevel: 1,
+      checkpointId: "f1-1.1.1",
+      item: {
+        id: "",
+        kind: "mcq",
+        skill: "apply",
+        prompt: "Custom teacher question: splitting a robotics build into chassis, sensors, and code is?",
+        options: [
+          { id: "a", text: "Decomposition (Leraian)" },
+          { id: "b", text: "Abstraction (Peniskalaan)" },
+          { id: "c", text: "Generalisation (Pengitlakan)" },
+        ],
+        answer: "a",
+        explanation: "Breaking a build into subsystems is decomposition.",
+      },
+    });
+    assert(added.itemId.startsWith("custom-f1-1.1.1-"));
+
+    // Edit built-in question f1-1.1.1-q05
+    await f.bank.saveTeacherBankItem({
+      formLevel: 1,
+      checkpointId: "f1-1.1.1",
+      item: {
+        id: "f1-1.1.1-q05",
+        kind: "mcq",
+        skill: "analyse",
+        prompt: "Updated prompt by Cikgu: ignoring wrapper cartoons when baking 60 cupcakes uses?",
+        options: [
+          { id: "a", text: "Abstraction (Peniskalaan)" },
+          { id: "b", text: "Decomposition (Leraian)" },
+          { id: "c", text: "Pattern recognition" },
+        ],
+        answer: "a",
+        explanation: "Updated teacher explanation.",
+      },
+    });
+
+    // Delete built-in question f1-1.1.1-q01 (soft-hides it)
+    await f.bank.deleteTeacherBankItem({
+      formLevel: 1,
+      checkpointId: "f1-1.1.1",
+      itemId: "f1-1.1.1-q01",
+    });
+
+    const eff = await f.bank.loadEffectiveCurriculum(1);
+    const cp = eff.chapters[0].checkpoints[0];
+    assert.equal(cp.items.some((i) => i.id === "f1-1.1.1-q01"), false);
+    assert.equal(cp.items.some((i) => i.id === added.itemId), true);
+    assert.match(
+      cp.items.find((i) => i.id === "f1-1.1.1-q05").prompt,
+      /Updated prompt by Cikgu/,
+    );
+
+    // Restore f1-1.1.1-q01 back to textbook default
+    await f.bank.restoreBuiltinBankItem({
+      formLevel: 1,
+      checkpointId: "f1-1.1.1",
+      itemId: "f1-1.1.1-q01",
+    });
+    const effAfterRestore = await f.bank.loadEffectiveCurriculum(1);
+    assert.equal(
+      effAfterRestore.chapters[0].checkpoints[0].items.some(
+        (i) => i.id === "f1-1.1.1-q01",
+      ),
+      true,
+    );
+  } finally {
+    f.close();
+  }
+});
+

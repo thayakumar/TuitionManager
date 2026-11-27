@@ -9,6 +9,7 @@ import {
   itemIndex,
   parseForm,
 } from "./curriculum";
+import { loadEffectiveCurriculum } from "./bank";
 import {
   computeUnlockMap,
   describeResponse,
@@ -314,7 +315,7 @@ export async function getStudentReviewMap(studentId: number): Promise<StudentMap
       curriculum: null,
     };
   }
-  const curriculum = curriculumFor(form);
+  const curriculum = await loadEffectiveCurriculum(form);
   if (!curriculum) {
     return {
       student: { id: student.id, name: student.name, gradeLevel: student.grade_level, form },
@@ -408,7 +409,7 @@ export async function startOrResumeCheckpoint(
   if (!form) {
     throw new ReviewError(400, "Your tutor has not assigned your Form level yet.", "FORM_NOT_SET");
   }
-  const curriculum = curriculumFor(form);
+  const curriculum = await loadEffectiveCurriculum(form);
   if (!curriculum) {
     throw new ReviewError(404, `Form ${form} Review Quest is coming soon.`, "FORM_UNAVAILABLE");
   }
@@ -648,6 +649,9 @@ export async function submitCheckpointAnswer(input: {
       ? input.confidence
       : null;
 
+  const effectiveCurriculum = await loadEffectiveCurriculum(activeForm);
+  const baseCurriculum = curriculumFor(activeForm);
+
   return withTransaction(async (tx) => {
     const attempt = (
       await tx.execute({
@@ -670,7 +674,7 @@ export async function submitCheckpointAnswer(input: {
       throw new ReviewError(409, "This attempt was restarted. Start a fresh round.", "ATTEMPT_ABANDONED");
     }
 
-    const curriculum = curriculumFor(activeForm);
+    const curriculum = effectiveCurriculum;
     const located = curriculum ? findCheckpoint(curriculum, String(attempt.checkpoint_id)) : null;
     if (!curriculum || !located) {
       throw new ReviewError(404, "Checkpoint definition not found.", "CHECKPOINT_MISSING");
@@ -681,7 +685,12 @@ export async function submitCheckpointAnswer(input: {
     if (position < 0) {
       throw new ReviewError(400, "Question does not belong to this attempt.", "INVALID_ITEM");
     }
-    const item = checkpoint.items.find((i) => i.id === input.itemId);
+    const baseLocated = baseCurriculum
+      ? findCheckpoint(baseCurriculum, String(attempt.checkpoint_id))
+      : null;
+    const item =
+      checkpoint.items.find((i) => i.id === input.itemId) ??
+      baseLocated?.checkpoint.items.find((i) => i.id === input.itemId);
     if (!item) {
       throw new ReviewError(404, "Question definition missing.", "ITEM_MISSING");
     }
@@ -1166,7 +1175,7 @@ export async function getTeacherStudentReviewReport(
       : assignedForm ?? historicalForms.at(-1) ?? null;
 
   const forms = availableForms();
-  const curriculum = curriculumFor(viewingForm);
+  const curriculum = await loadEffectiveCurriculum(viewingForm);
   if (!viewingForm || !curriculum) {
     return {
       student: {
@@ -1205,7 +1214,9 @@ export async function getTeacherStudentReviewReport(
     ),
   ]);
 
-  const idxMap = itemIndex(curriculum);
+  const baseCurr = curriculumFor(viewingForm);
+  const idxMap = baseCurr ? itemIndex(baseCurr) : new Map();
+  for (const [k, v] of itemIndex(curriculum).entries()) idxMap.set(k, v);
   const attemptsByCp = new Map<string, AttemptRow[]>();
   for (const a of allAttempts) {
     const list = attemptsByCp.get(a.checkpoint_id) ?? [];

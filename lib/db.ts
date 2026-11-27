@@ -8,7 +8,7 @@ import {
 
 // Bump only when a reviewed migration is added. A prepared database needs one
 // version read per process, rather than executing DDL on every cold page request.
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 let client: Client | null = null;
 let initialization: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -586,6 +586,21 @@ async function migrateReviewQuest(tx: Transaction) {
   `);
 }
 
+async function migrateReviewBankItems(tx: Transaction) {
+  await tx.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS review_bank_items (
+      id TEXT PRIMARY KEY,
+      form_level INTEGER NOT NULL CHECK(form_level BETWEEN 1 AND 5),
+      checkpoint_id TEXT NOT NULL,
+      op TEXT NOT NULL CHECK(op IN ('upsert','delete')),
+      item_json TEXT,
+      misconceptions_json TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_review_bank_items_cp ON review_bank_items(form_level, checkpoint_id);
+  `);
+}
+
 const INCREMENTAL_MIGRATIONS: ReadonlyArray<{
   version: number;
   up: (tx: Transaction) => Promise<void>;
@@ -600,6 +615,7 @@ const INCREMENTAL_MIGRATIONS: ReadonlyArray<{
   { version: 10, up: migrateDocuments },
   { version: 11, up: migrateSecurityAndIndexes },
   { version: 12, up: migrateReviewQuest },
+  { version: 13, up: migrateReviewBankItems },
 ];
 
 async function applyMigration(tx: Transaction, fromVersion = 0) {

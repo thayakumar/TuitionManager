@@ -2,14 +2,19 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
+  BookOpenCheck,
   CheckCircle2,
   Clock,
   Compass,
+  Download,
+  Edit3,
   Sparkles,
 } from "lucide-react";
 import { requireAdminPage } from "@/lib/auth";
 import { getTeacherReviewOverview } from "@/lib/review/service";
+import { loadEffectiveCurriculum } from "@/lib/review/bank";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +27,10 @@ function fmtDuration(ms: number): string {
 
 export default async function AdminReviewOverviewPage() {
   await requireAdminPage();
-  const { students } = await getTeacherReviewOverview();
+  const [{ students }, form1] = await Promise.all([
+    getTeacherReviewOverview(),
+    loadEffectiveCurriculum(1),
+  ]);
 
   const activeStudents = students.filter((s) => s.active);
   const totalCompletedRounds = activeStudents.reduce(
@@ -39,7 +47,80 @@ export default async function AdminReviewOverviewPage() {
         eyebrow="Learner Intelligence"
         title="Review Quest Progress"
         subtitle="Track station mastery, retry learning gains, misconceptions, confidence blind spots, and study pace across every learner."
+        action={
+          <Button asChild>
+            <Link href="/review/bank">
+              <Edit3 size={15} /> Manage Question Bank
+            </Link>
+          </Button>
+        }
       />
+
+      {form1 && (
+        <section
+          aria-labelledby="teacher-guides-heading"
+          className="rounded-lg border border-border bg-card p-5 shadow-xs"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2
+                id="teacher-guides-heading"
+                className="flex items-center gap-2 text-sm font-bold text-foreground"
+              >
+                <BookOpenCheck size={17} className="text-primary" aria-hidden="true" />
+                Form 1 Teacher&apos;s Review & Discussion Guides (KSSM ASK)
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Full question bank, answer keys, KSSM Standard Pembelajaran mapping, diagnostic misconception probes, and discussion notes per chapter.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3.5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {form1.chapters.map((ch) => {
+              const qCount = ch.checkpoints.reduce((s, c) => s + c.items.length, 0);
+              const pdfUrl = `/teacher-guides/Form1-Bab${ch.number}-Teachers-Guide.pdf`;
+              return (
+                <div
+                  key={ch.id}
+                  className="flex flex-col justify-between rounded-md border border-border bg-background p-3.5 text-xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between font-bold text-primary">
+                      <span>Bab {ch.number}</span>
+                      <span className="tabular-nums text-muted-foreground">
+                        {ch.checkpoints.length} checkpoints • {qCount} q
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm font-bold text-foreground">
+                      {ch.title}
+                    </div>
+                    <div className="truncate text-muted-foreground">{ch.titleMs}</div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/70 pt-2.5">
+                    <Link
+                      href={`/review/guide/1/${ch.id}`}
+                      className="inline-flex flex-1 items-center justify-center gap-1 rounded-sm bg-secondary px-2 py-1.5 font-semibold text-primary hover:bg-secondary/80"
+                    >
+                      <BookOpenCheck size={13} aria-hidden="true" />
+                      Scroll Guide
+                    </Link>
+                    <a
+                      href={pdfUrl}
+                      download
+                      className="inline-flex items-center justify-center gap-1 rounded-sm border border-border bg-card px-2.5 py-1.5 font-semibold text-foreground hover:border-primary/40"
+                    >
+                      <Download size={13} aria-hidden="true" />
+                      PDF
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section aria-label="Roster summary" className="grid gap-3.5 sm:grid-cols-3">
         <div className="kpi-hero-surface rounded-lg border border-border p-4 shadow-xs">
