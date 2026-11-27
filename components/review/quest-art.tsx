@@ -398,12 +398,12 @@ export function QuestCompanion({
       </svg>
       <span className="text-xs font-bold text-stone-800">
         {mood === "streak"
-          ? "On fire! Keep that combo rolling!"
+          ? "Kombo menyala! Teruskan rentak cemerlang ini!"
           : mood === "happy"
-            ? "Nailed it! Great thinking!"
+            ? "Tepat sekali! Pemikiran yang mantap!"
             : mood === "coach"
-              ? "Good try! Check the clue below — you've got this."
-              : "Take your time — think it through!"}
+              ? "Percubaan baik! Semak penerangan di bawah — anda pasti boleh."
+              : "Baca dengan teliti dan fikir langkah demi langkah!"}
       </span>
     </div>
   );

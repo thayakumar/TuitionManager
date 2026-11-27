@@ -338,9 +338,11 @@ export function QuestionBankManager({
               <div className="mt-1 text-sm font-bold text-foreground">
                 {ch.title}
               </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {ch.titleMs}
-              </div>
+              {ch.titleMs !== ch.title && (
+                <div className="truncate text-xs text-muted-foreground">
+                  {ch.titleMs}
+                </div>
+              )}
             </button>
           );
         })}
@@ -425,9 +427,11 @@ export function QuestionBankManager({
                 <h2 className="mt-2 text-lg font-bold text-foreground">
                   {activeCheckpoint.title}
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  {activeCheckpoint.titleMs}
-                </p>
+                {activeCheckpoint.titleMs !== activeCheckpoint.title && (
+                  <p className="text-xs text-muted-foreground">
+                    {activeCheckpoint.titleMs}
+                  </p>
+                )}
               </div>
 
               <Button type="button" size="sm" onClick={openNewQuestion} className="gap-1.5">

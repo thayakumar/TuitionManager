@@ -336,12 +336,12 @@ function buildChapterHtml(chapter) {
 </head>
 <body>
   <div class="cover">
-    <div class="eyebrow">TuitionHub Teacher's Review &amp; Discussion Guide • Form 1 Asas Sains Komputer (KSSM)</div>
+    <div class="eyebrow">TuitionHub Teacher's Review &amp; Discussion Guide • Tingkatan 1 Asas Sains Komputer (KSSM)</div>
     <h1>Bab ${chapter.number}: ${esc(chapter.titleMs)}</h1>
-    <p class="sub">${esc(chapter.title)} — ${esc(chapter.blurb)}</p>
+    <p class="sub">${esc(chapter.blurb)}</p>
     <div class="pills">
       <span class="pill">${chapter.checkpoints.length} Checkpoints (Sub-chapters + Mastery Boss)</span>
-      <span class="pill">${totalQ} Questions &amp; Answer Keys</span>
+      <span class="pill">${totalQ} Questions &amp; Answer Keys (Bahasa Melayu)</span>
       <span class="pill">Pass Gate: ${PASS_PERCENT}% • 5–8 min / checkpoint</span>
     </div>
   </div>
@@ -364,7 +364,7 @@ function buildChapterHtml(chapter) {
           const g = GAMES[cp.game];
           return `<tr>
             <td><strong>${cp.boss ? `BOSS ${esc(cp.code)}` : esc(cp.code)}</strong></td>
-            <td><strong>${esc(cp.title)}</strong><br/><span style="color:#6b5b53">${esc(cp.titleMs)}</span></td>
+            <td><strong>${esc(cp.title)}</strong>${cp.titleMs !== cp.title ? `<br/><span style="color:#6b5b53">${esc(cp.titleMs)}</span>` : ""}</td>
             <td>${esc(g.name)}</td>
             <td>${cp.items.length} / ${cp.draw}</td>
             <td>${esc(std.standardPembelajaranMs)}</td>
@@ -396,7 +396,7 @@ function buildChapterHtml(chapter) {
           <span>Game: ${esc(g.name)} • ${cp.items.length} Questions (draws ${cp.draw}/attempt)</span>
         </div>
         <h3>${esc(cp.code)} — ${esc(cp.title)}</h3>
-        <div class="cp-ms">${esc(cp.titleMs)}</div>
+        ${cp.titleMs !== cp.title ? `<div class="cp-ms">${esc(cp.titleMs)}</div>` : ""}
         <div class="std-grid">
           <div class="std-box">
             <strong>KSSM Standard Pembelajaran</strong>

@@ -317,7 +317,9 @@ export default async function ChapterTeacherGuidePage({
               <h2 className="font-display mt-2 text-xl font-bold text-foreground">
                 {cp.code} — {cp.title}
               </h2>
-              <p className="text-sm text-muted-foreground">{cp.titleMs}</p>
+              {cp.titleMs !== cp.title && (
+                <p className="text-sm text-muted-foreground">{cp.titleMs}</p>
+              )}
 
               <div className="mt-3 grid gap-3 rounded-md bg-secondary/40 p-3.5 text-xs sm:grid-cols-2">
                 <div>

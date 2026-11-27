@@ -8,47 +8,47 @@ import * as ch4b from "./ch4b";
 import * as ch4c from "./ch4c";
 
 /**
- * Form 1 Asas Sains Komputer (KSSM textbook "Asas Komputer Tingkatan 1").
- * Chapter = station on the world map. Each chapter has its own visual theme.
+ * Tingkatan 1 Asas Sains Komputer (Buku Teks KSSM "Asas Sains Komputer Tingkatan 1").
+ * Setiap bab mewakili satu stesen pulau pada peta pengembaraan.
  */
 const chapters: Chapter[] = [
   {
     id: "f1-ch1",
     number: 1,
-    title: "Computational Thinking",
+    title: "Konsep Asas Pemikiran Komputasional",
     titleMs: "Konsep Asas Pemikiran Komputasional",
     theme: "meadow",
-    blurb: "Break problems down, spot patterns, keep what matters.",
+    blurb: "Pecahkan masalah, kenal pasti corak, kekalkan aspek penting dan bina model penyelesaian.",
     misconceptions: { ...ch1.misconceptions },
     checkpoints: ch1.checkpoints,
   },
   {
     id: "f1-ch2",
     number: 2,
-    title: "Data Representation",
+    title: "Perwakilan Data",
     titleMs: "Perwakilan Data",
     theme: "lagoon",
-    blurb: "Binary numbers, ASCII and how big your files really are.",
+    blurb: "Sistem nombor perduaan, pengekodan ASCII serta ukuran saiz fail imej dan audio digital.",
     misconceptions: { ...ch2a.misconceptions, ...ch2b.misconceptions },
     checkpoints: [...ch2a.checkpoints, ...ch2b.checkpoints],
   },
   {
     id: "f1-ch3",
     number: 3,
-    title: "Algorithms",
+    title: "Algoritma",
     titleMs: "Algoritma",
     theme: "frost",
-    blurb: "Pseudocode and flowcharts with choices and loops.",
+    blurb: "Pseudokod dan carta alir yang melibatkan struktur kawalan pilihan, ulangan serta semakan meja.",
     misconceptions: { ...ch3.misconceptions },
     checkpoints: ch3.checkpoints,
   },
   {
     id: "f1-ch4",
     number: 4,
-    title: "Code",
+    title: "Kod Arahan",
     titleMs: "Kod Arahan",
     theme: "candy",
-    blurb: "Scratch programs and your first HTML web pages.",
+    blurb: "Pengaturcaraan Scratch 2.0, fasa pembangunan atur cara dan pembinaan laman sesawang HTML.",
     misconceptions: { ...ch4a.misconceptions, ...ch4b.misconceptions, ...ch4c.misconceptions },
     checkpoints: [...ch4a.checkpoints, ...ch4b.checkpoints, ...ch4c.checkpoints],
   },
@@ -57,6 +57,6 @@ const chapters: Chapter[] = [
 export const form1: Curriculum = {
   form: 1,
   subject: "Asas Sains Komputer",
-  version: "f1-v1",
+  version: "f1-v2-bm",
   chapters,
 };

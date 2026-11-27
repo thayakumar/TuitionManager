@@ -585,7 +585,13 @@ export function TeacherStudentAnalytics({
                         Station {ch.number}
                       </span>
                       <h3 className="text-sm font-bold text-foreground">
-                        {ch.title} — <span className="font-normal text-muted-foreground">{ch.titleMs}</span>
+                        {ch.title}
+                        {ch.titleMs !== ch.title && (
+                          <>
+                            {" "}
+                            — <span className="font-normal text-muted-foreground">{ch.titleMs}</span>
+                          </>
+                        )}
                       </h3>
                     </div>
                     <span className="rounded-full bg-card px-3 py-1 text-xs font-semibold tabular-nums">

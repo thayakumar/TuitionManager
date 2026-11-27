@@ -40,7 +40,7 @@ type BiomeVisual = {
 
 const BIOMES: Record<ThemeId, BiomeVisual> = {
   meadow: {
-    label: "Emerald Meadow",
+    label: "Padang Zamrud",
     canvasClass:
       "border-emerald-700 bg-gradient-to-b from-[#bbf7d0] via-[#86efac] to-[#4ade80]",
     roadOuter: "#854d0e",
@@ -48,7 +48,7 @@ const BIOMES: Record<ThemeId, BiomeVisual> = {
     badgeClass: "bg-emerald-800 text-emerald-50",
   },
   lagoon: {
-    label: "Coral Lagoon",
+    label: "Lagun Karang",
     canvasClass:
       "border-cyan-800 bg-gradient-to-b from-[#bae6fd] via-[#67e8f9] to-[#fde68a]",
     roadOuter: "#0e7490",
@@ -56,7 +56,7 @@ const BIOMES: Record<ThemeId, BiomeVisual> = {
     badgeClass: "bg-cyan-900 text-cyan-50",
   },
   frost: {
-    label: "Glacier Ridge",
+    label: "Puncak Glasier",
     canvasClass:
       "border-sky-800 bg-gradient-to-b from-[#dbeafe] via-[#e0f2fe] to-[#bae6fd]",
     roadOuter: "#1d4ed8",
@@ -64,7 +64,7 @@ const BIOMES: Record<ThemeId, BiomeVisual> = {
     badgeClass: "bg-sky-900 text-sky-50",
   },
   candy: {
-    label: "Amber Workshop",
+    label: "Bengkel Jingga",
     canvasClass:
       "border-orange-800 bg-gradient-to-b from-[#ffedd5] via-[#fed7aa] to-[#fdba74]",
     roadOuter: "#7c2d12",
@@ -72,7 +72,7 @@ const BIOMES: Record<ThemeId, BiomeVisual> = {
     badgeClass: "bg-orange-900 text-orange-50",
   },
   desert: {
-    label: "Sunstone Dunes",
+    label: "Gurun Suria",
     canvasClass:
       "border-amber-800 bg-gradient-to-b from-[#fef3c7] via-[#fde68a] to-[#fcd34d]",
     roadOuter: "#78350f",
@@ -80,7 +80,7 @@ const BIOMES: Record<ThemeId, BiomeVisual> = {
     badgeClass: "bg-amber-900 text-amber-50",
   },
   volcano: {
-    label: "Ember Summit",
+    label: "Puncak Bara",
     canvasClass:
       "border-red-900 bg-gradient-to-b from-[#fee2e2] via-[#fecaca] to-[#fca5a5]",
     roadOuter: "#7f1d1d",
@@ -112,7 +112,7 @@ export function StudentQuest({
         setMap((await res.json()) as StudentMapPayload);
       }
     } catch {
-      // Keep last known map state if offline momentarily
+      // Kekalkan peta sedia ada jika sambungan terputus seketika
     }
   }
 
@@ -132,12 +132,12 @@ export function StudentQuest({
       });
       const data = (await res.json()) as ActiveSessionPayload & { error?: string };
       if (!res.ok) {
-        throw new Error(data.error || "Could not start this checkpoint.");
+        throw new Error(data.error || "Tidak dapat memulakan checkpoint ini.");
       }
       setActiveChapterId(data.chapter.id);
       setSession(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not launch checkpoint.");
+      setError(e instanceof Error ? e.message : "Gagal melancarkan checkpoint.");
     } finally {
       setLoadingCp(null);
     }
@@ -149,7 +149,7 @@ export function StudentQuest({
     await refreshMap();
   }
 
-  // 1. Active Game Arena
+  // 1. Arena Permainan Aktif
   if (session) {
     return (
       <GamePlayer
@@ -163,16 +163,16 @@ export function StudentQuest({
     );
   }
 
-  // 2. Unset or Coming-Soon Form States
+  // 2. Tingkatan Belum Ditetapkan atau Akan Datang
   if (map.status === "unset_form") {
     return (
       <section className="quest-parchment-board mx-auto max-w-xl p-7 text-center sm:p-9">
         <Compass size={40} className="mx-auto text-[#9a3e1a]" aria-hidden="true" />
         <h1 className="font-display mt-3 text-2xl font-bold text-stone-900">
-          Your Adventure Map Awaits!
+          Peta Pengembaraan Anda Menanti!
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-stone-700">
-          Ask your tutor to set your Form level (Form 1 – Form 5) so your island stations unlock.
+          Minta cikgu menetapkan tahap Tingkatan anda (Tingkatan 1 – Tingkatan 5) supaya stesen pulau dapat dibuka.
         </p>
       </section>
     );
@@ -183,10 +183,10 @@ export function StudentQuest({
       <section className="quest-parchment-board mx-auto max-w-xl p-7 text-center sm:p-9">
         <Compass size={40} className="mx-auto text-[#9a3e1a]" aria-hidden="true" />
         <h1 className="font-display mt-3 text-2xl font-bold text-stone-900">
-          Form {map.student.form} World Map — Under Construction
+          Peta Pengembaraan Tingkatan {map.student.form} — Sedang Disediakan
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-stone-700">
-          Your account is locked to <strong>Form {map.student.form}</strong>. Your tutor is preparing the Form {map.student.form} island stations!
+          Akaun anda ditetapkan pada <strong>Tingkatan {map.student.form}</strong>. Cikgu sedang menyediakan stesen pulau bagi Tingkatan {map.student.form}!
         </p>
       </section>
     );
@@ -204,11 +204,10 @@ export function StudentQuest({
     : null;
 
   // =========================================================================
-  // 3. CHAPTER 3D BIOME WINDING TRAIL VIEW (inspired directly by image_2.png)
+  // 3. LALUAN BERLIKU 3D MENGIKUT BAB (diinspirasikan terus daripada image_2.png)
   // =========================================================================
   if (activeChapter) {
     const biome = BIOMES[activeChapter.theme];
-    // S-curve zig-zag positions along the winding trail!
     const laneClasses = [
       "sm:ml-6 sm:mr-auto",
       "sm:mx-auto",
@@ -221,7 +220,7 @@ export function StudentQuest({
 
     return (
       <div className="space-y-5">
-        {/* 3D Hanging Wooden Signboard Header (like top plaque in image_2.png!) */}
+        {/* Papan Tanda Kayu Gantung 3D */}
         <header className="quest-wood-signboard p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
@@ -233,13 +232,13 @@ export function StudentQuest({
               className="quest-3d-btn quest-3d-btn-gold inline-flex cursor-pointer items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold"
             >
               <ArrowLeft size={15} aria-hidden="true" />
-              World Map
+              Peta Pulau
             </button>
 
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-black/30 px-3 py-1 text-xs font-bold text-amber-100">
                 <CheckCircle2 size={14} className="text-emerald-300" aria-hidden="true" />
-                {activeChapter.passedCount} / {activeChapter.totalCount} Cleared
+                {activeChapter.passedCount} / {activeChapter.totalCount} Selesai
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-black/30 px-3 py-1 text-xs font-bold text-amber-100">
                 <StarTrio3D
@@ -259,7 +258,7 @@ export function StudentQuest({
               <button
                 type="button"
                 onClick={toggleMute}
-                aria-label={muted ? "Unmute game sounds" : "Mute game sounds"}
+                aria-label={muted ? "Hidupkan bunyi permainan" : "Senyapkan bunyi permainan"}
                 className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-amber-200/40 bg-black/30 text-amber-100 hover:bg-black/45"
               >
                 {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
@@ -269,14 +268,16 @@ export function StudentQuest({
 
           <div className="mt-4 text-center">
             <p className="text-xs font-extrabold uppercase tracking-widest text-amber-200">
-              Station {activeChapter.number} • {biome.label}
+              Stesen {activeChapter.number} • {biome.label}
             </p>
             <h1 className="font-display mt-0.5 text-2xl font-extrabold tracking-tight text-white drop-shadow-xs sm:text-3xl">
-              {activeChapter.title}
+              Bab {activeChapter.number}: {activeChapter.title}
             </h1>
-            <p className="text-xs font-medium text-amber-100/90 sm:text-sm">
-              {activeChapter.titleMs}
-            </p>
+            {activeChapter.titleMs !== activeChapter.title && (
+              <p className="text-xs font-medium text-amber-100/90 sm:text-sm">
+                {activeChapter.titleMs}
+              </p>
+            )}
           </div>
         </header>
 
@@ -286,12 +287,12 @@ export function StudentQuest({
           </p>
         )}
 
-        {/* Illustrated Biome Winding Path Stage */}
+        {/* Pentas Laluan Berliku Mengikut Tema Bab */}
         <section
-          aria-label={`Station ${activeChapter.number} checkpoint trail`}
+          aria-label={`Laluan checkpoint Stesen ${activeChapter.number}`}
           className={`relative overflow-hidden rounded-2xl border-4 p-5 shadow-lg sm:p-9 ${biome.canvasClass}`}
         >
-          {/* Decorative Winding Road / River Spine */}
+          {/* Tulang Belakang Laluan Berliku */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-8 left-1/2 w-12 -translate-x-1/2 rounded-full opacity-45"
@@ -326,15 +327,15 @@ export function StudentQuest({
                           : "border-stone-300 bg-white/95"
                     }`}
                   >
-                    {/* Bouncing Player Location Marker on Active Checkpoint! */}
+                    {/* Penanda Lokasi Melantun pada Checkpoint Semasa */}
                     {isCurrent && (
                       <span className="quest-pin-marker absolute -top-4 left-5 inline-flex items-center gap-1 rounded-full border-2 border-amber-900 bg-amber-400 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-950 shadow-sm">
                         <MapPin size={11} aria-hidden="true" />
-                        You Are Here
+                        Anda Di Sini
                       </span>
                     )}
 
-                    {/* Left 3D Stepping-Stone Puck OR 3D Boss Treasure Chest */}
+                    {/* Batu Loncatan 3D ATAU Peti Harta Karun Boss 3D */}
                     {cp.boss ? (
                       <span className="shrink-0">
                         <TreasureChest3D
@@ -362,7 +363,7 @@ export function StudentQuest({
                       </span>
                     )}
 
-                    {/* Checkpoint Title, Game Mode & 3D Stars */}
+                    {/* Tajuk Checkpoint, Mod Permainan & Bintang 3D */}
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span
@@ -374,7 +375,7 @@ export function StudentQuest({
                                 : biome.badgeClass
                           }`}
                         >
-                          {cp.boss ? `BOSS ${cp.code}` : cp.code}
+                          {cp.boss ? `CABARAN ${cp.code}` : cp.code}
                         </span>
                         <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-bold text-stone-700">
                           {cp.gameName}
@@ -384,9 +385,11 @@ export function StudentQuest({
                       <span className="mt-1 block text-sm font-extrabold leading-snug text-stone-900 sm:text-base">
                         {cp.title}
                       </span>
-                      <span className="block truncate text-xs text-stone-600">
-                        {cp.titleMs}
-                      </span>
+                      {cp.titleMs !== cp.title && (
+                        <span className="block truncate text-xs text-stone-600">
+                          {cp.titleMs}
+                        </span>
+                      )}
 
                       <span className="mt-2 flex flex-wrap items-center justify-between gap-2">
                         {cp.unlocked ? (
@@ -394,21 +397,21 @@ export function StudentQuest({
                             <StarTrio3D stars={cp.stars} size={17} />
                             <span className="text-xs font-extrabold tabular-nums text-stone-800">
                               {cp.bestScore !== null
-                                ? `Best ${cp.bestScore}%`
+                                ? `Terbaik ${cp.bestScore}%`
                                 : cp.inProgressAttemptId
-                                  ? "Resume Quest"
-                                  : "Start! (5–8m)"}
+                                  ? "Sambung Permainan"
+                                  : "Mula! (5–8 min)"}
                             </span>
                           </>
                         ) : (
                           <span className="text-[11px] font-bold text-stone-600">
-                            Score ≥ {curriculum.passPercent}% above to unlock
+                            Capai ≥ {curriculum.passPercent}% di atas untuk membuka
                           </span>
                         )}
                       </span>
                     </span>
 
-                    {/* 3D Play Pill */}
+                    {/* Butang Main 3D */}
                     {cp.unlocked && (
                       <span className="quest-3d-btn-primary inline-flex size-10 shrink-0 items-center justify-center rounded-full">
                         {isLoading ? (
@@ -431,13 +434,12 @@ export function StudentQuest({
   }
 
   // =========================================================================
-  // 4. 3D WORLD ADVENTURE STATION MAP (inspired directly by image.png!)
+  // 4. PETA STESEN PULAU 3D (diinspirasikan terus daripada image.png)
   // =========================================================================
   return (
     <div className="quest-world-stage space-y-5 sm:p-6">
-      {/* Top Game HUD Bar (Player Level + XP Bar on Left, Stars + Gems + Audio on Right) */}
+      {/* Bar HUD Atas (Tahap Murid + Bar XP di Kiri, Bintang + Permata + Bunyi di Kanan) */}
       <header className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-        {/* Player Level Shield + XP Progress Bar */}
         <div className="flex items-center gap-2.5 rounded-full border-2 border-cyan-950/35 bg-cyan-950/55 px-3 py-1.5 text-white backdrop-blur-xs">
           <span className="inline-flex size-9 items-center justify-center rounded-full border-2 border-amber-300 bg-gradient-to-b from-amber-400 to-orange-600 font-mono text-xs font-extrabold text-white shadow-xs">
             Lv.{playerLevel}
@@ -456,11 +458,10 @@ export function StudentQuest({
           </div>
         </div>
 
-        {/* Right Counters: Stars, Gems XP, and Sound FX Switch */}
         <div className="flex flex-wrap items-center gap-2">
           <div
             className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/60 bg-sky-900/65 px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs"
-            title="Total stars earned across all checkpoints"
+            title="Jumlah bintang terkumpul"
           >
             <StarTrio3D stars={3} size={15} />
             <span className="ml-1 font-mono text-sm tabular-nums">
@@ -470,7 +471,7 @@ export function StudentQuest({
 
           <div
             className="inline-flex items-center gap-1.5 rounded-full border-2 border-white/60 bg-sky-900/65 px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs"
-            title="Quest Gems earned from checkpoints & stars"
+            title="Permata XP yang dikumpul"
           >
             <Gem3D size={18} />
             <span className="font-mono text-sm tabular-nums">{xpGems}</span>
@@ -479,8 +480,8 @@ export function StudentQuest({
           <button
             type="button"
             onClick={toggleMute}
-            aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
-            title={muted ? "Sound FX muted — tap to turn on" : "Sound FX on — tap to mute"}
+            aria-label={muted ? "Hidupkan kesan bunyi" : "Senyapkan kesan bunyi"}
+            title={muted ? "Bunyi disenyapkan — tekan untuk hidupkan" : "Bunyi aktif — tekan untuk senyapkan"}
             className="inline-flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white/65 bg-sky-900/70 text-white shadow-xs hover:bg-sky-900"
           >
             {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -494,20 +495,19 @@ export function StudentQuest({
         </p>
       )}
 
-      {/* Center 3D Parchment Map Board with Green Ribbon Crown */}
+      {/* Papan Peta Perkamen 3D dengan Reben Hijau */}
       <div className="relative z-10 pt-4">
         <div className="flex justify-center">
           <div className="quest-ribbon-banner -mb-5 z-20 text-xs sm:text-sm">
             <Compass size={16} aria-hidden="true" />
-            Form {curriculum.form} • {curriculum.subject} Quest
+            Tingkatan {curriculum.form} • Kembara {curriculum.subject}
           </div>
         </div>
 
         <section
-          aria-label="Adventure island stations"
+          aria-label="Stesen pulau pengembaraan"
           className="quest-parchment-board px-4 pt-10 pb-7 sm:px-8 sm:pt-12 sm:pb-9"
         >
-          {/* Brass Corner Rivets & Dashed Cartography Border */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-3 rounded-xl border-2 border-dashed border-[#b46934]/55"
@@ -529,14 +529,12 @@ export function StudentQuest({
             className="pointer-events-none absolute right-4 bottom-4 size-3.5 rounded-full border-2 border-[#5c280e] bg-amber-400 shadow-2xs"
           />
 
-          {/* Winding Dashed Map Path SVG Behind the Islands */}
           <svg
             aria-hidden="true"
             viewBox="0 0 800 500"
             preserveAspectRatio="none"
             className="pointer-events-none absolute inset-8 hidden h-[calc(100%-4rem)] w-[calc(100%-4rem)] md:block"
           >
-            {/* Subtle Hand-Sketched Mountain Contours on Parchment */}
             <path
               d="M350 95 L380 55 L410 95 M392 95 L418 65 L445 95 M360 400 L395 355 L430 400"
               fill="none"
@@ -544,7 +542,6 @@ export function StudentQuest({
               strokeWidth="2"
               opacity="0.45"
             />
-            {/* Bold Dashed Pirate/Adventure Trail Connecting Stations 1 → 2 → 3 → 4 */}
             <path
               d="M 200 130 C 370 60, 440 190, 600 155 C 680 250, 140 270, 210 375 C 360 455, 470 340, 600 390"
               fill="none"
@@ -556,7 +553,7 @@ export function StudentQuest({
             />
           </svg>
 
-          {/* Continue Next Checkpoint Hero Pill */}
+          {/* Bar Sasaran Semasa */}
           {curriculum.nextCheckpoint && (
             <div className="relative z-10 mx-auto mb-7 flex max-w-2xl flex-wrap items-center justify-between gap-3 rounded-xl border-2 border-[#c2783e] bg-[#fffaf0]/95 px-4 py-3 shadow-xs">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm">
@@ -565,7 +562,7 @@ export function StudentQuest({
                 </span>
                 <div>
                   <div className="text-[11px] font-extrabold uppercase tracking-wider text-[#9a3e1a]">
-                    Current Quest Target
+                    Sasaran Seterusnya
                   </div>
                   <strong className="text-stone-900">
                     {curriculum.nextCheckpoint.code} — {curriculum.nextCheckpoint.title}
@@ -586,12 +583,12 @@ export function StudentQuest({
                 ) : (
                   <Play size={15} aria-hidden="true" />
                 )}
-                Jump Straight In!
+                Terus Bermain!
               </button>
             </div>
           )}
 
-          {/* Floating 3D Isometric Station Islands Grid */}
+          {/* Grid Pulau Stesen 3D */}
           <div className="relative z-10 grid gap-7 md:grid-cols-2">
             {curriculum.chapters.map((ch, idx) => {
               const pct = ch.totalCount
@@ -615,7 +612,6 @@ export function StudentQuest({
                       !ch.unlocked ? "opacity-90" : ""
                     }`}
                   >
-                    {/* Station Ribbon Pill */}
                     <div className="flex w-full items-center justify-between gap-2">
                       <span
                         className={`rounded-full px-3 py-0.5 text-[11px] font-extrabold uppercase tracking-wider ${
@@ -626,19 +622,17 @@ export function StudentQuest({
                               : "bg-stone-300 text-stone-700"
                         }`}
                       >
-                        Station {ch.number}
+                        Stesen {ch.number}
                       </span>
                       <span className="font-mono text-xs font-extrabold text-[#7c3415]">
-                        {ch.passedCount}/{ch.totalCount} lvls
+                        {ch.passedCount}/{ch.totalCount} tahap
                       </span>
                     </div>
 
-                    {/* 3D Floating Isometric Island SVG */}
                     <div className="my-1">
                       <IsometricIsland theme={ch.theme} locked={!ch.unlocked} />
                     </div>
 
-                    {/* 3D Gold Star Trio right below the Island (just like image.png!) */}
                     <div className="-mt-1 mb-2">
                       <StarTrio3D stars={stationStars} size={23} />
                     </div>
@@ -646,9 +640,11 @@ export function StudentQuest({
                     <h2 className="font-display text-lg font-extrabold text-stone-900 sm:text-xl">
                       Bab {ch.number}: {ch.title}
                     </h2>
-                    <p className="text-xs font-semibold text-[#8c4319]">
-                      {ch.titleMs}
-                    </p>
+                    {ch.titleMs !== ch.title && (
+                      <p className="text-xs font-semibold text-[#8c4319]">
+                        {ch.titleMs}
+                      </p>
+                    )}
                     <p className="mt-1 max-w-xs text-xs text-stone-600">
                       {ch.blurb}
                     </p>
@@ -661,7 +657,7 @@ export function StudentQuest({
                         />
                       </div>
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#b82f25] group-hover:translate-x-0.5">
-                        {ch.unlocked ? "Explore" : "Preview"}
+                        {ch.unlocked ? "Terokai" : "Lihat"}
                         <ArrowRight size={14} aria-hidden="true" />
                       </span>
                     </div>
@@ -677,10 +673,10 @@ export function StudentQuest({
                 <Award size={30} className="shrink-0 text-emerald-700" aria-hidden="true" />
                 <div>
                   <div className="font-extrabold">
-                    All Form {curriculum.form} Island Stations Conquered!
+                    Semua Stesen Pulau Tingkatan {curriculum.form} Berjaya Ditawan!
                   </div>
                   <p className="text-xs">
-                    Incredible! Replay any island station anytime to collect every 3-star crown before your exams.
+                    Syabas! Anda boleh bermain semula mana-mana stesen pada bila-bila masa untuk mengumpul 3 bintang penuh.
                   </p>
                 </div>
               </div>

@@ -95,7 +95,9 @@ export default async function AdminReviewOverviewPage() {
                     <div className="mt-1 text-sm font-bold text-foreground">
                       {ch.title}
                     </div>
-                    <div className="truncate text-muted-foreground">{ch.titleMs}</div>
+                    <div className="truncate text-muted-foreground">
+                      {ch.titleMs !== ch.title ? ch.titleMs : ch.blurb}
+                    </div>
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/70 pt-2.5">

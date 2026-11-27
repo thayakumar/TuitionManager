@@ -37,7 +37,17 @@ import type {
   Confidence,
   GradeResult,
   ItemResponse,
+  Skill,
 } from "@/lib/review/types";
+
+const SKILL_LABELS_BM: Record<Skill, string> = {
+  recall: "Ingat Kembali",
+  understand: "Kefahaman",
+  apply: "Aplikasi",
+  analyse: "Analisis",
+  trace: "Semakan Meja",
+  debug: "Kesan Ralat",
+};
 
 function formatDuration(ms: number): string {
   const totalSec = Math.max(1, Math.round(ms / 1000));
@@ -76,7 +86,6 @@ export function GamePlayer({
   const [restarting, setRestarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Per-item draft state
   const [mcqChoice, setMcqChoice] = useState<string>("");
   const [multiChoices, setMultiChoices] = useState<string[]>([]);
   const [orderList, setOrderList] = useState<string[]>([]);
@@ -188,7 +197,7 @@ export function GamePlayer({
     if (!currentItem || savedAnswer || submitting) return;
     const response = buildResponse(currentItem);
     if (!response) {
-      setError("Complete your move above before checking.");
+      setError("Sila lengkapkan jawapan anda di atas sebelum menyemak.");
       return;
     }
     setSubmitting(true);
@@ -209,7 +218,7 @@ export function GamePlayer({
       });
       const data = (await res.json()) as SubmitAnswerResult & { error?: string };
       if (!res.ok) {
-        throw new Error(data.error || "Could not submit your answer.");
+        throw new Error(data.error || "Gagal menghantar jawapan anda.");
       }
 
       const nextStreak = data.result.correct ? streak + 1 : 0;
@@ -237,7 +246,7 @@ export function GamePlayer({
         setSummary(data.summary);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Network error while saving.");
+      setError(e instanceof Error ? e.message : "Ralat rangkaian semasa menyimpan jawapan.");
     } finally {
       setSubmitting(false);
     }
@@ -261,7 +270,7 @@ export function GamePlayer({
       await onStartCheckpoint(session.checkpoint.id, true);
       setShowSummaryScreen(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not restart round.");
+      setError(e instanceof Error ? e.message : "Tidak dapat memulakan pusingan baharu.");
     } finally {
       setRestarting(false);
     }
@@ -272,7 +281,7 @@ export function GamePlayer({
   const allAnswered = answeredCount >= totalCount;
 
   // =========================================================================
-  // VICTORY / ENCOURAGEMENT TREASURE SUMMARY SCREEN
+  // SKRIN KEPUTUSAN & GANJARAN BINTANG
   // =========================================================================
   if (showSummaryScreen && summary) {
     const earnedGems = summary.passed
@@ -289,7 +298,7 @@ export function GamePlayer({
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#d4a373]/50 pb-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#9a3e1a] px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider text-amber-100">
             <Trophy size={14} aria-hidden="true" />
-            Level {session.checkpoint.code} • Round #{session.attemptNumber}
+            Tahap {session.checkpoint.code} • Cubaan #{session.attemptNumber}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-cyan-700/30 bg-cyan-950/80 px-3 py-1 text-xs font-extrabold text-cyan-100">
             <Gem3D size={16} />+{earnedGems} XP
@@ -320,32 +329,32 @@ export function GamePlayer({
           >
             {summary.passed
               ? summary.scorePct === 100
-                ? "3-Star Legendary Clear!"
-                : "Checkpoint Unlocked!"
-              : "Nice Warm-Up — Try One More Round!"}
+                ? "Syabas! 3 Bintang Penuh!"
+                : "Tahniah! Checkpoint Berjaya Dibuka!"
+              : "Percubaan Baik — Cuba Satu Pusingan Lagi!"}
           </h1>
           <p className="mt-2 max-w-md text-sm font-medium text-stone-700">
             {summary.passed
-              ? `Awesome job! You scored ${summary.scorePct}% (goal ${session.checkpoint.passPercent}%) and opened the path forward.`
-              : `You reached ${summary.scorePct}%. Hit ${session.checkpoint.passPercent}% to unlock the next stepping-stone — every retry deals fresh questions!`}
+              ? `Hebat! Anda memperoleh ${summary.scorePct}% (sasaran lulus ${session.checkpoint.passPercent}%) dan membuka laluan ke tahap seterusnya.`
+              : `Anda mencapai ${summary.scorePct}%. Capai sekurang-kurangnya ${session.checkpoint.passPercent}% untuk membuka batu loncatan seterusnya — setiap cubaan baharu memberi set soalan segar!`}
           </p>
         </div>
 
         <div className="relative z-10 mt-6 grid grid-cols-3 gap-3 text-center">
           <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
-            <div className="text-xs font-bold text-[#8c4319]">Score</div>
+            <div className="text-xs font-bold text-[#8c4319]">Skor</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {summary.scorePct}%
             </div>
           </div>
           <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
-            <div className="text-xs font-bold text-[#8c4319]">Hits</div>
+            <div className="text-xs font-bold text-[#8c4319]">Mata</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {summary.pointsEarned} / {summary.pointsMax}
             </div>
           </div>
           <div className="rounded-xl border-2 border-[#d4a373] bg-[#fffdf8] p-3 shadow-2xs">
-            <div className="text-xs font-bold text-[#8c4319]">Time</div>
+            <div className="text-xs font-bold text-[#8c4319]">Masa</div>
             <div className="mt-1 text-2xl font-extrabold tabular-nums text-stone-900">
               {formatDuration(summary.durationMs)}
             </div>
@@ -368,7 +377,7 @@ export function GamePlayer({
               disabled={restarting}
               className="quest-3d-btn quest-3d-btn-emerald inline-flex cursor-pointer items-center justify-center gap-2 px-5 py-3 text-sm font-extrabold"
             >
-              Next Level: {summary.nextCheckpoint.code}
+              Tahap Seterusnya: {summary.nextCheckpoint.code}
               <ArrowRight size={17} aria-hidden="true" />
             </button>
           )}
@@ -385,7 +394,7 @@ export function GamePlayer({
             ) : (
               <RotateCcw size={16} aria-hidden="true" />
             )}
-            {summary.passed ? "Replay for 3 Stars" : "Play Again!"}
+            {summary.passed ? "Main Semula (Kejar 3 Bintang)" : "Cuba Lagi!"}
           </button>
           <button
             type="button"
@@ -393,7 +402,7 @@ export function GamePlayer({
             className="quest-3d-btn inline-flex cursor-pointer items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold text-stone-800"
           >
             <ArrowLeft size={16} aria-hidden="true" />
-            Trail Map
+            Peta Laluan
           </button>
         </div>
       </section>
@@ -414,7 +423,7 @@ export function GamePlayer({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      {/* 3D Wooden Game HUD Bar */}
+      {/* Bar HUD Papan Kayu 3D */}
       <div className="quest-wood-signboard flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
@@ -423,7 +432,7 @@ export function GamePlayer({
             className="quest-3d-btn quest-3d-btn-gold inline-flex shrink-0 cursor-pointer items-center gap-1 px-3 py-1.5 text-xs font-extrabold"
           >
             <ArrowLeft size={14} aria-hidden="true" />
-            Trail
+            Laluan
           </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -435,7 +444,7 @@ export function GamePlayer({
               </span>
             </div>
             <p className="truncate text-[11px] font-medium text-amber-100/85">
-              {session.game.name} • Goal {session.checkpoint.passPercent}% • Round #
+              {session.game.name} • Lulus {session.checkpoint.passPercent}% • Cubaan #
               {session.attemptNumber}
             </p>
           </div>
@@ -445,23 +454,23 @@ export function GamePlayer({
           {streak >= 2 && (
             <span className="inline-flex items-center gap-1 rounded-full border-2 border-amber-300 bg-gradient-to-r from-amber-500 to-orange-600 px-2.5 py-1 text-xs font-extrabold text-white shadow-xs">
               <Flame size={13} aria-hidden="true" />
-              {streak}× Streak!
+              {streak}× Kombo!
             </span>
           )}
           <button
             type="button"
             onClick={handleRestart}
             disabled={restarting}
-            title="Start a fresh shuffled round"
+            title="Mulakan pusingan baharu dengan soalan dikocok"
             className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-amber-200/40 bg-black/25 px-2.5 py-1 text-xs font-bold text-amber-100 hover:bg-black/40"
           >
             <RotateCcw size={13} aria-hidden="true" />
-            Shuffle
+            Kocok
           </button>
           <button
             type="button"
             onClick={onToggleMute}
-            aria-label={muted ? "Unmute sound effects" : "Mute sound effects"}
+            aria-label={muted ? "Hidupkan kesan bunyi" : "Senyapkan kesan bunyi"}
             className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full border border-amber-200/40 bg-black/25 text-amber-100 hover:bg-black/40"
           >
             {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
@@ -469,11 +478,11 @@ export function GamePlayer({
         </div>
       </div>
 
-      {/* Glowing Stepping-Stone Progress Pebbles + Companion Mascot */}
+      {/* Teman Kembara + Penunjuk Soalan */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <QuestCompanion mood={companionMood} />
         <span className="font-mono text-xs font-extrabold text-muted-foreground">
-          Stage {index + 1} / {totalCount}
+          Soalan {index + 1} / {totalCount}
         </span>
       </div>
 
@@ -481,7 +490,7 @@ export function GamePlayer({
         className="grid gap-2 px-1"
         style={{ gridTemplateColumns: `repeat(${totalCount}, minmax(0, 1fr))` }}
         role="list"
-        aria-label="Challenge stages"
+        aria-label="Senarai soalan"
       >
         {session.items.map((it, idx) => {
           const ans = session.answered[it.id];
@@ -504,7 +513,7 @@ export function GamePlayer({
                 questSfx.tap();
                 setIndex(idx);
               }}
-              aria-label={`Stage ${idx + 1}${ans ? (ans.result.correct ? " (cleared)" : " (reviewed)") : ""}`}
+              aria-label={`Soalan ${idx + 1}${ans ? (ans.result.correct ? " (betul)" : " (disemak)") : ""}`}
               className={`h-3.5 cursor-pointer rounded-full border-b-2 transition-opacity duration-150 focus-visible:outline-2 focus-visible:outline-ring ${bg} ${
                 isCurrent ? "ring-2 ring-primary ring-offset-1" : "opacity-85 hover:opacity-100"
               }`}
@@ -513,15 +522,15 @@ export function GamePlayer({
         })}
       </div>
 
-      {/* Main 3D Parchment Puzzle Stage */}
+      {/* Pentas Soalan 3D */}
       <article className="quest-parchment-board p-5 sm:p-7">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c2783e] bg-[#fff8ea] px-3 py-0.5 text-xs font-extrabold text-[#9a3e1a]">
             <Sparkles size={13} aria-hidden="true" />
             {session.game.name}
           </span>
-          <span className="rounded-full bg-[#9a3e1a]/10 px-2.5 py-0.5 text-xs font-bold capitalize text-[#7c3415]">
-            {currentItem.skill}
+          <span className="rounded-full bg-[#9a3e1a]/10 px-2.5 py-0.5 text-xs font-bold text-[#7c3415]">
+            {SKILL_LABELS_BM[currentItem.skill] ?? currentItem.skill}
           </span>
         </div>
 
@@ -535,10 +544,10 @@ export function GamePlayer({
           </pre>
         )}
 
-        {/* Interactive Game Mechanics */}
+        {/* Mekanik Permainan Interaktif */}
         <div className="mt-5">
           {currentItem.kind === "mcq" && (
-            <div className="grid gap-3" role="radiogroup" aria-label="Answer options">
+            <div className="grid gap-3" role="radiogroup" aria-label="Pilihan jawapan">
               {currentItem.options.map((opt, oi) => {
                 const selected = mcqChoice === opt.id;
                 return (
@@ -577,7 +586,7 @@ export function GamePlayer({
           {currentItem.kind === "multi" && (
             <div className="space-y-3">
               <p className="text-xs font-bold text-[#7c3415]">
-                Pick {currentItem.pick} matching cards ({multiChoices.length} chosen):
+                Pilih {currentItem.pick} jawapan yang betul ({multiChoices.length} dipilih):
               </p>
               {currentItem.options.map((opt) => {
                 const checked = multiChoices.includes(opt.id);
@@ -621,7 +630,7 @@ export function GamePlayer({
           {currentItem.kind === "order" && (
             <div className="space-y-2.5">
               <p className="text-xs font-bold text-[#7c3415]">
-                Tap two puzzle blocks to swap them, or use the Up / Down arrows:
+                Tekan dua blok untuk menukar kedudukan, atau guna anak panah Atas / Bawah:
               </p>
               {orderList.map((stepId, pos) => {
                 const step = currentItem.steps.find((s) => s.id === stepId);
@@ -667,7 +676,7 @@ export function GamePlayer({
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"
-                          aria-label={`Move block ${pos + 1} up`}
+                          aria-label={`Gerakkan blok ${pos + 1} ke atas`}
                           disabled={pos === 0}
                           onClick={() => {
                             questSfx.flip(true);
@@ -683,7 +692,7 @@ export function GamePlayer({
                         </button>
                         <button
                           type="button"
-                          aria-label={`Move block ${pos + 1} down`}
+                          aria-label={`Gerakkan blok ${pos + 1} ke bawah`}
                           disabled={pos === orderList.length - 1}
                           onClick={() => {
                             questSfx.flip(false);
@@ -708,8 +717,8 @@ export function GamePlayer({
           {currentItem.kind === "match" && (
             <div className="space-y-3">
               <p className="text-xs font-bold text-[#7c3415]">
-                Tap a tile on the left, then tap its matching partner on the right (
-                {Object.keys(matchPairs).length}/{currentItem.left.length} linked):
+                Tekan kad di sebelah kiri, kemudian tekan pasangannya di sebelah kanan (
+                {Object.keys(matchPairs).length}/{currentItem.left.length} dipadankan):
               </p>
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-2.5">
@@ -742,7 +751,7 @@ export function GamePlayer({
                       >
                         <span className="text-stone-900">{l.text}</span>
                         <span className="shrink-0 rounded-full bg-amber-200 px-2.5 py-0.5 font-mono text-[11px] font-extrabold text-amber-950">
-                          {pairedRight ? `#${li + 1}` : "Tap"}
+                          {pairedRight ? `#${li + 1}` : "Pilih"}
                         </span>
                       </button>
                     );
@@ -807,14 +816,14 @@ export function GamePlayer({
           {currentItem.kind === "sort" && (
             <div className="space-y-4">
               <p className="text-xs font-bold text-[#7c3415]">
-                Tap a card in the tray, then tap the crate where it belongs (
-                {Object.keys(sortPlacement).length}/{currentItem.cards.length} sorted):
+                Tekan kad di dalam dulang, kemudian tekan bakul kategori yang sepadan (
+                {Object.keys(sortPlacement).length}/{currentItem.cards.length} diasingkan):
               </p>
 
               <div className="flex flex-wrap gap-2 rounded-xl border-2 border-dashed border-[#c2783e]/60 bg-[#fff8ea]/80 p-3">
                 {currentItem.cards.filter((c) => !sortPlacement[c.id]).length === 0 ? (
                   <span className="text-xs font-semibold text-[#7c3415]">
-                    All cards placed in crates! Tap any card inside a crate if you want to move it.
+                    Semua kad telah dimasukkan ke dalam bakul! Tekan mana-mana kad di dalam bakul jika mahu memindahkannya.
                   </span>
                 ) : (
                   currentItem.cards
@@ -870,7 +879,7 @@ export function GamePlayer({
                       >
                         <span>{b.label}</span>
                         <span className="rounded-full bg-amber-200 px-2.5 py-0.5 text-xs font-extrabold text-amber-950">
-                          {sortPick ? "Drop Here +" : inside.length}
+                          {sortPick ? "Letak Sini +" : inside.length}
                         </span>
                       </button>
                       <div className="mt-2.5 flex min-h-10 flex-wrap gap-1.5">
@@ -906,7 +915,7 @@ export function GamePlayer({
                 htmlFor={`quest-input-${currentItem.id}`}
                 className="block text-xs font-extrabold uppercase tracking-wider text-[#7c3415]"
               >
-                Your Answer
+                Jawapan Anda
               </label>
               <input
                 id={`quest-input-${currentItem.id}`}
@@ -921,16 +930,16 @@ export function GamePlayer({
                     void handleCheck("sure");
                   }
                 }}
-                placeholder={currentItem.placeholder ?? "Type your answer…"}
+                placeholder={currentItem.placeholder ?? "Taip jawapan anda…"}
                 className="w-full rounded-xl border-2 border-[#c2783e] bg-white px-4 py-3 font-mono text-base font-bold text-stone-900 shadow-inner focus-visible:outline-2 focus-visible:outline-ring"
               />
             </div>
           )}
 
           {currentItem.kind === "bug" && (
-            <div className="space-y-2" role="radiogroup" aria-label="Tap the faulty code line">
+            <div className="space-y-2" role="radiogroup" aria-label="Tekan baris yang mengandungi ralat">
               <p className="mb-2 text-xs font-bold text-[#7c3415]">
-                Spot the bug! Tap the ONE faulty line below:
+                Kesan ralat! Tekan SATU baris yang mengandungi kesilapan di bawah:
               </p>
               {currentItem.lines.map((line, li) => {
                 const picked = bugLine === li;
@@ -970,13 +979,13 @@ export function GamePlayer({
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-[#c2783e] bg-[#fff8ea] px-4 py-2.5 text-sm">
                 <span className="font-bold text-stone-800">
-                  Target Decimal:{" "}
+                  Sasaran Perpuluhan:{" "}
                   <strong className="font-mono text-lg text-[#b82f25]">
                     {currentItem.target}₁₀
                   </strong>
                 </span>
                 <span className="font-mono text-xs font-bold text-stone-600">
-                  Switches: <strong className="text-stone-900">{bitsValue}₂</strong>
+                  Suis Perduaan: <strong className="text-stone-900">{bitsValue}₂</strong>
                 </span>
               </div>
               <div
@@ -994,7 +1003,7 @@ export function GamePlayer({
                       type="button"
                       disabled={!!savedAnswer}
                       aria-pressed={on}
-                      aria-label={`Bit ${weight} (${on ? "1, ON" : "0, OFF"})`}
+                      aria-label={`Nilai tempat ${weight} (${on ? "1, HIDUP" : "0, MATI"})`}
                       onClick={() => {
                         questSfx.flip(!on);
                         setBitsValue((prev) => {
@@ -1016,7 +1025,7 @@ export function GamePlayer({
                         {on ? "1" : "0"}
                       </span>
                       <span className="mt-0.5 text-[10px] font-extrabold uppercase tracking-wider">
-                        {on ? "ON" : "OFF"}
+                        {on ? "HIDUP" : "MATI"}
                       </span>
                     </button>
                   );
@@ -1032,11 +1041,11 @@ export function GamePlayer({
           </p>
         )}
 
-        {/* 3D Tactile Check Buttons OR Teaching Feedback */}
+        {/* Butang Semak 3D ATAU Maklum Balas Pengajaran */}
         {!savedAnswer ? (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#d4a373]/50 pt-4">
             <span className="text-xs font-bold text-[#7c3415]">
-              Ready? Lock in your move:
+              Sudah sedia? Kunci jawapan anda:
             </span>
             <div className="flex flex-wrap items-center gap-2.5">
               <button
@@ -1046,7 +1055,7 @@ export function GamePlayer({
                 className="quest-3d-btn quest-3d-btn-gold inline-flex cursor-pointer items-center gap-1.5 px-4 py-2.5 text-xs font-extrabold disabled:cursor-not-allowed disabled:opacity-45 sm:text-sm"
               >
                 <HelpCircle size={15} aria-hidden="true" />
-                Try It (Unsure)
+                Cuba Jawab (Kurang Pasti)
               </button>
               <button
                 type="button"
@@ -1059,7 +1068,7 @@ export function GamePlayer({
                 ) : (
                   <CheckCircle2 size={15} aria-hidden="true" />
                 )}
-                Lock Answer (Sure!)
+                Kunci Jawapan (Yakin!)
               </button>
             </div>
           </div>
@@ -1127,14 +1136,14 @@ function FeedbackBanner({
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="text-sm font-extrabold sm:text-base">
             {result.correct
-              ? "Boom! Direct Hit!"
+              ? "Mantap! Jawapan Tepat!"
               : result.score > 0
-                ? `Nice! Partial Match (${Math.round(result.score * 100)}%)`
-                : "Power-Up Tip — Here's How It Works:"}
+                ? `Hampir Tepat! Separa Betul (${Math.round(result.score * 100)}%)`
+                : "Tip Penguasaan — Semak Penerangan Berikut:"}
           </div>
           {!result.correct && (
             <p className="text-xs sm:text-sm">
-              <span className="font-bold">Solution: </span>
+              <span className="font-bold">Jawapan Sebenar: </span>
               <span className="font-mono font-semibold">{result.solution}</span>
             </p>
           )}
@@ -1151,7 +1160,7 @@ function FeedbackBanner({
             onClick={onShowResults}
             className="quest-3d-btn quest-3d-btn-emerald inline-flex cursor-pointer items-center gap-1.5 px-4 py-2 text-xs font-extrabold sm:text-sm"
           >
-            Claim Stars & Score!
+            Tebus Bintang & Skor!
             <Award size={16} aria-hidden="true" />
           </button>
         )}
@@ -1161,7 +1170,7 @@ function FeedbackBanner({
             onClick={onNext}
             className="quest-3d-btn quest-3d-btn-primary inline-flex cursor-pointer items-center gap-1.5 px-4 py-2 text-xs font-extrabold sm:text-sm"
           >
-            Next Stage
+            Soalan Seterusnya
             <ArrowRight size={15} aria-hidden="true" />
           </button>
         )}
